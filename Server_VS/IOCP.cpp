@@ -32,10 +32,11 @@ void IOCP::Stop()
 {
 
 	int result = closesocket(srvSocket);
-	/*for (int i = 0; i < Sockets.size(); i++)
+	for (int i = 0; i < Sockets.size(); i++)
 	{
-		result=closesocket(Sockets[i]);
-	}*/
+		result = closesocket(Sockets[i]);
+		//Sockets.erase(Sockets.begin() + i);
+	}
 
 	
 	//CloseHandle((HANDLE)srvSocket);
@@ -236,6 +237,14 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 			QJsonDocument document;
 			document.setObject(JsonObj);
 			QByteArray byteArray = document.toJson(QJsonDocument::Compact);
+
+			QString DataTypeID = JsonObj.find("DataTypeID").value().toString();
+			//即时采集数据
+			if (DataTypeID=="01")
+			{
+				g_iocp->NoticfyServerRecvValue(JsonObj);
+				return;
+			}
 			LPCSTR dataChar;
 			dataChar = byteArray.data();
 			g_SimpleProducer.send(dataChar, strlen(dataChar));
@@ -255,6 +264,8 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 			PerHandleData->count += 1;
 			PerHandleData->StationStatus = true;
 			PerHandleData->Connected = true;
+			
+
 
 			g_iocp->NoticfyServerUpdateUI(PerHandleData->ServiceTypeID,
 				PerHandleData->StationID,
@@ -278,11 +289,13 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 		}
 		case 4:
 		{
-			QString RecvValue = JsonObj.find("Command").value().toString();
+			QString ip(PerHandleData->ClientIP);
+			JsonObj.insert("IP", ip);
+			JsonObj.insert("Port", PerHandleData->Port);
 			//服务器第一次发送ID获取站台号
 			if (g_iocp->bIsGetStationID)
 			{
-				g_iocp->NoticfyServerNewConnectionStationID(RecvValue);
+				g_iocp->NoticfyServerNewConnectionStationID(JsonObj);
 				g_iocp->bIsGetStationID = false;
 				break;
 			}

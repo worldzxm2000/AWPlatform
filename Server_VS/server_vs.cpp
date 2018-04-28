@@ -30,12 +30,11 @@ Server_VS::Server_VS(QWidget *parent)
 	ui.ServerList->horizontalHeader()->setHighlightSections(false);//禁止表头选中高亮
 	ui.ServerList->horizontalHeader()->setStyleSheet("QHeaderView::section{background:skyblue;}"); //设置表头背景色
 	ui.ServerList->horizontalHeader()->setStretchLastSection(true);//列宽
-	ui.ServerList->setContextMenuPolicy(Qt::CustomContextMenu);
+	ui.ServerList->setContextMenuPolicy(Qt::CustomContextMenu);//右键创建Menu
 	CreateServerListActions();
 
 	ui.clientList->setColumnCount(8);
 	ui.clientList->setHorizontalHeaderLabels(QStringList() << "业务类型" << "设备号" << "时间" << "数据数量" << "设备状态" << "连接" << "IP" << "端口号");
-
 	header = ui.clientList->verticalHeader();
 	header->setHidden(true);// 隐藏行号 
 	ui.clientList->setSelectionBehavior(QAbstractItemView::SelectRows);//整行选中的方式
@@ -45,7 +44,10 @@ Server_VS::Server_VS(QWidget *parent)
 	ui.clientList->horizontalHeader()->setStyleSheet("QHeaderView::section{background:skyblue;}"); //设置表头背景色
 	ui.clientList->horizontalHeader()->setStretchLastSection(true);//列宽
 	ui.clientList->setColumnWidth(2, 150);
+	ui.clientList->setContextMenuPolicy(Qt::CustomContextMenu);//右键创建Menu
+	CreateClientListActions();
 
+	iSelectIndexOfService = -1;
 	LRESULT pResult = -1;
 	//消息中间件的初始化
 
@@ -132,6 +134,7 @@ void Server_VS::RequestForReadCOMM(int ServiceTypeID, int StationID, int Facilit
 	//发送终端命令
 	switch (Command)
 	{
+		//读取采集器的基本信息
 	case	BASEINFO:
 	{
 		QString Comm = "BASEINFO\r\n";
@@ -145,6 +148,7 @@ void Server_VS::RequestForReadCOMM(int ServiceTypeID, int StationID, int Facilit
 		::send(SocketID, ch, len, 0);
 		break;
 	}
+	//设置或读取自动观测站的区站号
 	case ID:
 	{
 
@@ -159,6 +163,7 @@ void Server_VS::RequestForReadCOMM(int ServiceTypeID, int StationID, int Facilit
 		::send(SocketID, ch, len, 0);
 		break;
 	}
+	//设置或读取观测场拔海高度
 	case ALT:
 	{
 		QString Comm = "ALT\r\n";
@@ -172,6 +177,7 @@ void Server_VS::RequestForReadCOMM(int ServiceTypeID, int StationID, int Facilit
 		::send(SocketID, ch, len, 0);
 		break;
 	}
+	//CF卡模块配置
 	case CFSET:
 	{
 		QString Comm = "CFSET\r\n";
@@ -181,6 +187,7 @@ void Server_VS::RequestForReadCOMM(int ServiceTypeID, int StationID, int Facilit
 		::send(SocketID, ch, len, 0);
 		break;
 	}
+	//设置或读取数据采集时间范围
 	case CAPTIME:
 	{
 		QString Comm = "CAPTIME\r\n";
@@ -194,6 +201,7 @@ void Server_VS::RequestForReadCOMM(int ServiceTypeID, int StationID, int Facilit
 		::send(SocketID, ch, len, 0);
 		break;
 	}
+	//设置或读取自动观测站的经度
 	case LONGITUDE:
 	{
 		QString Comm = "LONG\r\n";
@@ -207,6 +215,7 @@ void Server_VS::RequestForReadCOMM(int ServiceTypeID, int StationID, int Facilit
 		::send(SocketID, ch, len, 0);
 		break;
 	}
+	//设置或读取数据采集时间间隔
 	case CAPINTERVAL:
 	{
 		QString Comm = "CAPINTERVAL\r\n";
@@ -220,6 +229,7 @@ void Server_VS::RequestForReadCOMM(int ServiceTypeID, int StationID, int Facilit
 		::send(SocketID, ch, len, 0);
 		break;
 	}
+	//重新启动采集器
 	case RESET:
 	{
 		QString Comm = "RESET\r\n";
@@ -229,6 +239,7 @@ void Server_VS::RequestForReadCOMM(int ServiceTypeID, int StationID, int Facilit
 		::send(SocketID, ch, len, 0);
 		break;
 	}
+	//远程升级开关
 	case UPDATE:
 	{
 		QString Comm = "UPDATE\r\n";
@@ -238,6 +249,7 @@ void Server_VS::RequestForReadCOMM(int ServiceTypeID, int StationID, int Facilit
 		::send(SocketID, ch, len, 0);
 		break;
 	}
+	//手动采集当前时刻的要素数据
 	case SNAPSHOT:
 	{
 		QString Comm = "SNAPSHOT\r\n";
@@ -247,12 +259,27 @@ void Server_VS::RequestForReadCOMM(int ServiceTypeID, int StationID, int Facilit
 		::send(SocketID, ch, len, 0);
 		break;
 	}
+	//设置或读取采集器日期时间操作
 	case DATETIME:
 	{
 		QString Comm = "DATETIME\r\n";
 		if (Param1 != "NULL")
 		{
 			Comm = "DATETIME " + Param1 + "\r\n";
+		}
+		QByteArray ba = Comm.toLatin1();
+		LPCSTR ch = ba.data();
+		int len = Comm.length();
+		::send(SocketID, ch, len, 0);
+		break;
+	}
+	//设置或读取自动观测站的纬度
+	case LAT:
+	{
+		QString Comm = "LAT\r\n";
+		if (Param1 != "NULL")
+		{
+			Comm = "LAT " + Param1 + "\r\n";
 		}
 		QByteArray ba = Comm.toLatin1();
 		LPCSTR ch = ba.data();
@@ -283,9 +310,6 @@ void Server_VS::on_RunBtn_clicked()
 //发送终端命令---设置时间
 void Server_VS::on_SetTimeBtn_clicked()
 {
-	QJsonObject Json;
-	Json.insert("RecvValue", 0);
-	socket4web->Send2WebServerJson(Json);
 }
 
 //加载动态链接库
@@ -318,7 +342,7 @@ void Server_VS::AddIOCP(Char2Json func,int port)
 	connect(iocp, SIGNAL(NoticfyServerUpdateUI(QString, QString, QString, int, bool, bool, QString, int)), this, SLOT(UpdateUI(QString, QString, QString, int, bool, bool, QString, int)), Qt::QueuedConnection);
 	connect(iocp, SIGNAL(NoticfyServerOperateStatus(int)), this, SLOT(GetCommandStatus(int)), Qt::QueuedConnection);
 	connect(iocp,SIGNAL(NoticfyServerRecvValue(QJsonObject)),this,SLOT(GetCommandRecvValue(QJsonObject)),Qt::QueuedConnection);
-	connect(iocp,SIGNAL(NoticfyServerNewConnectionStationID(QString)),this,SLOT(AddNewConnectStationID(QString)),Qt::QueuedConnection);
+	connect(iocp,SIGNAL(NoticfyServerNewConnectionStationID(QJsonObject)),this,SLOT(AddNewConnectStationID(QJsonObject)),Qt::QueuedConnection);
 	iocp->func_Char2Json = func;
 	iocp->SetListenedPort(port);
 	pool.start(iocp);
@@ -381,7 +405,7 @@ LRESULT Server_VS::AddDll()
 				ui.ServerList->setItem(RowCount, 0, new QTableWidgetItem("土壤水分业务"));
 				ui.ServerList->setItem(RowCount, 1, new QTableWidgetItem(strName));
 				Facility fcty;
-				fcty.ServiceID = HKQX;
+				fcty.ServiceID = TRSF;
 				fcty.ServerPortID = CfgWnd.m_Port;
 				fcty.ServerName = "土壤水分业务";
 				fcty.Path = strName;
@@ -513,7 +537,7 @@ void Server_VS::UpdateUI(QString serviceTypeID, QString stationID, QString obser
 	//ReleaseMutex(hMutex);
 }
 
-
+//添加区站号
 void Server_VS::AddClientInfoStation(QString ip,int port,QString StationID)
 {
 	for (int i = 0; i < ClientInfo.size(); i++)
@@ -539,7 +563,7 @@ void Server_VS::AddNewClient(QString clientIp, int clientPort, int serverPort, i
 	QString serviceTypeID = FindserviceTypeIDByPort(serverPort);
 	ui.clientList->setItem(RowCount, 0, new QTableWidgetItem(serviceTypeID));
 	QDateTime current_date_time = QDateTime::currentDateTime();
-	QString current_date = current_date_time.toString("yyyy.MM.dd hh:mm:ss.zzz ddd");
+	QString current_date = current_date_time.toString("yyyy.MM.dd hh:mm:ss");
 	ui.clientList->setItem(RowCount, 1, new QTableWidgetItem("未知"));
 	ui.clientList->setItem(RowCount, 2, new QTableWidgetItem(current_date));
 	ui.clientList->setItem(RowCount, 3, new QTableWidgetItem("0"));
@@ -564,12 +588,20 @@ void Server_VS::AddClient(QString ip, int port, int serverpot, SOCKET socketNo)
 }
 
 //添加区站号
-void Server_VS::AddNewConnectStationID(QString StationID)
+void Server_VS::AddNewConnectStationID(QJsonObject RecvJson)
 {
-	for (int i = 0; i < ClientInfo.size(); i++)
-	{
-		
-	}
+	
+	QString ServiceTypeID = RecvJson.find("ServiceTypeID").value().toString();
+	QString StationID = RecvJson.find("StationID").value().toString();
+	QString IP = RecvJson.find("IP").value().toString();
+	int Port = RecvJson.find("Port").value().toInt();
+	//查找索引号
+	int RowIndex = FindRowIndex(IP, Port);
+	//未找到
+	if (RowIndex < 0)
+		return;
+	AddClientInfoStation(IP, Port, StationID);
+	ui.clientList->setItem(RowIndex, 1, new QTableWidgetItem(StationID));
 }
 //通过设备ip和端口查询到设备索引号
 int Server_VS::FindRowIndex(QString ip, int port)
@@ -605,7 +637,7 @@ int Server_VS::FindSocketID(int ServiceTypeID, int StationID, int FacilityID)
 			for (int j = 0; j < CountOfStations; j++)
 			{
 				if (ClientInfo[i].clients[j].StationID == StationID)
-					return ClientInfo[i].clients[j].socketNO;
+					return ClientInfo[i].clients[j].SocketID;
 			}
 		}
 	}
@@ -655,7 +687,8 @@ void Server_VS::on_ServerList_customContextMenuRequested(const QPoint &pos)
 	{
 		if (ClientInfo[i].ServerName== selecteditem->text())
 		{
-			iSelectIndex = ClientInfo[i].ServerPortID;
+			iSelectIndexOfService = i;
+		//	iSelectIndex = ClientInfo[i].ServerPortID;
 		}
 	}
 	//菜单出现的位置为当前鼠标的位置
@@ -671,7 +704,6 @@ void Server_VS::CreateServerListActions()
 	action_run = new QAction(this);
 	action_stop = new QAction(this);
 	action_Attributes = new QAction(this);*/
-
 	action_run.setText(QString("启动"));
 	action_stop.setText(QString("停止"));
 	action_stop.setDisabled(true);
@@ -686,56 +718,53 @@ void Server_VS::CreateServerListActions()
 
 }
 
-//区站号列表右键事件
+////区站号列表右键事件
 void Server_VS::on_clientList_customContextMenuRequested(const QPoint &pos)
 {
 	QTableWidgetItem* selecteditem = ui.clientList->itemAt(pos); //get right click pos item
 																
 	if (selecteditem == 0)
-		return;
-	int row = selecteditem->row();
-	QTableWidgetItem * ServiceTypeItem = ui.clientList->item(row,0);
-	int iServicType = -1;
-	for (int i = 0; i < ClientInfo.size(); i++)
 	{
-		if (ClientInfo[i].ServerName == ServiceTypeItem->text())
-		{
-			iServicType = ClientInfo[i].ServiceID;
-		}
+		ServiceTypeItem = NULL;
+		return;
 	}
+	int row = selecteditem->row();
+	ServiceTypeItem = ui.clientList->item(row,0);
+
 	//菜单出现的位置为当前鼠标的位置
 	pop_Menu_Client.exec(QCursor::pos());
 }
 //客户列表右键菜单
-void Server_VS :: CreateClientListActions(int type)
+void Server_VS :: CreateClientListActions()
 {
 
-	switch (type)
-	{
-	case TRSF:
-	{
-		QAction action_GetData;
-		QAction action_GetConfig;
-		action_GetData.setText(QString("获取即时采集数据"));
-		action_GetConfig.setText(QString("获取参数设置"));
+	action_GetData.setText(QString("获取即时采集数据"));
+	action_GetConfig.setText(QString("获取参数设置"));
 
-		pop_Menu_Client.addAction(&action_GetData);
-		connect(&action_GetData, SIGNAL(triggered()), this, SLOT(Lib_Run()));
-		pop_Menu_Client.addAction(&action_GetConfig);
-		connect(&action_stop, SIGNAL(triggered()), this, SLOT(Lib_Stop()));
-
-	}
-	default:
-		break;
-	}
+	pop_Menu_Client.addAction(&action_GetData);
+	connect(&action_GetData, SIGNAL(triggered()), this, SLOT(GetFeature()));
+	pop_Menu_Client.addAction(&action_GetConfig);
+	connect(&action_GetConfig, SIGNAL(triggered()), this, SLOT(GetConfig()));
 }
 
 //启动Lib服务
 void Server_VS::Lib_Run()
 {
-	if (iSelectIndex < 0)
+	if (iSelectIndexOfService< 0)
 		return;
-	for (int i = 0; i < ClientInfo.size(); i++)
+
+
+	QLibrary lib(ClientInfo[iSelectIndexOfService].Path);
+	if (lib.load())
+	{
+		Char2Json func_Char2Json = (Char2Json)(lib.resolve("Char2Json"));
+		if (func_Char2Json == NULL)
+			return;
+		AddIOCP(func_Char2Json, ClientInfo[iSelectIndexOfService].ServerPortID);
+	}
+
+
+	/*for (int i = 0; i < ClientInfo.size(); i++)
 	{
 		if (ClientInfo[i].ServerPortID == iSelectIndex)
 		{
@@ -748,7 +777,7 @@ void Server_VS::Lib_Run()
 				AddIOCP(func_Char2Json, ClientInfo[i].ServerPortID);
 			}
 		}
-	}
+	}*/
 	action_run.setDisabled(true);
 	action_stop.setDisabled(false);
 }
@@ -756,16 +785,55 @@ void Server_VS::Lib_Run()
 //停止Lib服务
 void Server_VS::Lib_Stop()
 {
-	if (iSelectIndex < 0)
+	if (iSelectIndexOfService < 0)
 		return;
-	for (int i = 0; i < ClientInfo.size(); i++)
-	{
-		if (ClientInfo[i].ServerPortID == iSelectIndex)
-		{
-			ClientInfo[i].pICOP->Stop();
-		}
-	}
+	ClientInfo[iSelectIndexOfService].pICOP->Stop();
+
+	//for (int i = 0; i < ClientInfo.size(); i++)
+	//{
+	//	if (ClientInfo[i].ServerPortID == iSelectIndex)
+	//	{
+	//		ClientInfo[i].pICOP->Stop();
+	//	}
+	//}
 	action_run.setDisabled(false);
 	action_stop.setDisabled(true);
 }
 
+//获取即时采集数据
+void Server_VS::GetFeature()
+{
+	int severtype = -1;
+	int SocketID = -1;
+	for (int i = 0; i < ClientInfo.size(); i++)
+	{
+		if (ClientInfo[i].ServerName== ServiceTypeItem->text())
+		{
+			severtype = ClientInfo[i].ServiceID;
+			for (int j = 0; j< ClientInfo[i].clients.size(); j++)
+			{
+				SocketID = ClientInfo[i].clients[j].SocketID;
+			}
+		}
+	}
+	switch (severtype)
+	{
+	case HKQX:
+	{
+		QString Comm = "SNAPSHOT\r\n";
+		QByteArray ba = Comm.toLatin1();
+		LPCSTR ch = ba.data();
+		int len = Comm.length();
+		::send(SocketID, ch, len, 0);
+		break;
+	}
+	default:
+		break;
+	}
+}
+
+//获取参数设置
+void Server_VS::GetConfig()
+{
+
+}

@@ -1,6 +1,6 @@
 
 
-#include <decaf/util/concurrent/CountDownLatch.h>
+#include <../../include/decaf/util/concurrent/CountDownLatch.h>
 #include <decaf/lang/Long.h>
 #include <decaf/util/Date.h>
 #include <activemq/core/ActiveMQConnectionFactory.h>

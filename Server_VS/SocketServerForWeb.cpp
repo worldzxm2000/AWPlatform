@@ -4,15 +4,17 @@
 HANDLE hMutex = CreateMutex(NULL,0,NULL);
 SocketServerForWeb::SocketServerForWeb()
 {
-	
+	IsClose = false;
 }
 SocketServerForWeb::SocketServerForWeb(QObject *parent)
 	: QObject(parent)
 {
+	
 }
 
 SocketServerForWeb::~SocketServerForWeb()
 {
+	IsClose = true;
 	closesocket(srvSocket);
 }
 
@@ -34,10 +36,20 @@ void SocketServerForWeb::run()
 	int a = bind(srvSocket, (SOCKADDR*)&RecvAddr, len);
 	while (1)
 	{
-		char buff[LENGTH];
+		char buff[LENGTH] = {0};
 		int RecvLen=recvfrom(srvSocket,buff,LENGTH,0,(SOCKADDR*)&from,&len);
 		if (RecvLen < 0)
-			break;
+		{
+			if (IsClose)
+			{
+				break;
+			}
+			else
+			{
+				continue;
+			}
+		}
+			
 		ResolveData(buff, RecvLen);
 	}
 }
@@ -82,6 +94,8 @@ void SocketServerForWeb::ResolveData(LPCSTR buff,int len)
 	//²ÎÊý2
 	QString Param2 = strlist.at(12);
 	NoticfyServerFacilityID(ServiceTypeID, StationID, FacilityID,CommandID,Param1,Param2);
+	LPCSTR dataChar="<005,009001,234,46.02.20,N>";
+	sendto(srvSocket,dataChar , strlen(dataChar), 0, (SOCKADDR*)&from, len);
 	m_CommandID = CommandID;
 	m_ServiceTypeID = ServiceTypeID;
 	m_StationID = StationID;

@@ -25,7 +25,7 @@ private:
 	//加载DLL
 	bool LoadLib(LPCSTR LibPath, LPCSTR LibName);
 	//通过路径获取DLL名称
-	bool PluginManager::Path2Name(LPCSTR LibPath, LPCSTR LibName);
+    bool Path2Name(LPCSTR LibPath, LPCSTR LibName);
 	//动态库句柄
 	HLIB m_hDynLib;
 	//动态库名称

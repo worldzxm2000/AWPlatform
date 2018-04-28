@@ -85,7 +85,7 @@ signals:
 	//终端操作命令返回值
 	void NoticfyServerRecvValue(QJsonObject RecvJson);
 	//第一次设备连接发送ID获取值
-	void NoticfyServerNewConnectionStationID(QString StationID);
+	void NoticfyServerNewConnectionStationID(QJsonObject RecvJson);
     //线程操作信号
     void operate();
 private slots:

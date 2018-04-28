@@ -10,18 +10,23 @@ message("You are running qmake on a generated .pro file. This may not work!")
 HEADERS += ./SimpleProducer.h \
     ./param.h \
     ./server_vs.h \
+    ./SocketServerForWeb.h \
     ./IOCP.h \
     ./PluginManager.h \
     ./PluginInstance.h \
+    ./ConfigWnd.h \
     ./Dictionary.h \
     ./LogWrite.h
-SOURCES += ./Dictionary.cpp \
+SOURCES += ./ConfigWnd.cpp \
+    ./Dictionary.cpp \
     ./IOCP.cpp \
     ./LogWrite.cpp \
     ./main.cpp \
     ./PluginInstance.cpp \
     ./PluginManager.cpp \
     ./server_vs.cpp \
-    ./SimpleProducer.cpp
-FORMS += ./server_vs.ui
+    ./SimpleProducer.cpp \
+    ./SocketServerForWeb.cpp
+FORMS += ./server_vs.ui \
+    ./ConfigWnd.ui
 RESOURCES += server_vs.qrc

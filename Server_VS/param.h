@@ -70,7 +70,7 @@ typedef struct
 	//¶Ë¿ÚºÅ
 	int Port;
 	//socketºÅ
-	SOCKET socketNO;
+	SOCKET SocketID;
 	//ÇøÕ¾ºÅ
 	int StationID;
 } CLIENTINFO, *LPCLIENTINFO;
@@ -85,13 +85,14 @@ typedef struct
 //ÖÕ¶ËÃüÁî
 enum Command
 {
-	BASEINFO=231,
-	DATETIME=232,
-	ID=234,
+	BASEINFO = 231,
+	DATETIME = 232,
+	ID = 233,
+	LAT = 234,
+	LONGITUDE = 235,
 	ALT=236,
 	CFSET=237,
 	CAPTIME=238,
-	LONGITUDE=235,
 	CAPINTERVAL=239,
 	SNAPSHOT=2310,
 	RESET=2311,

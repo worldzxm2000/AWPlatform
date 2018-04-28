@@ -22,6 +22,7 @@ private:
 protected:
 	void run();
 	void ResolveData(LPCSTR buff,int len);
+	bool IsClose;
 public:
 	//÷’∂À√¸¡Ó¿‡–Õ
 	int m_CommandID;

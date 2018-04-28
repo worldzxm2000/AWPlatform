@@ -56,7 +56,7 @@ private:
 	//业务列表右键菜单
 	void CreateServerListActions();
 	//区站号列表右键菜单
-	void CreateClientListActions(int type);
+	void CreateClientListActions();
 	//初始化消息中间件
 	LRESULT InitializeMQ();
 	//初始化终端命令Socket
@@ -94,8 +94,14 @@ private:
 	QAction action_LONG;
 	//纬度
 	QAction action_LAT;
+	//获取即时要素数据
+	QAction action_GetData;
+	//获取参数
+    QAction action_GetConfig;
 	//服务列表选中项
-	int iSelectIndex;
+	int iSelectIndexOfService;
+	//区站号列表选中项
+	QTableWidgetItem* ServiceTypeItem;
 	//业务类型数组
 	vector<Facility> ClientInfo;
 private slots:
@@ -108,7 +114,7 @@ private slots:
 	//新客户端连接
 	void AddNewClient(QString clientIp, int clientPort, int serverPort, int socketNo);
 	//获取区站号
-	void AddNewConnectStationID(QString StationID);
+	void AddNewConnectStationID(QJsonObject StationID);
 	//终端操作返回信息
 	void GetCommandStatus(int result);
 	//终端操作返回读取值
@@ -123,7 +129,12 @@ private slots:
 	void Lib_Run();
 	//action_stop事件
 	void Lib_Stop();
-    void on_clientList_customContextMenuRequested(const QPoint &pos);
+   //区站号列表右键事件
+	void on_clientList_customContextMenuRequested(const QPoint &pos);
+	//获取即时采集数据
+	void GetFeature();
+	//获取参数设置
+	void GetConfig();
 };
 
 #endif // SERVER_VS_H

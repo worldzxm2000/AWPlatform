@@ -282,5 +282,7 @@
  <slots>
   <slot>on_RunBtn_clicked()</slot>
   <slot>On_SetTimeBtn_Clicked()</slot>
+  <slot>on_clientList_customContextMenuRequested(QPoint)</slot>
+  <slot>qwe()</slot>
  </slots>
 </ui>
