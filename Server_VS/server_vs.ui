@@ -18,9 +18,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>60</y>
-      <width>321</width>
-      <height>591</height>
+      <y>10</y>
+      <width>241</width>
+      <height>641</height>
      </rect>
     </property>
     <property name="title">
@@ -29,8 +29,8 @@
     <widget class="QPushButton" name="DeleteBtn">
      <property name="geometry">
       <rect>
-       <x>270</x>
-       <y>550</y>
+       <x>80</x>
+       <y>610</y>
        <width>41</width>
        <height>23</height>
       </rect>
@@ -42,8 +42,8 @@
     <widget class="QPushButton" name="RunBtn">
      <property name="geometry">
       <rect>
-       <x>200</x>
-       <y>550</y>
+       <x>10</x>
+       <y>610</y>
        <width>41</width>
        <height>23</height>
       </rect>
@@ -57,8 +57,8 @@
       <rect>
        <x>10</x>
        <y>20</y>
-       <width>300</width>
-       <height>521</height>
+       <width>221</width>
+       <height>581</height>
       </rect>
      </property>
     </widget>
@@ -66,10 +66,10 @@
    <widget class="QGroupBox" name="groupBox_2">
     <property name="geometry">
      <rect>
-      <x>340</x>
-      <y>60</y>
-      <width>931</width>
-      <height>591</height>
+      <x>260</x>
+      <y>10</y>
+      <width>1011</width>
+      <height>641</height>
      </rect>
     </property>
     <property name="title">
@@ -80,8 +80,8 @@
       <rect>
        <x>10</x>
        <y>20</y>
-       <width>841</width>
-       <height>561</height>
+       <width>991</width>
+       <height>611</height>
       </rect>
      </property>
     </widget>
@@ -91,7 +91,7 @@
      <rect>
       <x>0</x>
       <y>660</y>
-      <width>1001</width>
+      <width>1271</width>
       <height>51</height>
      </rect>
     </property>
@@ -122,136 +122,6 @@
      </property>
      <property name="text">
       <string>运行正常</string>
-     </property>
-    </widget>
-   </widget>
-   <widget class="QGroupBox" name="groupBox_4">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>0</y>
-      <width>1001</width>
-      <height>51</height>
-     </rect>
-    </property>
-    <property name="title">
-     <string>终端命令控制</string>
-    </property>
-    <widget class="QPushButton" name="SetTimeBtn">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>20</y>
-       <width>75</width>
-       <height>23</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>设置时间</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="pushButton_2">
-     <property name="geometry">
-      <rect>
-       <x>100</x>
-       <y>20</y>
-       <width>75</width>
-       <height>23</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>设置区站号</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="pushButton_3">
-     <property name="geometry">
-      <rect>
-       <x>190</x>
-       <y>20</y>
-       <width>75</width>
-       <height>23</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>设置纬度</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="pushButton_4">
-     <property name="geometry">
-      <rect>
-       <x>270</x>
-       <y>20</y>
-       <width>75</width>
-       <height>23</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>设置经度</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="pushButton_5">
-     <property name="geometry">
-      <rect>
-       <x>360</x>
-       <y>20</y>
-       <width>75</width>
-       <height>23</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>设置海拔</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="pushButton_6">
-     <property name="geometry">
-      <rect>
-       <x>440</x>
-       <y>20</y>
-       <width>81</width>
-       <height>23</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>设置采集时间</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="pushButton_7">
-     <property name="geometry">
-      <rect>
-       <x>530</x>
-       <y>20</y>
-       <width>81</width>
-       <height>23</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>设置采集间隔</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="pushButton_8">
-     <property name="geometry">
-      <rect>
-       <x>620</x>
-       <y>20</y>
-       <width>81</width>
-       <height>23</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>重启采集器</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="pushButton_9">
-     <property name="geometry">
-      <rect>
-       <x>710</x>
-       <y>20</y>
-       <width>81</width>
-       <height>23</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>设置采集间隔</string>
      </property>
     </widget>
    </widget>

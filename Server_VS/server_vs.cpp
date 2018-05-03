@@ -1,7 +1,5 @@
 ﻿#include "server_vs.h"
 #include<QJsonDocument>
-#include"PluginInstance.h"
-#include"PluginManager.h"
 #include<qfiledialog.h>
 #include"ConfigWnd.h"
 #include<QtNetwork>
@@ -358,7 +356,6 @@ void Server_VS::AddIOCP(Char2Json func,int port)
 //添加解析DLL
 LRESULT Server_VS::AddDll()
 {
-	PluginManager &PluginManager = PluginManager::GetInstance();
 	int errCode = 0;
 	QString strName;
 	//打开选择文件的对话框

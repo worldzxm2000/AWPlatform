@@ -4,7 +4,6 @@
 #include<WinSock2.h>
 #include<Windows.h>
 #include"SimpleProducer.h"
-#include"PluginInstance.h"
 typedef int(*Fun)(int, int, string*); //定义函数指针,int add(int a,int b);   
 typedef LRESULT(*Char2Json)(LPCSTR buff, int len, QJsonObject &json);//解析数据函数
 typedef int(*GetServiceTypeID)();//获取业务类型
@@ -75,13 +74,6 @@ typedef struct
 	//区站号
 	int StationID;
 } CLIENTINFO, *LPCLIENTINFO;
-
-typedef struct
-{
-	PluginInstance *pPlugin;
-	LPCSTR Name;
-} PER_PLUGIN_DATA, *LPPER_PLUGIN_DATA;
-
 
 //终端命令
 enum Command

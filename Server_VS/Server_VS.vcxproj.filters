@@ -62,9 +62,6 @@
     <ClCompile Include="LogWrite.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Dictionary.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="SimpleProducer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -73,24 +70,6 @@
     </ClCompile>
     <ClCompile Include="GeneratedFiles\Release\moc_IOCP.cpp">
       <Filter>Generated Files\Release</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Debug\moc_PluginManager.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Release\moc_PluginManager.cpp">
-      <Filter>Generated Files\Release</Filter>
-    </ClCompile>
-    <ClCompile Include="PluginManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Debug\moc_PluginInstance.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Release\moc_PluginInstance.cpp">
-      <Filter>Generated Files\Release</Filter>
-    </ClCompile>
-    <ClCompile Include="PluginInstance.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GeneratedFiles\Debug\moc_SocketServerForWeb.cpp">
       <Filter>Generated Files\Debug</Filter>
@@ -133,16 +112,7 @@
     <CustomBuild Include="LogWrite.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
-    <CustomBuild Include="Dictionary.h">
-      <Filter>Header Files</Filter>
-    </CustomBuild>
     <CustomBuild Include="IOCP.h">
-      <Filter>Header Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="PluginManager.h">
-      <Filter>Header Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="PluginInstance.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
     <CustomBuild Include="SocketServerForWeb.h">

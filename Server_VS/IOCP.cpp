@@ -35,11 +35,15 @@ void IOCP::SetListenedPort(int port)
 
 void IOCP::Stop()
 {
+	if (bIsListened != true)
+		return;
 	int result = -1;
-	for (int i = 0; i <Sockets.count(); i++)
+	int count = Sockets.count();
+	for (int i = 0; i <count; i++)
 	{
 		result = closesocket(Sockets.at(i));
 	}
+	Sockets.clear();
 	result= closesocket(srvSocket);
 	//CloseHandle((HANDLE)srvSocket);
 	for (int i = 0; i < iThreadsCount; i++)
