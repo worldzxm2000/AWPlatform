@@ -128,9 +128,9 @@ void IOCP::run()
 		//接收客户端连接
 		SOCKET acceptSocket;
 		acceptSocket = accept(srvSocket, (SOCKADDR*)&saRemote, &RemoteLen);
-		if (SOCKET_ERROR == (signed)acceptSocket) {   // 接收客户端失败
-
-			NoticfyServerError(-1);
+		if (SOCKET_ERROR == (signed)acceptSocket)
+		{  
+			// 接收客户端失败
 			break;
 		}
 

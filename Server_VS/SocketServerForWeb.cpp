@@ -34,8 +34,6 @@ void SocketServerForWeb::run()
 	RecvAddr.sin_port = htons(m_portServer);
 	RecvAddr.sin_addr.s_addr = inet_addr("172.18.2.160");
 	int a = bind(srvSocket, (SOCKADDR*)&RecvAddr, len);
-	timeval timeout = {5,0 };//3s
-	//setsockopt(srvSocket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
 	while (1)
 	{
 		char buff[LENGTH] = {0};
@@ -43,19 +41,15 @@ void SocketServerForWeb::run()
 		if (RecvLen == SOCKET_ERROR)
 		{
 			int error=WSAGetLastError();
-			switch (error)
-			{
-			case WSAECONNRESET:
-				break;
-			default:
-				break;
-			}
+			
 			if (IsClose)
 			{
 				break;
 			}
 			else
 			{
+				//∑¢ÀÕ¥ÌŒÛ–≈œ¢
+				NoticfyServerError(error);
 				continue;
 			}
 		}

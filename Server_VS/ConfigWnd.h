@@ -12,6 +12,7 @@ public:
 	~ConfigWnd();
 private:
 	Ui::ConfigWnd ui;
+	//获取本地IP
 	void GetLocalIP();
 public:
 	//设置端口号

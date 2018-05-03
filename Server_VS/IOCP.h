@@ -78,7 +78,6 @@ signals:
     void GetStatus(int result);
 	//发送错误信息
 	void NoticfyServerError(int errorMSG);
-    void NoticfyServer(LONGLONG port);
 	void NoticfyServerUpdateUI(QString ServiceTypeID,
 		QString StationID,
 		QString ObserveTime,

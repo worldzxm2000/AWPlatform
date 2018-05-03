@@ -21,11 +21,11 @@ SrvTableWidget::SrvTableWidget(QWidget *parent)
 	setSelectionBehavior(QAbstractItemView::SelectRows);//整行选中的方式
 	setEditTriggers(QAbstractItemView::NoEditTriggers);//禁止修改
 	setSelectionMode(QAbstractItemView::SingleSelection);//可以选中单个
-	this->horizontalHeader()->setHighlightSections(false);//禁止表头选中高亮
-	this->horizontalHeader()->setStyleSheet("QHeaderView::section{background:skyblue;}"); //设置表头背景色
+	horizontalHeader()->setHighlightSections(false);//禁止表头选中高亮
+	horizontalHeader()->setStyleSheet("QHeaderView::section{background:skyblue;}"); //设置表头背景色
 	setColumnWidth(0,150);
 	setColumnWidth(1, 30);//设置第二列宽度50
-	this->horizontalHeader()->setStretchLastSection(true);//列宽
+	horizontalHeader()->setStretchLastSection(true);//列宽
 }
 
 SrvTableWidget::~SrvTableWidget()

@@ -96,6 +96,8 @@ private:
 	QAction action_LONG;
 	//纬度
 	QAction action_LAT;
+	//发送终端命令
+	QAction action_Comm;
 	//获取即时要素数据
 	QAction action_GetData;
 	//获取参数
@@ -123,8 +125,8 @@ private slots:
 	void GetCommandRecvValue(QJsonObject RecvJson);
 	//添加Lib按钮事件
     void on_RunBtn_clicked();
-	//设置时间按钮事件
-    void on_SetTimeBtn_clicked();
+	//移除业务Lib
+	void on_DeleteBtn_clicked();
 	//业务列表右键事件
     void on_ServerList_customContextMenuRequested(const QPoint &pos);
 	//action_run事件
@@ -139,7 +141,8 @@ private slots:
 	void GetFeature();
 	//获取参数设置
 	void GetConfig();
-    void on_DeleteBtn_clicked();
+	//发送终端命令
+	void SendCOMM();
 };
 
 #endif // SERVER_VS_H
