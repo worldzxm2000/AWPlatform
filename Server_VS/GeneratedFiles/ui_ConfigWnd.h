@@ -16,8 +16,8 @@
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
+#include <QtWidgets/QPlainTextEdit>
 #include <QtWidgets/QPushButton>
-#include <QtWidgets/QTextBrowser>
 #include <QtWidgets/QWidget>
 
 QT_BEGIN_NAMESPACE
@@ -28,16 +28,16 @@ public:
     QLineEdit *IPEdit;
     QLabel *label_3;
     QPushButton *SetBtn;
-    QTextBrowser *AtrrText;
     QLineEdit *PortEdit;
     QLabel *label_2;
     QLabel *label;
+    QPlainTextEdit *AttrTextEdit;
 
     void setupUi(QWidget *ConfigWnd)
     {
         if (ConfigWnd->objectName().isEmpty())
             ConfigWnd->setObjectName(QStringLiteral("ConfigWnd"));
-        ConfigWnd->resize(400, 300);
+        ConfigWnd->resize(345, 300);
         IPEdit = new QLineEdit(ConfigWnd);
         IPEdit->setObjectName(QStringLiteral("IPEdit"));
         IPEdit->setGeometry(QRect(100, 20, 113, 20));
@@ -51,9 +51,6 @@ public:
         SetBtn = new QPushButton(ConfigWnd);
         SetBtn->setObjectName(QStringLiteral("SetBtn"));
         SetBtn->setGeometry(QRect(120, 260, 75, 23));
-        AtrrText = new QTextBrowser(ConfigWnd);
-        AtrrText->setObjectName(QStringLiteral("AtrrText"));
-        AtrrText->setGeometry(QRect(100, 120, 271, 101));
         PortEdit = new QLineEdit(ConfigWnd);
         PortEdit->setObjectName(QStringLiteral("PortEdit"));
         PortEdit->setGeometry(QRect(100, 80, 113, 20));
@@ -65,6 +62,9 @@ public:
         label->setObjectName(QStringLiteral("label"));
         label->setGeometry(QRect(30, 20, 51, 21));
         label->setFont(font);
+        AttrTextEdit = new QPlainTextEdit(ConfigWnd);
+        AttrTextEdit->setObjectName(QStringLiteral("AttrTextEdit"));
+        AttrTextEdit->setGeometry(QRect(100, 120, 191, 121));
 
         retranslateUi(ConfigWnd);
 

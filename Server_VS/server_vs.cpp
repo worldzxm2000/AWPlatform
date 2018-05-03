@@ -9,33 +9,22 @@
 using namespace std;
 //消息中间件类
 SimpleProducer g_SimpleProducer;
-//HANDLE hMutex = CreateMutex(NULL, FALSE, NULL);
-
 //构造函数
 Server_VS::Server_VS(QWidget *parent)
 	: QMainWindow(parent)
 {
 	ui.setupUi(this);
-	this->setFixedSize(1024, 768);
+	this->setFixedSize(1280, 768);
 	strOperateType = "";
 
-	ui.ServerList->setColumnCount(2);
-	ui.ServerList->setHorizontalHeaderLabels(QStringList() << "业务类型"<<"业务名称");
-	QHeaderView *header = ui.ServerList->verticalHeader();
-	header->setHidden(true);// 隐藏行号 
-	ui.ServerList->setColumnHidden(1, true);//隐藏第二列
-	ui.ServerList->setSelectionBehavior(QAbstractItemView::SelectRows);//整行选中的方式
-	ui.ServerList->setEditTriggers(QAbstractItemView::NoEditTriggers);//禁止修改
-	ui.ServerList->setSelectionMode(QAbstractItemView::SingleSelection);//可以选中单个
-	ui.ServerList->horizontalHeader()->setHighlightSections(false);//禁止表头选中高亮
-	ui.ServerList->horizontalHeader()->setStyleSheet("QHeaderView::section{background:skyblue;}"); //设置表头背景色
-	ui.ServerList->horizontalHeader()->setStretchLastSection(true);//列宽
+	connect(ui.ServerList, SIGNAL(NoticfyServerRun(int)), this, SLOT(Lib_Run(int)));
+	connect(ui.ServerList, SIGNAL(NoticfyServerStop(int)), this, SLOT(Lib_Stop(int)));
 	ui.ServerList->setContextMenuPolicy(Qt::CustomContextMenu);//右键创建Menu
 	CreateServerListActions();
 
 	ui.clientList->setColumnCount(8);
 	ui.clientList->setHorizontalHeaderLabels(QStringList() << "业务类型" << "设备号" << "时间" << "数据数量" << "设备状态" << "连接" << "IP" << "端口号");
-	header = ui.clientList->verticalHeader();
+	QHeaderView *header = ui.clientList->verticalHeader();
 	header->setHidden(true);// 隐藏行号 
 	ui.clientList->setSelectionBehavior(QAbstractItemView::SelectRows);//整行选中的方式
 	ui.clientList->setEditTriggers(QAbstractItemView::NoEditTriggers);//禁止修改
@@ -50,11 +39,21 @@ Server_VS::Server_VS(QWidget *parent)
 	iSelectIndexOfService = -1;
 	LRESULT pResult = -1;
 	//消息中间件的初始化
-
 	pResult = InitializeMQ();
 
 	//web服务器Socket的初始化
 	pResult = InitializeCommandSocket();
+	switch (pResult)
+	{
+	case -1:
+		QMessageBox::warning(NULL, "警告", "消息中间件服务初始化失败！");
+		return;
+	case -2:
+		QMessageBox::warning(NULL,"警告","Web服务器初始化失败!");
+		return;
+	default:
+		break;
+	}
 
 }
 
@@ -65,63 +64,62 @@ Server_VS::~Server_VS()
 
 	for (int i = 0; i < ClientInfo.size(); i++)
 	{
-		ClientInfo[i].pICOP->Stop();
+		if (ClientInfo[i].pICOP != NULL)
+		{
+			if (ClientInfo[i].pICOP->GetStatus())
+				ClientInfo[i].pICOP->Stop();			
+		}	
 	}
-	//g_SimpleProducer.close();
-	//setAttribute(Qt::WA_DeleteOnClose);
-	//delete pop_Menu_Service;
-	////运行
-	//delete action_run;
-	////停止
-	//delete action_stop;
-	////属性
-	//delete action_Attributes;
-	////客户列表右键菜单
-	//delete pop_Menu_Client;
-	////时间
-	//delete action_Time;
-	////高度
-	//delete action_ALT;
-	////经度
-	//delete action_LONG;
-	////纬度
-	//delete action_LAT;
 }
 
 //初始化消息中间件
 LRESULT Server_VS::InitializeMQ()
 {
-	std::string brokerURI;
-	std::string destURI;
-	std::string UserName;
-	std::string Password;
-	bool useTopics;
-	bool clientAck;
+	try
+	{
+		std::string brokerURI;
+		std::string destURI;
+		std::string UserName;
+		std::string Password;
+		bool useTopics;
+		bool clientAck;
 
-	activemq::library::ActiveMQCPP::initializeLibrary();
-	UserName = "admin";
-	Password = "admin";
-	brokerURI = "tcp://117.158.216.250:61616";
+		activemq::library::ActiveMQCPP::initializeLibrary();
+		UserName = "admin";
+		Password = "admin";
+		brokerURI = "tcp://117.158.216.250:61616";
 
-	unsigned int numMessages = 2000;
-	destURI = "DataFromFacility";
-	clientAck = false;
-	useTopics = false;
-	g_SimpleProducer.start(UserName, Password, brokerURI, numMessages, destURI, useTopics, clientAck);
-	return 1;
+		unsigned int numMessages = 2000;
+		destURI = "DataFromFacility";
+		clientAck = false;
+		useTopics = false;
+		g_SimpleProducer.start(UserName, Password, brokerURI, numMessages, destURI, useTopics, clientAck);
+		return 1;
+	}
+	catch (const std::exception&)
+	{
+		return -1;
+	}
 }
 
 //初始化Web监听线程
 LRESULT Server_VS::InitializeCommandSocket()
 {
-	//开启WebSocket线程
-	socket4web = new SocketServerForWeb();
-	//connect(socket4web, SIGNAL(NoticfyServerError(int)), this, SLOT());
-	connect(socket4web, SIGNAL(NoticfyServerFacilityID(int, int, int, int, QString, QString)), this, SLOT(RequestForReadCOMM(int, int, int, int, QString, QString)), Qt::AutoConnection);
-	socket4web->m_portServer = 1030;
-	socket4web->setAutoDelete(false);
-	pool.start(socket4web);
-	return 1;
+	try
+	{
+		//开启WebSocket线程
+		socket4web = new SocketServerForWeb();
+		//connect(socket4web, SIGNAL(NoticfyServerError(int)), this, SLOT());
+		connect(socket4web, SIGNAL(NoticfyServerFacilityID(int, int, int, int, QString, QString)), this, SLOT(RequestForReadCOMM(int, int, int, int, QString, QString)), Qt::AutoConnection);
+		socket4web->m_portServer = 1030;
+		socket4web->setAutoDelete(false);
+		pool.start(socket4web);
+		return 1;
+	}
+	catch (const std::exception&)
+	{
+		return -2;
+	}
 }
 
 //读取设备参数指令
@@ -368,10 +366,12 @@ LRESULT Server_VS::AddDll()
 	fileDialog->setWindowTitle(tr("选择加载动态链接库"));
 	fileDialog->setDirectory(".");
 	fileDialog->setNameFilter(tr("DLL Files(*.dll)"));
-	if (fileDialog->exec() == QDialog::Accepted) {
+	if (fileDialog->exec() == QDialog::Accepted) 
+	{
 		strName = fileDialog->selectedFiles()[0];
 	}
-	else {
+	else
+	{
 		return 0;
 	}
 	//读取dll
@@ -379,71 +379,40 @@ LRESULT Server_VS::AddDll()
 	//读取成功
 	if (lib.load())
 	{
-		GetServiceTypeID func_GetServiceTypeID = (GetServiceTypeID)lib.resolve("GetServiceTypeID");
+		GetServiceTypeID func_GetServiceTypeID = (GetServiceTypeID)lib.resolve("GetServiceTypeID");//获取业务ID
+		GetServiceTypeName func_GetServiceTypeName = (GetServiceTypeName)lib.resolve("GetServiceTypeName");//获取业务名称
 		//是否成功连接上 add() 函数  
 		if (func_GetServiceTypeID)
 		{
 			//获取业务类型
 			int ServiceID = func_GetServiceTypeID();
-			switch (ServiceID)
+			for (int i = 0; i < ClientInfo.size(); i++)
 			{
-				//土壤水分
-			case TRSF:
-			{
-				for (int i = 0; i < ClientInfo.size(); i++)
-				{
-					if (ClientInfo[i].ServiceID == ServiceID)
-						return -1;
-				}
+				if (ClientInfo[i].ServiceID == ServiceID)
+					return -1;
+			}
 				//开启IP和端口设置窗体
 				ConfigWnd CfgWnd(this);
+				CfgWnd.DialogMode = true;
 				CfgWnd.exec();
 				if (!IsLegallyPort(CfgWnd.m_Port))
 					return -2;
-				int RowCount = ui.ServerList->rowCount();
-				ui.ServerList->insertRow(RowCount);
-				ui.ServerList->setItem(RowCount, 0, new QTableWidgetItem("土壤水分业务"));
-				ui.ServerList->setItem(RowCount, 1, new QTableWidgetItem(strName));
+			
 				Facility fcty;
-				fcty.ServiceID = TRSF;
+				fcty.pICOP = NULL;
+				fcty.ServiceID = ServiceID;
 				fcty.ServerPortID = CfgWnd.m_Port;
-				fcty.ServerName = "土壤水分业务";
+				fcty.ServerName = func_GetServiceTypeName();
 				fcty.Path = strName;
+				fcty.Attribute = CfgWnd.m_Attribute;
+				ui.ServerList->AddRow(fcty.ServerName, strName);
 				//设备连接信息
 				ClientInfo.push_back(fcty);
 				lib.unload();
-				break;
-			}
-				//航空气象	
-			case HKQX:
-			{
-				for (int i = 0; i < ClientInfo.size(); i++)
-				{
-					if (ClientInfo[i].ServiceID == ServiceID)
-						return -1;
-				}
-				//开启IP和端口设置窗体
-				ConfigWnd CfgWnd(this);
-				CfgWnd.exec();
-				if (!IsLegallyPort(CfgWnd.m_Port))
-					return -2;
-				int RowCount = ui.ServerList->rowCount();
-				ui.ServerList->insertRow(RowCount);
-				ui.ServerList->setItem(RowCount, 0, new QTableWidgetItem("航空气象业务"));
-				ui.ServerList->setItem(RowCount, 1, new QTableWidgetItem(strName));
-				Facility fcty;
-				fcty.ServiceID = HKQX;
-				fcty.ServerPortID = CfgWnd.m_Port;
-				fcty.ServerName = "航空气象业务";
-				fcty.Path = strName;
-				//设备连接信息
-				ClientInfo.push_back(fcty);
-				lib.unload();
-				break;
-			}
-			default:
-				break;
-			}
+		}
+		else
+		{
+			return 0;
 		}
 	}
 	return 1;
@@ -533,8 +502,6 @@ void Server_VS::UpdateUI(QString serviceTypeID, QString stationID, QString obser
 	ui.clientList->setItem(RowIndex, 5, new QTableWidgetItem(strConnected));
 	ui.clientList->setItem(RowIndex, 6, new QTableWidgetItem(ip));
 	ui.clientList->setItem(RowIndex, 7, new QTableWidgetItem(QString::number(port, 10)));
-	//qApp->processEvents();
-	//ReleaseMutex(hMutex);
 }
 
 //添加区站号
@@ -590,7 +557,6 @@ void Server_VS::AddClient(QString ip, int port, int serverpot, SOCKET socketNo)
 //添加区站号
 void Server_VS::AddNewConnectStationID(QJsonObject RecvJson)
 {
-	
 	QString ServiceTypeID = RecvJson.find("ServiceTypeID").value().toString();
 	QString StationID = RecvJson.find("StationID").value().toString();
 	QString IP = RecvJson.find("IP").value().toString();
@@ -675,12 +641,6 @@ QString Server_VS::FindserviceTypeIDByServiceID(int serviceID)
 void Server_VS::on_ServerList_customContextMenuRequested(const QPoint &pos)
 {
     QTableWidgetItem* selecteditem = ui.ServerList->itemAt(pos) ; //get right click pos item
-      /*
-      * do sth  relative with current selected item
-      *  QString finalStr = selecteditem->text();
-      */
-
-	//pop_menu->clear(); //清除原有菜单
 	if (selecteditem == 0)
 		return;
 	for (int i = 0; i < ClientInfo.size(); i++)
@@ -688,7 +648,6 @@ void Server_VS::on_ServerList_customContextMenuRequested(const QPoint &pos)
 		if (ClientInfo[i].ServerName== selecteditem->text())
 		{
 			iSelectIndexOfService = i;
-		//	iSelectIndex = ClientInfo[i].ServerPortID;
 		}
 	}
 	//菜单出现的位置为当前鼠标的位置
@@ -699,21 +658,8 @@ void Server_VS::on_ServerList_customContextMenuRequested(const QPoint &pos)
 //业务列表右键菜单
 void Server_VS::CreateServerListActions()
 {
-	//创建菜单项
-	/*pop_Menu_Service = new QMenu();
-	action_run = new QAction(this);
-	action_stop = new QAction(this);
-	action_Attributes = new QAction(this);*/
-	action_run.setText(QString("启动"));
-	action_stop.setText(QString("停止"));
-	action_stop.setDisabled(true);
 	action_Attributes.setText(QString("属性"));
-
-	pop_Menu_Service.addAction(&action_run);
-	connect(&action_run, SIGNAL(triggered()), this, SLOT(Lib_Run()));
-	pop_Menu_Service.addAction(&action_stop);
-	connect(&action_stop, SIGNAL(triggered()), this, SLOT(Lib_Stop()));
-	pop_Menu_Service.addSeparator();
+	connect(&action_Attributes, SIGNAL(triggered()), this, SLOT(Lib_Attri()));
 	pop_Menu_Service.addAction(&action_Attributes);
 
 }
@@ -748,8 +694,20 @@ void Server_VS :: CreateClientListActions()
 }
 
 //启动Lib服务
-void Server_VS::Lib_Run()
+void Server_VS::Lib_Run(int ServerIndex)
 {
+	QTableWidgetItem* selecteditem = ui.ServerList->item(ServerIndex,0); //获取选择行
+																
+	if (selecteditem == 0)
+		return;
+	for (int i = 0; i < ClientInfo.size(); i++)
+	{
+		if (ClientInfo[i].ServerName == selecteditem->text())
+		{
+			iSelectIndexOfService = i;
+			//	iSelectIndex = ClientInfo[i].ServerPortID;
+		}
+	}
 	if (iSelectIndexOfService< 0)
 		return;
 
@@ -783,7 +741,7 @@ void Server_VS::Lib_Run()
 }
 
 //停止Lib服务
-void Server_VS::Lib_Stop()
+void Server_VS::Lib_Stop(int ServerIndex)
 {
 	if (iSelectIndexOfService < 0)
 		return;
@@ -800,6 +758,16 @@ void Server_VS::Lib_Stop()
 	action_stop.setDisabled(true);
 }
 
+void Server_VS::Lib_Attri()
+{
+	if (iSelectIndexOfService < 0)
+		return;
+	ConfigWnd CfgWnd(this);
+	CfgWnd.DialogMode = false;
+	 CfgWnd.m_Attribute=ClientInfo[iSelectIndexOfService].Attribute;;
+	CfgWnd.m_Port= ClientInfo[iSelectIndexOfService].ServerPortID;
+	CfgWnd.exec();
+}
 //获取即时采集数据
 void Server_VS::GetFeature()
 {
@@ -835,5 +803,33 @@ void Server_VS::GetFeature()
 //获取参数设置
 void Server_VS::GetConfig()
 {
+
+}
+//移除Lib
+void Server_VS::on_DeleteBtn_clicked()
+{
+	QTableWidgetItem* selecteditem = ui.ServerList->currentItem(); //获取选择单元
+	int SelectedRow = ui.ServerList->currentRow();//获取选中行
+	if (selecteditem == 0)
+		return;
+	QString x = selecteditem->text();
+	for (int i = 0; i < ClientInfo.size(); i++)
+	{
+		if (ClientInfo[i].ServerName == selecteditem->text())
+		{
+			if (ClientInfo[i].pICOP != NULL)
+				if (ClientInfo[i].pICOP->GetStatus())
+				{
+					QMessageBox::warning(NULL, "警告", "请先停止运行，再删除业务！");
+					return;
+				}
+			ClientInfo[i].pICOP->Stop();
+			ClientInfo.erase(ClientInfo.begin() + i);
+
+			//	iSelectIndex = ClientInfo[i].ServerPortID;
+		}
+	}
+	if (SelectedRow != -1)
+		ui.ServerList->removeRow(SelectedRow);
 
 }

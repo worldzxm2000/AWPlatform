@@ -5,7 +5,7 @@
 #include<QObject>
 #include"param.h"
 #include<Windows.h>
-#include<vector>
+#include<qvector.h>
 #include<qthread.h>
 #include<QRunnable>
 #include<QString>
@@ -13,7 +13,13 @@
 
 using namespace std;
 class IOCP;
-extern IOCP *pIocp;
+//extern IOCP *pIocp;
+
+struct pParam
+{
+	HANDLE HandleIOCP;
+	HANDLE HandleClass;
+};
 class  IOCP:public QObject,public QRunnable
 {
 
@@ -26,7 +32,6 @@ public:
 protected:
     void run();
 public:
-
     //设置监听号
     void SetListenedPort(int port);
     //开启监听Socket
@@ -42,13 +47,17 @@ public:
 	void SendSocket();
     //通知信号
     FacilityID facilityID;
+	//返回运行状态
+	//true：运行
+	//false:停止
+	bool GetStatus();
 private:
 	//获取区站号
 	bool bIsGetStationID;
 	//服务器端
 	SOCKET srvSocket;
 	//存放Socket数组
-	vector<int> Sockets;
+	QVector<SOCKET> Sockets;
 	//创建完成端口号
 	HANDLE completionPort;
 	//创建线程个数
@@ -56,7 +65,7 @@ private:
     //IOCP处理线程
     static unsigned __stdcall ServerWorkThread(LPVOID pParam);
     //处理设备发送数据
-	static void UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA PerHandleData);
+	static void UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA PerHandleData, IOCP *P);
     //加载DLL
     LRESULT AddDll(char* dllpath);
     // 端口号

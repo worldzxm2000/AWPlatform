@@ -18,7 +18,11 @@ public:
 	int m_Port;
 	//设置ip号
 	QString m_IP;
-
+	//描述
+	QString m_Attribute;
+	//窗体打开模式
+	bool DialogMode;
+	int exec();
 private slots:
     void on_SetBtn_clicked();
 };

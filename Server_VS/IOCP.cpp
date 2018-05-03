@@ -7,38 +7,40 @@
 #include<qthread.h>
 #include<qjsondocument.h>
 using namespace std;
-IOCP *g_iocp;
+//IOCP *g_iocp;
+
+HANDLE hMutex = CreateMutex(NULL, FALSE, NULL);
 
 IOCP::IOCP()
 {
 	bIsListened = false;
-	g_iocp = this;
+	//g_iocp = this;
 	bIsGetStationID = false;
 }
 
 IOCP::~IOCP()
 {
-	Stop();
+	/*WaitForSingleObject(hMutex, INFINITE);
+	if (bIsListened)
+		Stop();
+	ReleaseMutex(hMutex);*/
 }
 
 void IOCP::SetListenedPort(int port)
 {
-
+	bIsListened = true;
 	this->m_port = port;
 
 }
 
 void IOCP::Stop()
 {
-
-	int result = closesocket(srvSocket);
-	for (int i = 0; i < Sockets.size(); i++)
+	int result = -1;
+	for (int i = 0; i <Sockets.count(); i++)
 	{
-		result = closesocket(Sockets[i]);
-		//Sockets.erase(Sockets.begin() + i);
+		result = closesocket(Sockets.at(i));
 	}
-
-	
+	result= closesocket(srvSocket);
 	//CloseHandle((HANDLE)srvSocket);
 	for (int i = 0; i < iThreadsCount; i++)
 	{
@@ -46,8 +48,14 @@ void IOCP::Stop()
 		PostQueuedCompletionStatus(completionPort, 0, NULL, NULL);
 	}
 	bIsListened = false;
+	
 
+}
 
+//获取当前运行状态
+bool IOCP::GetStatus()
+{
+	return bIsListened;
 }
 
 void IOCP::SendSocket()
@@ -57,7 +65,6 @@ void IOCP::SendSocket()
 
 void IOCP::run()
 {
-	bIsListened = true;
 	//初始化WSA    加载socket动态链接库
 	WORD sockVersion = MAKEWORD(2, 2);
 	WSADATA wsaData;     // 接收Windows Socket的结构信息
@@ -72,12 +79,15 @@ void IOCP::run()
 		NoticfyServerError(-1);
 	}
 
+	pParam pparam;
+	pparam.HandleIOCP = completionPort;
+	pparam.HandleClass = (HANDLE)this;
 	SYSTEM_INFO mySysInfo;
 	GetSystemInfo(&mySysInfo);
 	iThreadsCount = (mySysInfo.dwNumberOfProcessors * 2);
 	for (unsigned i = 0; i < iThreadsCount; ++i)
 	{
-		HANDLE threadhandle = (HANDLE)_beginthreadex(NULL, 0, ServerWorkThread, completionPort, 0, NULL);
+		HANDLE threadhandle = (HANDLE)_beginthreadex(NULL, 0, ServerWorkThread, &pparam, 0, NULL);
 		::ResumeThread(threadhandle);
 	}
 
@@ -166,7 +176,10 @@ unsigned IOCP::ServerWorkThread(LPVOID pParam)
 {
 	try
 	{
-		HANDLE completionPort = (HANDLE)pParam;
+		struct pParam *p = (struct pParam*)pParam;
+
+		HANDLE completionPort =p->HandleIOCP;
+		IOCP *pIOCP = (IOCP *)p->HandleClass;
 		DWORD BytesTransferred = 0;
 		LPOVERLAPPED IpOverlapped;
 		LPPER_IO_DATA PerIoData = NULL;
@@ -197,7 +210,7 @@ unsigned IOCP::ServerWorkThread(LPVOID pParam)
 				continue;
 			}
 			//线程处理函数
-			UnboxData(PerIoData, BytesTransferred, PerHandleData);
+			UnboxData(PerIoData, BytesTransferred, PerHandleData,pIOCP);
 
 
 			//为下一个重叠调用建立IO操作
@@ -222,13 +235,13 @@ unsigned IOCP::ServerWorkThread(LPVOID pParam)
 }
 
 //接收处理数据
-void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA PerHandleData)
+void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA PerHandleData,IOCP *p)
 {
 	try
 	{
 		QJsonObject JsonObj;
 		///**************************解析动态链接库***********************************
-		LRESULT pResult = g_iocp->func_Char2Json(perIOData->buffer, len, JsonObj);
+		LRESULT pResult = p->func_Char2Json(perIOData->buffer, len, JsonObj);
 		switch (pResult)
 		{
 		case 1://1：表示BG,ED的要素数据
@@ -242,7 +255,7 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 			//即时采集数据
 			if (DataTypeID=="01")
 			{
-				g_iocp->NoticfyServerRecvValue(JsonObj);
+				p->NoticfyServerRecvValue(JsonObj);
 				return;
 			}
 			LPCSTR dataChar;
@@ -267,7 +280,7 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 			
 
 
-			g_iocp->NoticfyServerUpdateUI(PerHandleData->ServiceTypeID,
+			p->NoticfyServerUpdateUI(PerHandleData->ServiceTypeID,
 				PerHandleData->StationID,
 				PerHandleData->ObserveTime,
 				PerHandleData->count,
@@ -279,12 +292,12 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 		}
 		case 2://2：表示终端命令操作成功
 		{
-			g_iocp->NoticfyServerOperateStatus(1);
+			p->NoticfyServerOperateStatus(1);
 			break;
 		}
 		case 3://3：表示终端命令操作失败
 		{
-			g_iocp->NoticfyServerOperateStatus(0);
+			p->NoticfyServerOperateStatus(0);
 			break;
 		}
 		case 4:
@@ -293,19 +306,19 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 			JsonObj.insert("IP", ip);
 			JsonObj.insert("Port", PerHandleData->Port);
 			//服务器第一次发送ID获取站台号
-			if (g_iocp->bIsGetStationID)
+			if (p->bIsGetStationID)
 			{
-				g_iocp->NoticfyServerNewConnectionStationID(JsonObj);
-				g_iocp->bIsGetStationID = false;
+				p->NoticfyServerNewConnectionStationID(JsonObj);
+				p->bIsGetStationID = false;
 				break;
 			}
 			
-			g_iocp->NoticfyServerRecvValue(JsonObj);
+			p->NoticfyServerRecvValue(JsonObj);
 			break;
 		}
 		case 0://0：表示非法的终端命令
 		{
-			g_iocp->NoticfyServerOperateStatus(-1);
+			p->NoticfyServerOperateStatus(-1);
 			break;
 		}
 		default://-1：表示无效数据//-2：表示非航空气象数据

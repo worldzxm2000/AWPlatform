@@ -1,7 +1,7 @@
 #include "SocketServerForWeb.h"
 #include<qjsondocument.h>
 #include<qjsonobject.h>
-HANDLE hMutex = CreateMutex(NULL,0,NULL);
+
 SocketServerForWeb::SocketServerForWeb()
 {
 	IsClose = false;
@@ -34,12 +34,22 @@ void SocketServerForWeb::run()
 	RecvAddr.sin_port = htons(m_portServer);
 	RecvAddr.sin_addr.s_addr = inet_addr("172.18.2.160");
 	int a = bind(srvSocket, (SOCKADDR*)&RecvAddr, len);
+	timeval timeout = {5,0 };//3s
+	//setsockopt(srvSocket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
 	while (1)
 	{
 		char buff[LENGTH] = {0};
 		int RecvLen=recvfrom(srvSocket,buff,LENGTH,0,(SOCKADDR*)&from,&len);
-		if (RecvLen < 0)
+		if (RecvLen == SOCKET_ERROR)
 		{
+			int error=WSAGetLastError();
+			switch (error)
+			{
+			case WSAECONNRESET:
+				break;
+			default:
+				break;
+			}
 			if (IsClose)
 			{
 				break;

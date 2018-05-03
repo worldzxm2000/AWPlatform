@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>345</width>
     <height>300</height>
    </rect>
   </property>
@@ -55,16 +55,6 @@
     <string>设置</string>
    </property>
   </widget>
-  <widget class="QTextBrowser" name="AtrrText">
-   <property name="geometry">
-    <rect>
-     <x>100</x>
-     <y>120</y>
-     <width>271</width>
-     <height>101</height>
-    </rect>
-   </property>
-  </widget>
   <widget class="QLineEdit" name="PortEdit">
    <property name="geometry">
     <rect>
@@ -111,6 +101,16 @@
    </property>
    <property name="text">
     <string>IP：</string>
+   </property>
+  </widget>
+  <widget class="QPlainTextEdit" name="AttrTextEdit">
+   <property name="geometry">
+    <rect>
+     <x>100</x>
+     <y>120</y>
+     <width>191</width>
+     <height>121</height>
+    </rect>
    </property>
   </widget>
  </widget>

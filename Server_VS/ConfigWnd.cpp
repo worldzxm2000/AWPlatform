@@ -8,8 +8,7 @@ ConfigWnd::ConfigWnd(QWidget *parent)
 	ui.setupUi(this);
 	
 	GetLocalIP();
-	ui.IPEdit->setText(m_IP);
-	ui.PortEdit->setText("1031");
+
 }
 
 
@@ -44,5 +43,23 @@ void ConfigWnd::on_SetBtn_clicked()
 	bool ok;
 	m_Port = ui.PortEdit->text().toInt(&ok,10);
 	m_IP = ui.IPEdit->text();
+	m_Attribute = ui.AttrTextEdit->toPlainText();
 	this->close();
+}
+
+int ConfigWnd::exec()
+{
+	if (!DialogMode)
+	{
+		ui.PortEdit->setEnabled(false);
+		ui.IPEdit->setEnabled(false);
+		ui.AttrTextEdit->setEnabled(false);
+		ui.IPEdit->setText(m_IP);
+		ui.PortEdit->setText(QString::number(m_Port));
+		ui.AttrTextEdit->setPlainText(m_Attribute);
+		ui.SetBtn -> setVisible(false);
+	}
+	ui.IPEdit->setText(m_IP);
+	ui.PortEdit->setText("1031");
+	return QDialog::exec();
 }

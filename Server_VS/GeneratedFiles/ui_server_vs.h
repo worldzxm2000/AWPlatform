@@ -1,4 +1,4 @@
-/********************************************************************************
+﻿/********************************************************************************
 ** Form generated from reading UI file 'server_vs.ui'
 **
 ** Created by: Qt User Interface Compiler version 5.10.1
@@ -23,7 +23,7 @@
 #include <QtWidgets/QTableWidget>
 #include <QtWidgets/QToolBar>
 #include <QtWidgets/QWidget>
-
+#include"SrvTableWidget.h"
 QT_BEGIN_NAMESPACE
 
 class Ui_Server_VSClass
@@ -33,7 +33,7 @@ public:
     QGroupBox *groupBox;
     QPushButton *DeleteBtn;
     QPushButton *RunBtn;
-    QTableWidget *ServerList;
+	SrvTableWidget *ServerList;
     QGroupBox *groupBox_2;
     QTableWidget *clientList;
     QGroupBox *groupBox_3;
@@ -57,24 +57,24 @@ public:
     {
         if (Server_VSClass->objectName().isEmpty())
             Server_VSClass->setObjectName(QStringLiteral("Server_VSClass"));
-        Server_VSClass->resize(1024, 768);
+        Server_VSClass->resize(1280, 768);
         centralWidget = new QWidget(Server_VSClass);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         groupBox = new QGroupBox(centralWidget);
         groupBox->setObjectName(QStringLiteral("groupBox"));
-        groupBox->setGeometry(QRect(0, 60, 141, 591));
+        groupBox->setGeometry(QRect(10, 60, 321, 591));
         DeleteBtn = new QPushButton(groupBox);
         DeleteBtn->setObjectName(QStringLiteral("DeleteBtn"));
-        DeleteBtn->setGeometry(QRect(90, 550, 41, 23));
+        DeleteBtn->setGeometry(QRect(270, 550, 41, 23));
         RunBtn = new QPushButton(groupBox);
         RunBtn->setObjectName(QStringLiteral("RunBtn"));
-        RunBtn->setGeometry(QRect(10, 550, 41, 23));
-        ServerList = new QTableWidget(groupBox);
+        RunBtn->setGeometry(QRect(200, 550, 41, 23));
+        ServerList = new SrvTableWidget(groupBox);
         ServerList->setObjectName(QStringLiteral("ServerList"));
-        ServerList->setGeometry(QRect(10, 20, 121, 521));
+        ServerList->setGeometry(QRect(10, 20, 300, 521));
         groupBox_2 = new QGroupBox(centralWidget);
         groupBox_2->setObjectName(QStringLiteral("groupBox_2"));
-        groupBox_2->setGeometry(QRect(150, 60, 861, 591));
+        groupBox_2->setGeometry(QRect(340, 60, 931, 591));
         clientList = new QTableWidget(groupBox_2);
         clientList->setObjectName(QStringLiteral("clientList"));
         clientList->setGeometry(QRect(10, 20, 841, 561));
@@ -120,7 +120,7 @@ public:
         Server_VSClass->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(Server_VSClass);
         menuBar->setObjectName(QStringLiteral("menuBar"));
-        menuBar->setGeometry(QRect(0, 0, 1024, 23));
+        menuBar->setGeometry(QRect(0, 0, 1280, 23));
         Server_VSClass->setMenuBar(menuBar);
         mainToolBar = new QToolBar(Server_VSClass);
         mainToolBar->setObjectName(QStringLiteral("mainToolBar"));

@@ -110,6 +110,15 @@
     <ClCompile Include="ConfigWnd.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_SrvTableWidget.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_SrvTableWidget.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="SrvTableWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="server_vs.h">
@@ -144,6 +153,9 @@
     </CustomBuild>
     <CustomBuild Include="ConfigWnd.ui">
       <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="SrvTableWidget.h">
+      <Filter>Header Files</Filter>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>

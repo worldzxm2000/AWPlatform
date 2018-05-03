@@ -15,6 +15,8 @@
 //业务类型
 typedef struct
 {
+	//描述
+	QString Attribute;
 	//业务号
 	int ServiceID;
 	//Lib路径
@@ -126,15 +128,18 @@ private slots:
 	//业务列表右键事件
     void on_ServerList_customContextMenuRequested(const QPoint &pos);
 	//action_run事件
-	void Lib_Run();
+	void Lib_Run(int ServerIndex);
 	//action_stop事件
-	void Lib_Stop();
+	void Lib_Stop(int ServerIndex);
+	//action_attri事件
+	void Lib_Attri();
    //区站号列表右键事件
 	void on_clientList_customContextMenuRequested(const QPoint &pos);
 	//获取即时采集数据
 	void GetFeature();
 	//获取参数设置
 	void GetConfig();
+    void on_DeleteBtn_clicked();
 };
 
 #endif // SERVER_VS_H
