@@ -83,9 +83,9 @@ void IOCP::run()
 		NoticfyServerError(-1);
 	}
 
-	pParam pparam;
-	pparam.HandleIOCP = completionPort;
-	pparam.HandleClass = (HANDLE)this;
+	PARAMS pparam;
+	pparam.completionPort = completionPort;
+	pparam.fatherClass = (HANDLE)this;
 	SYSTEM_INFO mySysInfo;
 	GetSystemInfo(&mySysInfo);
 	iThreadsCount = (mySysInfo.dwNumberOfProcessors * 2);
@@ -180,10 +180,9 @@ unsigned IOCP::ServerWorkThread(LPVOID pParam)
 {
 	try
 	{
-		struct pParam *p = (struct pParam*)pParam;
-
-		HANDLE completionPort =p->HandleIOCP;
-		IOCP *pIOCP = (IOCP *)p->HandleClass;
+		LPPARAMS p = (LPPARAMS)pParam;
+		HANDLE completionPort =p->completionPort;
+		IOCP *pIOCP = (IOCP *)p->fatherClass;
 		DWORD BytesTransferred = 0;
 		LPOVERLAPPED IpOverlapped;
 		LPPER_IO_DATA PerIoData = NULL;
@@ -279,7 +278,6 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 			PerHandleData->ObserveTime = bastrObserveTime.data();
 
 			PerHandleData->count += 1;
-			PerHandleData->StationStatus = true;
 			PerHandleData->Connected = true;
 			
 
@@ -288,10 +286,10 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 				PerHandleData->StationID,
 				PerHandleData->ObserveTime,
 				PerHandleData->count,
-				PerHandleData->StationStatus,
 				PerHandleData->Connected,
 				PerHandleData->ClientIP,
-				PerHandleData->Port);
+				PerHandleData->Port,
+				PerHandleData->socket);
 			break;
 		}
 		case 2://2：表示终端命令操作成功
@@ -325,10 +323,21 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 			p->NoticfyServerOperateStatus(-1);
 			break;
 		}
+		//心跳数据
+		case 8:
+		{
+			//获取区站号
+			QString strStationID = JsonObj.find("StationID").value().toString();
+			//获取
+			QString strServiceTypeID = JsonObj.find("ServiceTypeID").value().toString();
+			QString ip = PerHandleData->ClientIP;
+			p->NoticfyServerHB(PerHandleData->socket);
+		}
 		default://-1：表示无效数据//-2：表示非航空气象数据
 		{
 			QJsonDocument document;
 			document.setObject(JsonObj);
+			p->NoticfyServerNewConnectionStationID(JsonObj);
 			QByteArray byteArray = document.toJson(QJsonDocument::Compact);
 			LPCSTR dataChar;
 			dataChar = byteArray.data();

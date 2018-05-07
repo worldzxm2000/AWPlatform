@@ -12,7 +12,7 @@
 #include"IOCP.h"
 #include<qlibrary.h>
 #include"SocketServerForWeb.h"
-//业务类型
+//业务类型连接信息
 typedef struct
 {
 	//描述
@@ -69,6 +69,8 @@ private:
 	bool IsLegallyPort(int port);
 	//添加区站号
 	void AddClientInfoStation(QString ip, int port, QString StationID);
+	//更新设备在线离线状态
+	void SetFacilityOffLine(int SocketID);
 private:
 	Ui::Server_VSClass ui;
 	QMessageBox msg;
@@ -108,13 +110,15 @@ private:
 	QTableWidgetItem* ServiceTypeItem;
 	//业务类型数组
 	vector<Facility> ClientInfo;
+	//心跳监听时间
+	QTimer *timer;
 private slots:
     //终端读取设备命令
     void RequestForReadCOMM(int ServiceTypeID,int StationID,int FacilityID, int Command, QString Param1, QString Param2);
 	//错误提示
 	void GetErrorMSG(int error);
 	//更新UI界面
-	void UpdateUI(QString serviceTypeID, QString stationID, QString observeTime, int count, bool stationStatus, bool connected, QString ip, int port);
+	void UpdateUI(QString serviceTypeID, QString stationID, QString observeTime, int count, bool connected, QString ip, int port,int socket);
 	//新客户端连接
 	void AddNewClient(QString clientIp, int clientPort, int serverPort, int socketNo);
 	//获取区站号
@@ -143,6 +147,10 @@ private slots:
 	void GetConfig();
 	//发送终端命令
 	void SendCOMM();
+	//心跳处理
+	void HeartBeat(int Socket);
+	//心跳Timer处理
+	void Func_HeartBeat();
 };
 
 #endif // SERVER_VS_H

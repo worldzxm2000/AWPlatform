@@ -32,7 +32,8 @@ void SocketServerForWeb::run()
 	//设置服务器地址
 	RecvAddr.sin_family = AF_INET;
 	RecvAddr.sin_port = htons(m_portServer);
-	RecvAddr.sin_addr.s_addr = inet_addr("172.18.2.160");
+	RecvAddr.sin_addr.s_addr = INADDR_ANY;
+		//inet_addr("172.18.2.160");
 	int a = bind(srvSocket, (SOCKADDR*)&RecvAddr, len);
 	while (1)
 	{

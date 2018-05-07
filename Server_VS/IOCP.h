@@ -82,10 +82,10 @@ signals:
 		QString StationID,
 		QString ObserveTime,
 		int count,
-	bool StationStatus,
 		bool Connected,
 		QString IP,
-		int Port);
+		int Port,
+		int Socket);
 	//新设备连接信号
 	void NoticfyUINewClient(QString IP, int Port, int m_port, int socketNo);
 	//终端操作命令信号
@@ -94,6 +94,8 @@ signals:
 	void NoticfyServerRecvValue(QJsonObject RecvJson);
 	//第一次设备连接发送ID获取值
 	void NoticfyServerNewConnectionStationID(QJsonObject RecvJson);
+	//心跳处理
+	void NoticfyServerHB(int Socket);
     //线程操作信号
     void operate();
 private slots:

@@ -4,6 +4,7 @@
 #include<WinSock2.h>
 #include<Windows.h>
 #include"SimpleProducer.h"
+#include<qdatetime.h>
 typedef int(*Fun)(int, int, string*); //定义函数指针,int add(int a,int b);   
 typedef LRESULT(*Char2Json)(LPCSTR buff, int len, QJsonObject &json);//解析数据函数
 typedef int(*GetServiceTypeID)();//获取业务类型
@@ -35,15 +36,14 @@ typedef struct
 	LPCSTR ServiceTypeID;//服务类型
 	LPCSTR StationID;//区站号
 	LPCSTR ObserveTime;//观察时间
-	bool StationStatus;//设备状态
-	bool Connected;//连接开关
+	bool Connected;//设备状态
 }PER_HANDLE_DATA, *LPPER_HANDLE_DATA;
 
-//typedef struct
-//{
-//	HANDLE completionPort;
-//	HANDLE fatherClass;
-//}PARAMS,*LPPARAMS;
+typedef struct
+{
+	HANDLE completionPort;
+	HANDLE fatherClass;
+}PARAMS,*LPPARAMS;
 //业务编号
 enum FacilityID
 {
@@ -65,6 +65,7 @@ typedef struct
 //客户端socket信息
 typedef struct
 {
+	
 	//IP号
 	QString IP;
 	//端口号
@@ -73,6 +74,8 @@ typedef struct
 	SOCKET SocketID;
 	//区站号
 	int StationID;
+	//最新心跳时间
+	QDateTime LatestTimeOfHeartBeat;
 } CLIENTINFO, *LPCLIENTINFO;
 
 //终端命令

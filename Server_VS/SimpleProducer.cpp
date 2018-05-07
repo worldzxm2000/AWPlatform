@@ -17,6 +17,12 @@ void SimpleProducer::close()
 	cleanup();
 }
 
+
+void SimpleProducer::onException(const CMSException& ex AMQCPP_UNUSED)
+{
+	printf("CMS Exception occurred.  Shutting down client.\n");
+	exit(1);
+}
 void SimpleProducer::start(const std::string& UserName, const std::string& Password, const std::string& brokerURI, unsigned int numMessages, const std::string& destURI, bool useTopic = false, bool clientAck = false)
 {
 	this->UserName = UserName;
@@ -79,21 +85,29 @@ void SimpleProducer::initialize()
 
 void SimpleProducer::send(const char* Message, int nSize)
 {
-	// 消息内容
-	//std::string threadIdStr = Long::toString( Thread::currentThread()->getId() );
-	// 创建一个文本类型的消息
-	if (session == nullptr)
-		return;
-	auto_ptr<BytesMessage> bytesMessage(session->createBytesMessage((unsigned char*)Message, nSize));
-	// 发送消息
-	//printf( "Sent message  from thread %s\n", threadIdStr.c_str() );
-	producer->send(bytesMessage.get());
+	try
+	{
+		// 消息内容
+		//std::string threadIdStr = Long::toString( Thread::currentThread()->getId() );
+		// 创建一个文本类型的消息
+		if (session == nullptr)
+			return;
+		auto_ptr<BytesMessage> bytesMessage(session->createBytesMessage((unsigned char*)Message, nSize));
+		// 发送消息
+		//printf( "Sent message  from thread %s\n", threadIdStr.c_str() );
+		producer->send(bytesMessage.get());
 
-	////新家
-	// 	delete bytesMessage;
-	// 	cleanup();
+		////新家
+		// 	delete bytesMessage;
+		// 	cleanup();
 
-	///
+		///
+	}
+	catch (CMSException& e)
+	{
+		e.printStackTrace();
+	}
+	
 }
 
 

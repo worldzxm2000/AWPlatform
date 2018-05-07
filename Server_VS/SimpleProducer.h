@@ -40,6 +40,7 @@ public:
 private:
 	void cleanup();
 	virtual void initialize();
+	virtual void onException(const CMSException& ex AMQCPP_UNUSED);
 
 private:
 	Connection* connection;

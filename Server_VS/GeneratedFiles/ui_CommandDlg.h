@@ -27,6 +27,8 @@ public:
     QLineEdit *COMMText;
     QLabel *label;
     QPushButton *SendBtn;
+    QLabel *label_2;
+    QLabel *StatusLabel;
 
     void setupUi(QWidget *CommandDlg)
     {
@@ -46,7 +48,13 @@ public:
         label->setFont(font);
         SendBtn = new QPushButton(CommandDlg);
         SendBtn->setObjectName(QStringLiteral("SendBtn"));
-        SendBtn->setGeometry(QRect(160, 110, 75, 23));
+        SendBtn->setGeometry(QRect(160, 90, 75, 23));
+        label_2 = new QLabel(CommandDlg);
+        label_2->setObjectName(QStringLiteral("label_2"));
+        label_2->setGeometry(QRect(10, 130, 81, 20));
+        StatusLabel = new QLabel(CommandDlg);
+        StatusLabel->setObjectName(QStringLiteral("StatusLabel"));
+        StatusLabel->setGeometry(QRect(100, 130, 81, 20));
 
         retranslateUi(CommandDlg);
 
@@ -58,6 +66,8 @@ public:
         CommandDlg->setWindowTitle(QApplication::translate("CommandDlg", "\347\273\210\347\253\257\345\221\275\344\273\244", nullptr));
         label->setText(QApplication::translate("CommandDlg", "\347\273\210\347\253\257\345\221\275\344\273\244", nullptr));
         SendBtn->setText(QApplication::translate("CommandDlg", "\345\217\221\351\200\201", nullptr));
+        label_2->setText(QApplication::translate("CommandDlg", "\345\217\221\351\200\201\347\212\266\346\200\201\357\274\232", nullptr));
+        StatusLabel->setText(QString());
     } // retranslateUi
 
 };
