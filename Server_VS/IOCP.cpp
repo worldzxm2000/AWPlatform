@@ -164,8 +164,8 @@ void IOCP::run()
 		NoticfyUINewClient(ip, port, m_port, acceptSocket);
 	
 		//读取区站号信息
-		send(acceptSocket, "ID\r\n", 4, 0);
-		bIsGetStationID = true;
+		//send(acceptSocket, "ID\r\n", 4, 0);
+	//	bIsGetStationID = true;
 		DWORD RecvBytes = 0;
 		DWORD Flags = 0;
 		WSARecv(PerHandleData->socket, &(PerIoData->databuff), 1, &RecvBytes, &Flags, &(PerIoData->overlapped), NULL);
@@ -265,28 +265,21 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 			dataChar = byteArray.data();
 			g_SimpleProducer.send(dataChar, strlen(dataChar));
 			//获取区站号
-			QString strStationID = JsonObj.find("StationID").value().toString();
-			QByteArray baStationID = strStationID.toLatin1();
-			PerHandleData->StationID = baStationID.data();
-			//获取
-			QString strServiceTypeID = JsonObj.find("ServiceTypeID").value().toString();
-			QByteArray baServiceTypeID = strServiceTypeID.toLatin1();
-			PerHandleData->ServiceTypeID = baServiceTypeID.data();
-
-			QString strObserveTime = JsonObj.find("UploadTime").value().toString();
-			QByteArray bastrObserveTime = strObserveTime.toLatin1();
-			PerHandleData->ObserveTime = bastrObserveTime.data();
-
+			QString StationID = JsonObj.find("StationID").value().toString();
+			//获取业务号
+			QString ServiceTypeID = JsonObj.find("ServiceTypeID").value().toString();
+	        //获取时间
+			QString ObserveTime = JsonObj.find("UploadTime").value().toString();
 			PerHandleData->count += 1;
 			PerHandleData->Connected = true;
 			
 
 
-			p->NoticfyServerUpdateUI(PerHandleData->ServiceTypeID,
-				PerHandleData->StationID,
-				PerHandleData->ObserveTime,
+			p->NoticfyServerUpdateUI(ServiceTypeID,
+				StationID,
+				ObserveTime,
 				PerHandleData->count,
-				PerHandleData->Connected,
+				true,
 				PerHandleData->ClientIP,
 				PerHandleData->Port,
 				PerHandleData->socket);
@@ -318,6 +311,57 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 			p->NoticfyServerRecvValue(JsonObj);
 			break;
 		}
+		//农委数据 两根
+		case 20:
+		{
+			QJsonObject json_one;
+			QJsonObject json_another;
+		
+
+			json_one =JsonObj.find("1").value().toObject();
+			json_another = JsonObj.find("2").value().toObject();
+
+			QString DataTypeID = json_one.find("DataTypeID").value().toString();
+			//即时采集数据
+			if (DataTypeID == "01")
+			{
+				p->NoticfyServerRecvValue(json_one);
+				p->NoticfyServerRecvValue(json_another);
+				return;
+			}
+			//发送消息第一根
+			QJsonDocument document_one;
+			document_one.setObject(json_one);
+			QByteArray byteArray_one = document_one.toJson(QJsonDocument::Compact);
+			LPCSTR dataChar_one;
+			dataChar_one = byteArray_one.data();
+			g_SimpleProducer.send(dataChar_one, strlen(dataChar_one));
+			//发送消息第二根
+			QJsonDocument document_another;
+			document_another.setObject(json_another);
+			QByteArray byteArray_another = document_another.toJson(QJsonDocument::Compact);
+			LPCSTR dataChar_another;
+			dataChar_another = byteArray_another.data();
+			g_SimpleProducer.send(dataChar_another, strlen(dataChar_another));
+			//获取区站号
+			QString StationID = json_one.find("StationID").value().toString();
+			//获取业务号
+			QString ServiceTypeID = json_one.find("ServiceTypeID").value().toString();
+			//获取时间
+			QString ObserveTime = json_one.find("UploadTime").value().toString();
+			PerHandleData->count += 1;
+			PerHandleData->Connected = true;
+
+			p->NoticfyServerUpdateUI(ServiceTypeID,
+				StationID,
+				ObserveTime,
+				PerHandleData->count,
+				true,
+				PerHandleData->ClientIP,
+				PerHandleData->Port,
+				PerHandleData->socket);
+
+		}
 		case 0://0：表示非法的终端命令
 		{
 			p->NoticfyServerOperateStatus(-1);
@@ -333,7 +377,12 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 			QString ip = PerHandleData->ClientIP;
 			p->NoticfyServerHB(PerHandleData->socket);
 		}
-		default://-1：表示无效数据//-2：表示非航空气象数据
+		//非业务数据
+		case -2:
+		{
+			p->NoticfyServerError(-2);
+		}
+		default://-1：表示无效数据
 		{
 			QJsonDocument document;
 			document.setObject(JsonObj);

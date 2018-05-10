@@ -57,7 +57,10 @@ int ConfigWnd::exec()
 		ui.AttrTextEdit->setPlainText(m_Attribute);
 		ui.SetBtn -> setVisible(false);
 	}
-	ui.IPEdit->setText(m_IP);
-	ui.PortEdit->setText("1031");
+	else
+	{
+		ui.IPEdit->setText(m_IP);
+		ui.PortEdit->setText("1031");
+	}
 	return QDialog::exec();
 }

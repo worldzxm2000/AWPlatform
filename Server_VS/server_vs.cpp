@@ -24,7 +24,7 @@ Server_VS::Server_VS(QWidget *parent)
 
 	//设备连接列表
 	ui.clientList->setColumnCount(9);
-	ui.clientList->setHorizontalHeaderLabels(QStringList() << "业务类型" << "设备号" << "时间" << "数据数量" << "设备状态" << "连接" << "IP" << "端口号"<<"socket号");
+	ui.clientList->setHorizontalHeaderLabels(QStringList() << "业务类型" << "区站号" << "时间" << "数据数量" << "设备状态" << "连接" << "IP" << "端口号"<<"socket号");
 	QHeaderView *header = ui.clientList->verticalHeader();
 	header->setHidden(true);// 隐藏行号 
 	ui.clientList->setColumnHidden(8, true);//隐藏第九列
@@ -41,7 +41,7 @@ Server_VS::Server_VS(QWidget *parent)
 	//心跳监听时间
 	timer = new QTimer(this);
 	connect(timer,SIGNAL(timeout()),this,SLOT(Func_HeartBeat()));
-	timer->start(1000 * 3);
+	timer->start(1000 * 60*2);
 	iSelectIndexOfService = -1;
 	LRESULT pResult = -1;
 	//消息中间件的初始化
@@ -86,8 +86,15 @@ void Server_VS::Func_HeartBeat()
 		for (int j = 0; j <ClientInfo[i].clients.size(); j++)
 		{
 			int time_t = currentTime.toTime_t() - ClientInfo[i].clients[j].LatestTimeOfHeartBeat.toTime_t();
-			if (time_t > 1000 * 60 * 4)
+			//大于十秒
+			if (time_t > 60*2-1)
+			{
 				SetFacilityOffLine(ClientInfo[i].clients[j].SocketID);
+				//将此设备Socket断开
+				int result=closesocket(ClientInfo[i].clients[j].SocketID);
+				ClientInfo[i].clients.erase(ClientInfo[i].clients.begin() + j);
+				int x = 10;
+			}
 		}
 	}
 }
@@ -97,8 +104,12 @@ void Server_VS:: SetFacilityOffLine(int SocketID)
 {
 	for (int i = 0; i < ui.clientList->rowCount(); i++)
 	{
-			if (ui.clientList->item(i, 8)->text() == QString::number(SocketID))
-				ui.clientList->setItem(i, 5, new QTableWidgetItem(QString::fromLocal8Bit("离线")));
+		if (ui.clientList->item(i, 8)->text() == QString::number(SocketID))
+		{
+			//设置UI设备列表状态
+			ui.clientList->setItem(i, 5, new QTableWidgetItem("离线"));
+			
+		}
 	}
 }
 
@@ -342,12 +353,15 @@ void Server_VS::on_DeleteBtn_clicked()
 		if (ClientInfo[i].ServerName == selecteditem->text())
 		{
 			if (ClientInfo[i].pICOP != NULL)
+			{
+
 				if (ClientInfo[i].pICOP->GetStatus())
 				{
 					QMessageBox::warning(NULL, "警告", "请先停止运行，再删除业务！");
 					return;
 				}
-			ClientInfo[i].pICOP->Stop();
+				ClientInfo[i].pICOP->Stop();
+			}
 			ClientInfo.erase(ClientInfo.begin() + i);
 		}
 	}
@@ -362,7 +376,7 @@ void Server_VS::InitServer()
 	LRESULT pResult = AddDll();
 	switch (pResult)
 	{
-	case 0:
+	case -3:
 		QMessageBox::information(NULL, tr("错误"), tr("加载的动态链接库不正确！"));
 		break;
 	case -1:
@@ -392,7 +406,7 @@ LRESULT Server_VS::AddDll()
 	}
 	else
 	{
-		return 0;
+		return -3;
 	}
 	//读取dll
 	QLibrary lib(strName);
@@ -402,7 +416,7 @@ LRESULT Server_VS::AddDll()
 		GetServiceTypeID func_GetServiceTypeID = (GetServiceTypeID)lib.resolve("GetServiceTypeID");//获取业务ID
 		GetServiceTypeName func_GetServiceTypeName = (GetServiceTypeName)lib.resolve("GetServiceTypeName");//获取业务名称
 		//是否成功连接上 add() 函数  
-		if (func_GetServiceTypeID)
+		if (func_GetServiceTypeID&&func_GetServiceTypeName)
 		{
 			//获取业务类型
 			int ServiceID = func_GetServiceTypeID();
@@ -417,7 +431,7 @@ LRESULT Server_VS::AddDll()
 			CfgWnd.exec();
 			if (!IsLegallyPort(CfgWnd.m_Port))
 				return -2;
-
+			//添加到业务类型内存中
 			Facility fcty;
 			fcty.pICOP = NULL;
 			fcty.ServiceID = ServiceID;
@@ -490,8 +504,11 @@ void Server_VS::GetErrorMSG(int error)
 	case 1:
 		strMSG = "正常";
 		break;
-	case 0:
+	case -1:
 		strMSG = "通信异常！";
+		break;
+	case -2:
+		strMSG = "来自非本业务的数据";
 		break;
 	default:
 		strMSG = QString::number(error);
@@ -796,7 +813,9 @@ void Server_VS::Lib_Stop(int ServerIndex)
 {
 	if (iSelectIndexOfService < 0)
 		return;
-	ClientInfo[iSelectIndexOfService].pICOP->Stop();
+	if (ClientInfo[iSelectIndexOfService].pICOP != NULL)
+		ClientInfo[iSelectIndexOfService].pICOP->Stop();
+
 }
 //查看业务属性
 void Server_VS::Lib_Attri()
