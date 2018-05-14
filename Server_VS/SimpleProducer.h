@@ -34,7 +34,7 @@ public:
 	virtual ~SimpleProducer();
 
 	void start(const std::string& UserName, const std::string& Password, const std::string& brokerURI, unsigned int numMessages, const std::string& destURI, bool useTopic, bool clientAck);
-	void send(const char* bytesMessage, int nSize);
+	LRESULT send(const char* bytesMessage, int nSize);
 	void close();
 
 private:

@@ -10,6 +10,7 @@ typedef LRESULT(*Char2Json)(LPCSTR buff, int len, QJsonObject &json);//½âÎöÊı¾İº
 typedef int(*GetServiceTypeID)();//»ñÈ¡ÒµÎñÀàĞÍ
 typedef QString(*GetServiceTypeName)();//»ñÈ¡ÒµÎñÃû³Æ
 
+
 const int DataBuffSize = 4 * 1024;
 extern 	SimpleProducer g_SimpleProducer;
 typedef void* HLIB;		//¶¯Ì¬¿â¾ä±ú

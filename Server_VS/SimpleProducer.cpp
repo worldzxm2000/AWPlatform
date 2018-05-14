@@ -83,20 +83,19 @@ void SimpleProducer::initialize()
 	}
 }
 
-void SimpleProducer::send(const char* Message, int nSize)
+LRESULT SimpleProducer::send(const char* Message, int nSize)
 {
 	try
 	{
 		// 消息内容
-		//std::string threadIdStr = Long::toString( Thread::currentThread()->getId() );
 		// 创建一个文本类型的消息
 		if (session == nullptr)
-			return;
+			return 0;
 		auto_ptr<BytesMessage> bytesMessage(session->createBytesMessage((unsigned char*)Message, nSize));
 		// 发送消息
 		//printf( "Sent message  from thread %s\n", threadIdStr.c_str() );
 		producer->send(bytesMessage.get());
-
+		return 1;
 		////新家
 		// 	delete bytesMessage;
 		// 	cleanup();
@@ -105,7 +104,8 @@ void SimpleProducer::send(const char* Message, int nSize)
 	}
 	catch (CMSException& e)
 	{
-		e.printStackTrace();
+	//	e.printStackTrace();
+		return -1;
 	}
 	
 }

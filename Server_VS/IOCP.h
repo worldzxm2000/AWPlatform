@@ -78,6 +78,7 @@ signals:
     void GetStatus(int result);
 	//发送错误信息
 	void NoticfyServerError(int errorMSG);
+	//数据通知
 	void NoticfyServerUpdateUI(QString ServiceTypeID,
 		QString StationID,
 		QString ObserveTime,
@@ -92,6 +93,7 @@ signals:
 	void NoticfyServerOperateStatus(int Result);
 	//终端操作命令返回值
 	void NoticfyServerRecvValue(QJsonObject RecvJson);
+	void NoticfyServerRecvValue(QJsonObject RecvJson,bool IsComm);
 	//第一次设备连接发送ID获取值
 	void NoticfyServerNewConnectionStationID(QJsonObject RecvJson);
 	//心跳处理
@@ -100,7 +102,5 @@ signals:
     void operate();
 private slots:
     //监听处理线程
-
-
 };
 

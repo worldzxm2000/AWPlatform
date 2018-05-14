@@ -62,7 +62,6 @@ void SocketServerForWeb::run()
 //发送数据至Web服务器
 void SocketServerForWeb::Send2WebServerJson(QJsonObject RecvValue)
 {
-	
 	QJsonDocument document;
 	document.setObject(RecvValue);
 	QByteArray byteArray = document.toJson(QJsonDocument::Compact);
@@ -91,18 +90,12 @@ void SocketServerForWeb::ResolveData(LPCSTR buff,int len)
 	int StationID = strlist.at(4).toInt(&ok, 10);
 	//设备号
 	int FacilityID = strlist.at(6).toInt(&ok, 10);
-
 	//命令号
 	int CommandID = strlist.at(8).toInt(&ok, 10);
 	//参数1
 	QString Param1 = strlist.at(10);
 	//参数2
 	QString Param2 = strlist.at(12);
+	//处理发送命令
 	NoticfyServerFacilityID(ServiceTypeID, StationID, FacilityID,CommandID,Param1,Param2);
-	LPCSTR dataChar="<005,009001,234,46.02.20,N>";
-	sendto(srvSocket,dataChar , strlen(dataChar), 0, (SOCKADDR*)&from, len);
-	m_CommandID = CommandID;
-	m_ServiceTypeID = ServiceTypeID;
-	m_StationID = StationID;
-	m_FacilityID = FacilityID;
 }

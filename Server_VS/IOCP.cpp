@@ -272,8 +272,6 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 			QString ObserveTime = JsonObj.find("UploadTime").value().toString();
 			PerHandleData->count += 1;
 			PerHandleData->Connected = true;
-			
-
 
 			p->NoticfyServerUpdateUI(ServiceTypeID,
 				StationID,
@@ -295,18 +293,19 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 			p->NoticfyServerOperateStatus(0);
 			break;
 		}
+		//发送的终端命令
 		case 4:
 		{
 			QString ip(PerHandleData->ClientIP);
 			JsonObj.insert("IP", ip);
 			JsonObj.insert("Port", PerHandleData->Port);
-			//服务器第一次发送ID获取站台号
-			if (p->bIsGetStationID)
-			{
-				p->NoticfyServerNewConnectionStationID(JsonObj);
-				p->bIsGetStationID = false;
-				break;
-			}
+			////服务器第一次发送ID获取站台号
+			//if (p->bIsGetStationID)
+			//{
+			//	p->NoticfyServerNewConnectionStationID(JsonObj);
+			//	p->bIsGetStationID = false;
+			//	break;
+			//}
 			
 			p->NoticfyServerRecvValue(JsonObj);
 			break;
@@ -316,19 +315,18 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 		{
 			QJsonObject json_one;
 			QJsonObject json_another;
-		
 
 			json_one =JsonObj.find("1").value().toObject();
 			json_another = JsonObj.find("2").value().toObject();
 
 			QString DataTypeID = json_one.find("DataTypeID").value().toString();
 			//即时采集数据
-			if (DataTypeID == "01")
-			{
-				p->NoticfyServerRecvValue(json_one);
-				p->NoticfyServerRecvValue(json_another);
-				return;
-			}
+			//if (DataTypeID == "01")
+			//{
+			//	p->NoticfyServerRecvValue(json_one);
+			//	p->NoticfyServerRecvValue(json_another);
+			//	return;
+			//}
 			//发送消息第一根
 			QJsonDocument document_one;
 			document_one.setObject(json_one);

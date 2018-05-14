@@ -14,8 +14,21 @@ CommandDlg::CommandDlg(int ServiceType)
 	listModel = new QStringListModel(valueList, this);
 	completer->setModel(listModel);
 	ui.COMMText->setCompleter(completer);
-	ui.SendBtn->setFocus(); //设置默认焦点
+	//ui.SendBtn->setFocus(); //设置默认焦点
 	ui.SendBtn->setDefault(true); //设置默认按钮，设置了这个属性，当用户按下回车的时候，就会按下该按钮
+
+	map.insert("BASEINFO",QString::fromLocal8Bit("采集器基本信息"));
+	map.insert("ID", QString::fromLocal8Bit("观测站区站号"));
+	map.insert("DATETIME", QString::fromLocal8Bit("采集器时间"));
+	map.insert("LAT", QString::fromLocal8Bit("观测站纬度"));
+	map.insert("ALT", QString::fromLocal8Bit("观测场拔海高度")); 
+	map.insert("LONG", QString::fromLocal8Bit("观测站经度"));
+	map.insert("CAPTIME", QString::fromLocal8Bit("采集时间范围"));
+	map.insert("CFSET ", QString::fromLocal8Bit("CF卡模块配置"));
+	map.insert("CAPINTERVAL", QString::fromLocal8Bit("采集时间间隔"));
+	map.insert("SNAPSHOT", QString::fromLocal8Bit("手动采集"));
+	map.insert("RESET", QString::fromLocal8Bit("重新启动采集器"));
+	map.insert("UPDATE", QString::fromLocal8Bit("远程升级开关"));
 }
 
 CommandDlg::~CommandDlg()
@@ -29,18 +42,18 @@ CommandDlg::~CommandDlg()
 
 QStringList CommandDlg::LoadCommandIni(int ServiceType)
 {
-	//锟斤拷取ini路锟斤拷
+	//读取Command.ini路径
 	QString path = QCoreApplication::applicationDirPath()+"//Command.ini";
-	//锟斤拷锟截碉拷ini锟侥硷拷锟斤拷锟斤拷
+	//打开INI文件
 	QSettings configIniRead(path, QSettings::IniFormat);
 	QStringList list;
 	switch (ServiceType)
 	{
 	case HKQX:
 	{
-		//锟斤拷取锟斤拷锟斤拷锟斤拷锟斤拷
+		//终端命令个数
 		int Count = configIniRead.value("HKQX/COMMCount").toInt();
-		//锟斤拷取锟斤拷锟斤拷
+		//遍历终端命令
 		for (int i = 0; i < Count; i++)
 		{
 			QString comm = "/HKQX/COMM" + QString::number(i);
@@ -67,6 +80,7 @@ QStringList CommandDlg::LoadCommandIni(int ServiceType)
 void CommandDlg::on_SendBtn_clicked()
 {
 	QString comm = ui.COMMText->text().trimmed();
+	QString commName = FindCommName(comm);
 	comm += "\r\n";
 	QByteArray byteArray = comm.toLatin1();
 	LPCSTR dataChar;
@@ -74,4 +88,15 @@ void CommandDlg::on_SendBtn_clicked()
 	int len = comm.count();
 	send(Socket,dataChar,len,0);
 	ui.StatusLabel->setText(QString::fromLocal8Bit("已发送!"));
+	NoticfyUICOMMSTR(commName);
+	this->accept();
+}
+
+QString CommandDlg::FindCommName(QString comm)
+{
+	QString commName = QString::fromLocal8Bit("未知命令");
+	QMap<QString, QString>::const_iterator mi = map.find(comm);
+	if (mi != map.end())
+		return map[comm];
+	return commName;
 }

@@ -42,6 +42,7 @@ public:
         COMMText = new QLineEdit(CommandDlg);
         COMMText->setObjectName(QStringLiteral("COMMText"));
         COMMText->setGeometry(QRect(80, 39, 301, 31));
+        COMMText->setFocusPolicy(Qt::StrongFocus);
         label = new QLabel(CommandDlg);
         label->setObjectName(QStringLiteral("label"));
         label->setGeometry(QRect(10, 50, 81, 16));
@@ -49,6 +50,7 @@ public:
         SendBtn = new QPushButton(CommandDlg);
         SendBtn->setObjectName(QStringLiteral("SendBtn"));
         SendBtn->setGeometry(QRect(160, 90, 75, 23));
+        SendBtn->setFocusPolicy(Qt::NoFocus);
         label_2 = new QLabel(CommandDlg);
         label_2->setObjectName(QStringLiteral("label_2"));
         label_2->setGeometry(QRect(10, 130, 81, 20));

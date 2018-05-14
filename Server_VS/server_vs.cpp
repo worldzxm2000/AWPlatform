@@ -14,7 +14,7 @@ Server_VS::Server_VS(QWidget *parent)
 {
 	ui.setupUi(this);
 	this->setFixedSize(1280, 768);
-	strOperateType = "";
+	strOperateType = "未知操作";
 
 	//业务类型列表
 	connect(ui.ServerList, SIGNAL(NoticfyServerRun(int)), this, SLOT(Lib_Run(int)));
@@ -77,6 +77,7 @@ Server_VS::~Server_VS()
 		}
 	}
 }
+
 //心跳监听
 void Server_VS::Func_HeartBeat()
 {
@@ -86,7 +87,7 @@ void Server_VS::Func_HeartBeat()
 		for (int j = 0; j <ClientInfo[i].clients.size(); j++)
 		{
 			int time_t = currentTime.toTime_t() - ClientInfo[i].clients[j].LatestTimeOfHeartBeat.toTime_t();
-			//大于十秒
+			//大于2分钟
 			if (time_t > 60*2-1)
 			{
 				SetFacilityOffLine(ClientInfo[i].clients[j].SocketID);
@@ -108,7 +109,9 @@ void Server_VS:: SetFacilityOffLine(int SocketID)
 		{
 			//设置UI设备列表状态
 			ui.clientList->setItem(i, 5, new QTableWidgetItem("离线"));
-			
+			QDateTime current_date_time = QDateTime::currentDateTime();
+			QString current_date = current_date_time.toString("yyyy.MM.dd hh:mm:ss");
+			ui.clientList->setItem(i, 2, new QTableWidgetItem(current_date));
 		}
 	}
 }
@@ -151,6 +154,7 @@ LRESULT Server_VS::InitializeCommandSocket()
 		//开启WebSocket线程
 		socket4web = new SocketServerForWeb();
 		connect(socket4web, SIGNAL(NoticfyServerError(int)), this, SLOT(GetErrorMSG(int)), Qt::AutoConnection);
+		//处理web端发送过来命令类型
 		connect(socket4web, SIGNAL(NoticfyServerFacilityID(int, int, int, int, QString, QString)), this, SLOT(RequestForReadCOMM(int, int, int, int, QString, QString)), Qt::AutoConnection);
 		socket4web->m_portServer = 1030;
 		socket4web->setAutoDelete(false);
@@ -329,8 +333,6 @@ void Server_VS::RequestForReadCOMM(int ServiceTypeID, int StationID, int Facilit
 	default:
 		break;
 	}
-
-
 }
 
 //添加Lib服务
@@ -463,7 +465,7 @@ bool Server_VS::IsLegallyPort(int port)
 	return true;
 }
 
-//终端命令返回信息
+//终端命令返回操作状态
 void Server_VS::GetCommandStatus(int result)
 {
 	//操作状态
@@ -492,9 +494,26 @@ void Server_VS::GetCommandStatus(int result)
 //终端命令返回读取值
 void Server_VS::GetCommandRecvValue(QJsonObject RecvJson)
 {
+	QJsonObject::Iterator it;
+	QString keyString = "";
+	QString valueString = "";
+	for (it = RecvJson.begin(); it != RecvJson.end(); it++)
+	{
+		keyString = it.key();
+		if (keyString == "RecvValue1" || keyString == "RecvValue2" || keyString == "RecvValue3" || keyString == "RecvValue4")
+		{
+			valueString += it.value().toString();
+		}
+	}
+	ui.StatusLabel->setText(strOperateType+":"+valueString);
 	socket4web->Send2WebServerJson(RecvJson);
 }
 
+//终端返回读取值
+void Server_VS::GetCommandRecvValue(QJsonObject RecvJson, bool IsComm)
+{
+
+}
 //获得错误信息
 void Server_VS::GetErrorMSG(int error)
 {
@@ -517,8 +536,7 @@ void Server_VS::GetErrorMSG(int error)
 	ui.StatusLabel->setText(strMSG);
 }
 
-//"业务类型" << "设备号" << "时间" << "上传数量"<<<<"连接"<<"IP"
-//设备发送数据
+//设备发送数据  "业务类型"<< "设备号" << "时间" << "上传数量"<<"设备状态"<<"连接"<<"IP"<<"Socket"
 void Server_VS::UpdateUI(QString serviceTypeID, QString stationID, QString observeTime, int count, bool connected, QString ip, int port,int socket)
 {
 	//找到设备对应的UI行
@@ -556,7 +574,8 @@ void Server_VS::AddClientInfoStation(QString ip, int port, QString StationID)
 		}
 	}
 }
-//有新的客户端连接 //"业务类型" << "设备号" << "时间" << "上传数量"<<"设备状态"<<"连接"<<"IP"<<"Socket"
+
+//有新的客户端连接 "业务类型" << "设备号" << "时间" << "上传数量"<<"设备状态"<<"连接"<<"IP"<<"Socket"
 void Server_VS::AddNewClient(QString clientIp, int clientPort, int serverPort, int socketID)
 {
 	//添加到业务数组内存
@@ -609,6 +628,7 @@ void Server_VS::AddNewConnectStationID(QJsonObject RecvJson)
 	AddClientInfoStation(IP, Port, StationID);
 	ui.clientList->setItem(RowIndex, 1, new QTableWidgetItem(StationID));
 }
+
 //通过设备ip和端口查询到设备索引号
 int Server_VS::FindRowIndex(QString ip, int port)
 {
@@ -758,6 +778,7 @@ void Server_VS::Lib_Run(int ServerIndex)
 		AddIOCP(func_Char2Json, ClientInfo[iSelectIndexOfService].ServerPortID);
 	}
 }
+
 //开启新的IOCP
 void Server_VS::AddIOCP(Char2Json func, int port)
 {
@@ -772,8 +793,10 @@ void Server_VS::AddIOCP(Char2Json func, int port)
 	connect(iocp, SIGNAL(NoticfyServerOperateStatus(int)), this, SLOT(GetCommandStatus(int)), Qt::QueuedConnection);
 	//主动发送终端命令接收数据通知
 	connect(iocp, SIGNAL(NoticfyServerRecvValue(QJsonObject)), this, SLOT(GetCommandRecvValue(QJsonObject)), Qt::QueuedConnection);
+	connect(iocp, SIGNAL(NoticfyServerRecvValue(QJsonObject,bool)), this, SLOT(GetCommandRecvValue(QJsonObject,bool)), Qt::QueuedConnection);
 	//新设备连接获取台站号通知
 	connect(iocp, SIGNAL(NoticfyServerNewConnectionStationID(QJsonObject)), this, SLOT(AddNewConnectStationID(QJsonObject)), Qt::QueuedConnection);
+	//心跳处理
 	connect(iocp, SIGNAL(NoticfyServerHB(int)), this, SLOT(HeartBeat(int)), Qt::QueuedConnection);
 	//数据拆包函数
 	iocp->func_Char2Json = func;
@@ -791,6 +814,7 @@ void Server_VS::AddIOCP(Char2Json func, int port)
 		}
 	}
 }
+
 //心跳处理
 void Server_VS::HeartBeat( int Socket)
 {
@@ -798,12 +822,12 @@ void Server_VS::HeartBeat( int Socket)
 	{
 		for (int j = 0; j < ClientInfo[i].clients.size(); j++)
 		{
+			//通过socket找到设备的最新上传时间
 			if (ClientInfo[i].clients[j].SocketID == Socket)
 			{
 				QDateTime current_date_time = QDateTime::currentDateTime();
-				int tiemT = current_date_time.toTime_t() - ClientInfo[i].clients[j].LatestTimeOfHeartBeat.toTime_t();
+			    ClientInfo[i].clients[j].LatestTimeOfHeartBeat=current_date_time;
 			}
-
 		}
 	}
 }
@@ -817,6 +841,7 @@ void Server_VS::Lib_Stop(int ServerIndex)
 		ClientInfo[iSelectIndexOfService].pICOP->Stop();
 
 }
+
 //查看业务属性
 void Server_VS::Lib_Attri()
 {
@@ -860,8 +885,10 @@ void Server_VS::SendCOMM()
 	}
 	CommandDlg commdlg(severtype);
 	commdlg.Socket = SocketID;
+	connect(&commdlg,SIGNAL(NoticfyUICOMMSTR(QString)),this,SLOT(GetCommName(QString)));
 	commdlg.exec();
 }
+
 //获取即时采集数据
 void Server_VS::GetFeature()
 {
@@ -900,3 +927,8 @@ void Server_VS::GetConfig()
 
 }
 
+//获取终端命令名称
+void Server_VS::GetCommName(QString CommName)
+{
+	strOperateType = CommName;
+}

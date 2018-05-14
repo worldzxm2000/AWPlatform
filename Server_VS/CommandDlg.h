@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <QDialog>
 #include "ui_CommandDlg.h"
@@ -15,13 +15,20 @@ public:
 private:
 	Ui::CommandDlg ui;
 private:
-	//����ini�ļ�
+	//加载终端命令INI文件
 	QStringList LoadCommandIni(int ServiceType);
+	//查找终端命令名称
+	QString CommandDlg::FindCommName(QString comm);
 private:
 	QCompleter *completer;
 	QStringListModel *listModel;
+	QMap<QString,QString> map;
 public:
+	//当前设备Socket
 	int Socket;
+signals:
+	void NoticfyUICOMMSTR(QString CommName);
+
 private slots:
     void on_SendBtn_clicked();
 };
