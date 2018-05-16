@@ -12,6 +12,7 @@
 #include"IOCP.h"
 #include<qlibrary.h>
 #include"SocketServerForWeb.h"
+#include "qtimer.h"
 //业务类型连接信息
 typedef struct
 {

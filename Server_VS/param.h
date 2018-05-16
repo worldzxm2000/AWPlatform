@@ -18,11 +18,13 @@ typedef struct
 {
 	OVERLAPPED overlapped;
 	WSABUF databuff;//单次接收字节
-//	char perBuff[1024];//单次接收字节;
+	//char totleBuff[1024*4];//总体接收字节
 	char buffer[DataBuffSize]; //总接收字节
 	int BufferLen;  //单次接收字节大小
 	//int TotalBufferLen;//总接受字节数
 	int operationType; // 记录重叠IO操作类型 accp或recv
+	
+
 }PER_IO_OPERATEION_DATA, *LPPER_IO_OPERATION_DATA, *LPPER_IO_DATA, PER_IO_DATA;
 
 typedef struct
@@ -34,10 +36,13 @@ typedef struct
 	int Port;//客户端端口
 	bool Status;//客户端连接状态
 	int count;//数据接收量
-	LPCSTR ServiceTypeID;//服务类型
-	LPCSTR StationID;//区站号
-	LPCSTR ObserveTime;//观察时间
+	//LPCSTR ServiceTypeID;//服务类型
+	//LPCSTR StationID;//区站号
+	//LPCSTR ObserveTime;//观察时间
 	bool Connected;//设备状态
+	char Frame[DataBuffSize] = {0};//一帧数据
+	int DataCount;//一帧数据数量
+    bool IsWholeFrame;//判断是否是一帧数据
 }PER_HANDLE_DATA, *LPPER_HANDLE_DATA;
 
 typedef struct

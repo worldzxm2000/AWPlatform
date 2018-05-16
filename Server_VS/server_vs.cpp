@@ -2,9 +2,11 @@
 #include<QJsonDocument>
 #include<qfiledialog.h>
 #include"ConfigWnd.h"
-#include<QtNetwork>
+//#include"QtNetwork"
+//#include<QtNetwork>
 #include <iphlpapi.h>
 #include"CommandDlg.h"
+#include"qdebug.h"
 using namespace std;
 //消息中间件类
 SimpleProducer g_SimpleProducer;
@@ -15,7 +17,6 @@ Server_VS::Server_VS(QWidget *parent)
 	ui.setupUi(this);
 	this->setFixedSize(1280, 768);
 	strOperateType = "未知操作";
-
 	//业务类型列表
 	connect(ui.ServerList, SIGNAL(NoticfyServerRun(int)), this, SLOT(Lib_Run(int)));
 	connect(ui.ServerList, SIGNAL(NoticfyServerStop(int)), this, SLOT(Lib_Stop(int)));
@@ -28,6 +29,7 @@ Server_VS::Server_VS(QWidget *parent)
 	QHeaderView *header = ui.clientList->verticalHeader();
 	header->setHidden(true);// 隐藏行号 
 	ui.clientList->setColumnHidden(8, true);//隐藏第九列
+	ui.clientList->setColumnHidden(4, true);//隐藏第四列
 	ui.clientList->setSelectionBehavior(QAbstractItemView::SelectRows);//整行选中的方式
 	ui.clientList->setEditTriggers(QAbstractItemView::NoEditTriggers);//禁止修改
 	ui.clientList->setSelectionMode(QAbstractItemView::SingleSelection);//可以选中单个
@@ -41,7 +43,7 @@ Server_VS::Server_VS(QWidget *parent)
 	//心跳监听时间
 	timer = new QTimer(this);
 	connect(timer,SIGNAL(timeout()),this,SLOT(Func_HeartBeat()));
-	timer->start(1000 * 60*2);
+	timer->start(1000 * 60*6);
 	iSelectIndexOfService = -1;
 	LRESULT pResult = -1;
 	//消息中间件的初始化
@@ -88,7 +90,7 @@ void Server_VS::Func_HeartBeat()
 		{
 			int time_t = currentTime.toTime_t() - ClientInfo[i].clients[j].LatestTimeOfHeartBeat.toTime_t();
 			//大于2分钟
-			if (time_t > 60*2-1)
+			if (time_t > 60*5-1)
 			{
 				SetFacilityOffLine(ClientInfo[i].clients[j].SocketID);
 				//将此设备Socket断开
@@ -514,6 +516,7 @@ void Server_VS::GetCommandRecvValue(QJsonObject RecvJson, bool IsComm)
 {
 
 }
+
 //获得错误信息
 void Server_VS::GetErrorMSG(int error)
 {
@@ -590,7 +593,7 @@ void Server_VS::AddNewClient(QString clientIp, int clientPort, int serverPort, i
 	ui.clientList->setItem(RowCount, 1, new QTableWidgetItem("未知"));
 	ui.clientList->setItem(RowCount, 2, new QTableWidgetItem(current_date));
 	ui.clientList->setItem(RowCount, 3, new QTableWidgetItem("0"));
-	ui.clientList->setItem(RowCount, 4, new QTableWidgetItem("未知"));
+	//ui.clientList->setItem(RowCount, 4, new QTableWidgetItem("未知"));
 	ui.clientList->setItem(RowCount, 5, new QTableWidgetItem("已连接"));
 	ui.clientList->setItem(RowCount, 6, new QTableWidgetItem(clientIp));
 	ui.clientList->setItem(RowCount, 7, new QTableWidgetItem(QString::number(clientPort, 10)));

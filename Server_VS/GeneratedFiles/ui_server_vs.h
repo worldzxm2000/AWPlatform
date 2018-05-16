@@ -23,7 +23,7 @@
 #include <QtWidgets/QTableWidget>
 #include <QtWidgets/QToolBar>
 #include <QtWidgets/QWidget>
-#include"SrvTableWidget.h"
+#include "SrvTableWidget.h"
 QT_BEGIN_NAMESPACE
 
 class Ui_Server_VSClass
@@ -76,7 +76,7 @@ public:
         label->setGeometry(QRect(10, 20, 54, 16));
         StatusLabel = new QLabel(groupBox_3);
         StatusLabel->setObjectName(QStringLiteral("StatusLabel"));
-        StatusLabel->setGeometry(QRect(70, 20, 341, 16));
+        StatusLabel->setGeometry(QRect(70, 20, 500, 16));
         Server_VSClass->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(Server_VSClass);
         menuBar->setObjectName(QStringLiteral("menuBar"));

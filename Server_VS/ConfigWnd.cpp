@@ -1,5 +1,5 @@
 ﻿#include "ConfigWnd.h"
-#include <QtNetwork>
+//#include <QtNetwork>
 #include<Windows.h>
 #include<qmessagebox.h>
 using namespace std;

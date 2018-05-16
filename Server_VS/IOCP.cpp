@@ -137,6 +137,7 @@ void IOCP::run()
 		//客户端socket与IOCP关联
 		PerHandleData = (LPPER_HANDLE_DATA)GlobalAlloc(GPTR, sizeof(PER_HANDLE_DATA));
 		PerHandleData->socket = acceptSocket;
+		PerHandleData->IsWholeFrame = true;
 		memcpy(&PerHandleData->ClientAddr, &saRemote, RemoteLen);
 
 		//客户端socket绑定IOCP
@@ -149,10 +150,11 @@ void IOCP::run()
 		PerIoData->databuff.buf = PerIoData->buffer;
 		PerIoData->operationType = 0;
 
-
-		LPCSTR ch = inet_ntoa(saRemote.sin_addr);
-		PerHandleData->ClientIP = ch;
+		//PerHandleData->ClientIP ;
+	   LPCSTR ch = inet_ntoa(saRemote.sin_addr);
 		QString ip = QString(QLatin1String(ch));
+		//PerHandleData->ClientIP.append(ch);
+		//= QString(ip);
 
 		PerHandleData->Port = saRemote.sin_port;
 		int port = PerHandleData->Port;
@@ -243,12 +245,31 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 	try
 	{
 		QJsonObject JsonObj;
+		LRESULT pResult = -99;
+		//数据内存判断，如果数据内存大于3M说明有错误数据 需要清空内存，否则会造成内存溢
+		if (PerHandleData->DataCount>1024*3)
+			memset(PerHandleData->Frame, 0, sizeof(PerHandleData->Frame) / sizeof(char));
 		///**************************解析动态链接库***********************************
-		LRESULT pResult = p->func_Char2Json(perIOData->buffer, len, JsonObj);
+		if (PerHandleData->IsWholeFrame == false)
+		{
+			//一帧数据的两次接收数据
+			strcat(PerHandleData->Frame, perIOData->buffer);
+			PerHandleData->DataCount += len;
+			pResult = p->func_Char2Json(PerHandleData->Frame, PerHandleData->DataCount, JsonObj);
+		}
+		else
+		{
+		
+			pResult = p->func_Char2Json(perIOData->buffer, len, JsonObj);
+		}
+	
 		switch (pResult)
 		{
 		case 1://1：表示BG,ED的要素数据
 		{
+			PerHandleData->IsWholeFrame = false;
+			PerHandleData->DataCount = 0;
+			memset(PerHandleData->Frame, 0, sizeof(PerHandleData->Frame) / sizeof(char));
 			//发送给消息中间件
 			QJsonDocument document;
 			document.setObject(JsonObj);
@@ -272,13 +293,15 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 			QString ObserveTime = JsonObj.find("UploadTime").value().toString();
 			PerHandleData->count += 1;
 			PerHandleData->Connected = true;
-
+			//获取IP
+			 LPCSTR ch = inet_ntoa(PerHandleData->ClientAddr.sin_addr);
+			QString ip = QString(QLatin1String(ch));
 			p->NoticfyServerUpdateUI(ServiceTypeID,
 				StationID,
 				ObserveTime,
 				PerHandleData->count,
 				true,
-				PerHandleData->ClientIP,
+				ip,
 				PerHandleData->Port,
 				PerHandleData->socket);
 			break;
@@ -293,20 +316,12 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 			p->NoticfyServerOperateStatus(0);
 			break;
 		}
-		//发送的终端命令
+		//发送的终端命令返回值
 		case 4:
 		{
 			QString ip(PerHandleData->ClientIP);
 			JsonObj.insert("IP", ip);
 			JsonObj.insert("Port", PerHandleData->Port);
-			////服务器第一次发送ID获取站台号
-			//if (p->bIsGetStationID)
-			//{
-			//	p->NoticfyServerNewConnectionStationID(JsonObj);
-			//	p->bIsGetStationID = false;
-			//	break;
-			//}
-			
 			p->NoticfyServerRecvValue(JsonObj);
 			break;
 		}
@@ -358,6 +373,7 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 				PerHandleData->ClientIP,
 				PerHandleData->Port,
 				PerHandleData->socket);
+			break;
 
 		}
 		case 0://0：表示非法的终端命令
@@ -374,21 +390,32 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 			QString strServiceTypeID = JsonObj.find("ServiceTypeID").value().toString();
 			QString ip = PerHandleData->ClientIP;
 			p->NoticfyServerHB(PerHandleData->socket);
+			break;
 		}
 		//非业务数据
 		case -2:
 		{
 			p->NoticfyServerError(-2);
+			break;
+		}
+		//不完整数据
+		case -6:
+		{
+			
+			strcat(PerHandleData->Frame, perIOData->buffer);
+			PerHandleData->DataCount += len;
+			PerHandleData->IsWholeFrame = false;
+			break;
 		}
 		default://-1：表示无效数据
 		{
 			QJsonDocument document;
 			document.setObject(JsonObj);
 			p->NoticfyServerNewConnectionStationID(JsonObj);
-			QByteArray byteArray = document.toJson(QJsonDocument::Compact);
-			LPCSTR dataChar;
-			dataChar = byteArray.data();
-			g_SimpleProducer.send(dataChar, strlen(dataChar));
+		//	QByteArray byteArray = document.toJson(QJsonDocument::Compact);
+		//	LPCSTR dataChar;
+		//	dataChar = byteArray.data();
+		//	g_SimpleProducer.send(dataChar, strlen(dataChar));
 			break;
 		}
 			
