@@ -267,7 +267,7 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 		{
 		case 1://1：表示BG,ED的要素数据
 		{
-			PerHandleData->IsWholeFrame = false;
+			PerHandleData->IsWholeFrame = true;
 			PerHandleData->DataCount = 0;
 			memset(PerHandleData->Frame, 0, sizeof(PerHandleData->Frame) / sizeof(char));
 			//发送给消息中间件
