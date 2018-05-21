@@ -100,7 +100,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
-      <AdditionalLibraryDirectories>C:\Users\Administrator\Documents\Visual Studio 2015\Projects\Server_VS\lib;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>../lib;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>qtmaind.lib;Qt5Cored.lib;Qt5Guid.lib;Qt5WebSocketsd.lib;Qt5Widgetsd.lib;ws2_32.lib;activemq-cpp.lib;libapr-1.lib;libapriconv-1.lib;libaprutil-1.lib;libeay32.lib;libssh2.lib;ssleay32.lib;zlib.lib;Qt5Sqld.lib;Qt5Network.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
