@@ -94,6 +94,8 @@ void CommandDlg::on_SendBtn_clicked()
 
 QString CommandDlg::FindCommName(QString comm)
 {
+	QStringList commlist = comm.split(" ");
+	comm = commlist.at(0);
 	QString commName = QString::fromLocal8Bit("未知命令");
 	QMap<QString, QString>::const_iterator mi = map.find(comm);
 	if (mi != map.end())
