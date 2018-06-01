@@ -7,6 +7,7 @@
 #include <iphlpapi.h>
 #include"CommandDlg.h"
 #include"qdebug.h"
+#include"qtcpsocket.h"
 using namespace std;
 //消息中间件类
 SimpleProducer g_SimpleProducer;
@@ -40,10 +41,21 @@ Server_VS::Server_VS(QWidget *parent)
 	ui.clientList->setContextMenuPolicy(Qt::CustomContextMenu);//右键创建Menu
 	CreateClientListActions();
 
-	//心跳监听时间
+
+	
+	//心跳监听时间 6min
 	timer = new QTimer(this);
 	connect(timer,SIGNAL(timeout()),this,SLOT(Func_HeartBeat()));
 	timer->start(1000 * 60*6);
+	//自动校正时间 24hour
+	day_timer = new QTimer(this);
+	connect(day_timer, SIGNAL(timeout()), this, SLOT(SetTimeCorrection()));
+	day_timer->start(1000 * 60 * 60*24);
+	//自动补抄数据 1hour
+	hour_timer = new QTimer(this);
+	connect(hour_timer, SIGNAL(timeout), this, SLOT(CheckDataCorrection()));
+	hour_timer->start(1000 * 60 * 60);
+
 	iSelectIndexOfService = -1;
 	LRESULT pResult = -1;
 	//消息中间件的初始化
@@ -700,6 +712,7 @@ QString Server_VS::FindserviceTypeIDByServiceID(int serviceID)
 	}
 	return NULL;
 }
+
 //业务列表右键事件
 void Server_VS::on_ServerList_customContextMenuRequested(const QPoint &pos)
 {
@@ -745,6 +758,7 @@ void Server_VS::on_clientList_customContextMenuRequested(const QPoint &pos)
 	//菜单出现的位置为当前鼠标的位置
 	pop_Menu_Client.exec(QCursor::pos());
 }
+
 //客户列表右键菜单
 void Server_VS::CreateClientListActions()
 {
@@ -934,4 +948,41 @@ void Server_VS::GetConfig()
 void Server_VS::GetCommName(QString CommName)
 {
 	strOperateType = CommName;
+}
+
+//自动校正时钟
+void Server_VS::SetTimeCorrection()
+{
+	////获取网络时间
+	//QTcpSocket *socket = new QTcpSocket();
+	//socket->connectToHost("time-d-b.nist.gov", 13);
+	//QString datetime;
+	//if (socket->waitForConnected())
+	//{
+	//	if (socket->waitForReadyRead())
+	//	{
+	//		QString str(socket->readAll());
+	//		str = str.trimmed();
+	//		str = str.section(" ", 1, 2);
+	//		datetime = "20" + str;
+	//	}
+	//}
+	//socket->close();
+	//delete socket;
+	////校正设备时钟
+	//for (int i = 0; i < ui.clientList->rowCount(); i++)
+	//{
+	//	int socketID = ui.clientList->item(i, 8)->text().toInt();
+	//	QString Comm = "DATETIME " + datetime + "\r\n";
+	//	QByteArray ba = Comm.toLatin1();
+	//	LPCSTR ch = ba.data();
+	//	int len = Comm.length();
+	//	::send(socketID, ch, len, 0);
+	//}
+}
+
+//自动补抄
+void Server_VS::CheckDataCorrection()
+{
+
 }

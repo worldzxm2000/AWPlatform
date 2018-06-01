@@ -72,6 +72,7 @@ private:
 	void AddClientInfoStation(QString ip, int port, QString StationID);
 	//更新设备在线离线状态
 	void SetFacilityOffLine(int SocketID);
+
 private:
 	Ui::Server_VSClass ui;
 	QMessageBox msg;
@@ -113,6 +114,10 @@ private:
 	vector<Facility> ClientInfo;
 	//心跳监听时间
 	QTimer *timer;
+	//自动对时
+	QTimer *day_timer;
+	//自动补抄
+	QTimer *hour_timer;
 private slots:
     //终端读取设备命令
     void RequestForReadCOMM(int ServiceTypeID,int StationID,int FacilityID, int Command, QString Param1, QString Param2);
@@ -155,6 +160,10 @@ private slots:
 	void Func_HeartBeat();
 	//获取终端命令名称
 	void GetCommName(QString CommName);
+	//自动对时
+	void SetTimeCorrection();
+	//自动补抄数据
+	void CheckDataCorrection();
 };
 
 #endif // SERVER_VS_H

@@ -29,6 +29,7 @@ CommandDlg::CommandDlg(int ServiceType)
 	map.insert("SNAPSHOT", QString::fromLocal8Bit("手动采集"));
 	map.insert("RESET", QString::fromLocal8Bit("重新启动采集器"));
 	map.insert("UPDATE", QString::fromLocal8Bit("远程升级开关"));
+	map.insert("DMTD", QString::fromLocal8Bit("补抄数据"));
 }
 
 CommandDlg::~CommandDlg()

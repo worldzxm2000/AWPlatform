@@ -4,15 +4,16 @@
 
 TEMPLATE = app
 TARGET = Server_VS
-DESTDIR = ../Win32/Debug
+DESTDIR = ../Win32/Release
 QT += core sql network gui widgets websockets
-CONFIG += debug
+CONFIG += release
 DEFINES += _UNICODE WIN64 QT_DLL QT_WEBSOCKETS_LIB QT_WIDGETS_LIB
 INCLUDEPATH += ./../include \
     ./GeneratedFiles \
     . \
     ./GeneratedFiles/$(ConfigurationName)
-LIBS += -lws2_32 \
+LIBS += -L"./../lib" \
+    -lws2_32 \
     -lactivemq-cpp \
     -llibapr-1 \
     -llibapriconv-1 \
@@ -24,7 +25,7 @@ LIBS += -lws2_32 \
     -lIphlpapi
 DEPENDPATH += .
 MOC_DIR += ./GeneratedFiles/$(ConfigurationName)
-OBJECTS_DIR += debug
+OBJECTS_DIR += release
 UI_DIR += ./GeneratedFiles
 RCC_DIR += ./GeneratedFiles
 include(Server_VS.pri)
