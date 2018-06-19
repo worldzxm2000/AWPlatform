@@ -4,9 +4,9 @@
 
 TEMPLATE = app
 TARGET = Server_VS
-DESTDIR = ../Win32/Release
+DESTDIR = ../Win32/Debug
 QT += core sql network gui widgets websockets
-CONFIG += release
+CONFIG += debug
 DEFINES += _UNICODE WIN64 QT_DLL QT_WEBSOCKETS_LIB QT_WIDGETS_LIB
 INCLUDEPATH += ./../include \
     ./GeneratedFiles \
@@ -25,7 +25,7 @@ LIBS += -L"./../lib" \
     -lIphlpapi
 DEPENDPATH += .
 MOC_DIR += ./GeneratedFiles/$(ConfigurationName)
-OBJECTS_DIR += release
+OBJECTS_DIR += debug
 UI_DIR += ./GeneratedFiles
 RCC_DIR += ./GeneratedFiles
 include(Server_VS.pri)

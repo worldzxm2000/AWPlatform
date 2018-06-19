@@ -90,17 +90,12 @@ LRESULT SimpleProducer::send(const char* Message, int nSize)
 		// 消息内容
 		// 创建一个文本类型的消息
 		if (session == nullptr)
-			return 0;
+			return -1;
 		auto_ptr<BytesMessage> bytesMessage(session->createBytesMessage((unsigned char*)Message, nSize));
 		// 发送消息
 		//printf( "Sent message  from thread %s\n", threadIdStr.c_str() );
 		producer->send(bytesMessage.get());
 		return 1;
-		////新家
-		// 	delete bytesMessage;
-		// 	cleanup();
-
-		///
 	}
 	catch (CMSException& e)
 	{

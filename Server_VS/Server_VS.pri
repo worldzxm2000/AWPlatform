@@ -15,7 +15,9 @@ HEADERS += ./SimpleProducer.h \
     ./IOCP.h \
     ./ConfigWnd.h \
     ./CommandDlg.h \
-    ./LogWrite.h
+    ./LogWrite.h \
+    ./DoDMTD.h \
+    ./DMTDDlg.h
 SOURCES += ./CommandDlg.cpp \
     ./ConfigWnd.cpp \
     ./IOCP.cpp \
@@ -24,8 +26,11 @@ SOURCES += ./CommandDlg.cpp \
     ./server_vs.cpp \
     ./SimpleProducer.cpp \
     ./SocketServerForWeb.cpp \
-    ./SrvTableWidget.cpp
+    ./SrvTableWidget.cpp \
+    ./DoDMTD.cpp \
+    ./DMTDDlg.cpp
 FORMS += ./server_vs.ui \
     ./ConfigWnd.ui \
-    ./CommandDlg.ui
+    ./CommandDlg.ui \
+    ./DMTDDlg.ui
 RESOURCES += server_vs.qrc

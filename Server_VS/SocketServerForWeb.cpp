@@ -80,7 +80,7 @@ void SocketServerForWeb::ResolveData(LPCSTR buff,int len)
 	//帧头或者帧尾不正确
 	if (!(header== "BG" && tailer== "ED"))
 	{
-		NoticfyServerError(-1);
+		NoticfyServerError(-4);
 		return;
 	}
 	bool ok;

@@ -19,7 +19,7 @@ public:
 	LogWrite();
 	~LogWrite();
 
-   static void LogMsgOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg);
+   static void LogMsgOutput(QString ErrMSG);
 
 signals:
    void test(int x);

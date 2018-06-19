@@ -30,6 +30,8 @@ typedef struct
 	int ServerPortID;
 	//业务名称
 	QString ServerName;
+	//是否在运行
+	bool IsRun;
 	//业务下连接socket的IP号和端口号
 	vector<CLIENTINFO> clients;
 } Facility, *LPFacility;
@@ -48,14 +50,14 @@ private:
 	LRESULT AddDll();
 	//开启新的IOCP
 	void AddIOCP(Char2Json func, int port);
-	//通过设备ip和端口查询到设备索引号
-	int  FindRowIndex(QString ip, int port);
+	//通过设备号和端口查询到设备索引号
+	int FindRowIndex(int SrvPort, QString StationID);
 	//通过服务器端口号查找业务编号
 	QString FindserviceTypeIDByPort(int servicePort);
 	//通过服务器类型查找业务编号
-	QString FindserviceTypeIDByServiceID(int serviceID);
-	//添加设备
-	void AddClient(QString ip, int port, int serverPort, SOCKET socketNo);
+	//QString FindserviceTypeIDByServiceID(int serviceID);
+	//添加台站号
+	bool AddClient(QString IP, int Port, int SrvPort, SOCKET SocketID, QString StationID);
 	//业务列表右键菜单
 	void CreateServerListActions();
 	//区站号列表右键菜单
@@ -69,10 +71,11 @@ private:
 	//判断port号的合法性
 	bool IsLegallyPort(int port);
 	//添加区站号
-	void AddClientInfoStation(QString ip, int port, QString StationID);
+	//void AddClientInfoStation(QString ip, int port, QString StationID);
 	//更新设备在线离线状态
 	void SetFacilityOffLine(int SocketID);
-
+	//添加SIM卡号
+	void Convert2StationID();
 private:
 	Ui::Server_VSClass ui;
 	QMessageBox msg;
@@ -88,6 +91,8 @@ private:
 	QAction action_run;
 	//停止
 	QAction action_stop;
+	//补抄数据
+	QAction action_dmtd;
 	//属性
 	QAction action_Attributes;
 	//客户列表右键菜单
@@ -112,23 +117,24 @@ private:
 	QTableWidgetItem* ServiceTypeItem;
 	//业务类型数组
 	vector<Facility> ClientInfo;
+	//SIM卡号对应区站号
+	QMap<QString, QString> SIM2Staion;
 	//心跳监听时间
 	QTimer *timer;
 	//自动对时
 	QTimer *day_timer;
 	//自动补抄
 	QTimer *hour_timer;
+
 private slots:
     //终端读取设备命令
     void RequestForReadCOMM(int ServiceTypeID,int StationID,int FacilityID, int Command, QString Param1, QString Param2);
 	//错误提示
 	void GetErrorMSG(int error);
 	//更新UI界面
-	void UpdateUI(QString serviceTypeID, QString stationID, QString observeTime, int count, bool connected, QString ip, int port,int socket);
+	void UpdateUI(QString stationID, QString observeTime, int count, bool connected, QString ip, int port,int socket,int SrvPort);
 	//新客户端连接
-	void AddNewClient(QString clientIp, int clientPort, int serverPort, int socketNo);
-	//获取区站号
-	void AddNewConnectStationID(QJsonObject StationID);
+	//void AddNewClient(QString clientIp, int clientPort, int serverPort, int socketNo);
 	//终端操作返回信息
 	void GetCommandStatus(int result);
 	//终端操作返回读取值
@@ -155,7 +161,7 @@ private slots:
 	//发送终端命令
 	void SendCOMM();
 	//心跳处理
-	void HeartBeat(int Socket);
+	void HeartBeat(QString IP, int Port, int SrvPort, int CltSocket, QString StationID, QString  ServiceTypeID);
 	//心跳Timer处理
 	void Func_HeartBeat();
 	//获取终端命令名称
@@ -164,6 +170,8 @@ private slots:
 	void SetTimeCorrection();
 	//自动补抄数据
 	void CheckDataCorrection();
+	//补抄数据功能
+	void Func_DMTD();
 };
 
 #endif // SERVER_VS_H

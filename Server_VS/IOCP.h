@@ -24,7 +24,7 @@ class  IOCP:public QObject,public QRunnable
 {
 
     Q_OBJECT
-    QThread listenthread;
+
 public:
     IOCP();
     ~IOCP();
@@ -34,22 +34,9 @@ protected:
 public:
     //设置监听号
     void SetListenedPort(int port);
-    //开启监听Socket
-    void StartSever(int port);
-    //结束监听socket
-    void EndListenSocket(int port);
-    //存储客户端
-    vector < PER_HANDLE_DATA* > clientGroup;
 	//停止监听
 	void Stop();
-	//测试
-	//ceshi
-	void SendSocket();
-    //通知信号
-    FacilityID facilityID;
-	//返回运行状态
-	//true：运行
-	//false:停止
+	//获取当前运行状态
 	bool GetStatus();
 private:
 	//获取区站号
@@ -66,8 +53,6 @@ private:
     static unsigned __stdcall ServerWorkThread(LPVOID pParam);
     //处理设备发送数据
 	static void UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA PerHandleData, IOCP *P);
-    //加载DLL
-    LRESULT AddDll(char* dllpath);
     // 端口号
     int m_port;
     //监听启动/结束
@@ -79,14 +64,15 @@ signals:
 	//发送错误信息
 	void NoticfyServerError(int errorMSG);
 	//数据通知
-	void NoticfyServerUpdateUI(QString ServiceTypeID,
+	void NoticfyServerUpdateUI(
 		QString StationID,
 		QString ObserveTime,
 		int count,
 		bool Connected,
 		QString IP,
 		int Port,
-		int Socket);
+		int Socket,
+		int SrvPort);
 	//新设备连接信号
 	void NoticfyUINewClient(QString IP, int Port, int m_port, int socketNo);
 	//终端操作命令信号
@@ -94,12 +80,8 @@ signals:
 	//终端操作命令返回值
 	void NoticfyServerRecvValue(QJsonObject RecvJson);
 	void NoticfyServerRecvValue(QJsonObject RecvJson,bool IsComm);
-	//第一次设备连接发送ID获取值
-	void NoticfyServerNewConnectionStationID(QJsonObject RecvJson);
 	//心跳处理
-	void NoticfyServerHB(int Socket);
-    //线程操作信号
-    void operate();
+	void NoticfyServerHB(QString IP,int Port,int SrvPort,int CltSocket,QString StationID,QString ServiceTypeID);
 private slots:
     //监听处理线程
 };

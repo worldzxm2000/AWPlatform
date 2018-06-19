@@ -17,18 +17,21 @@
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QMainWindow>
+#include <QtWidgets/QMenu>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QTableWidget>
 #include <QtWidgets/QToolBar>
 #include <QtWidgets/QWidget>
-#include "SrvTableWidget.h"
+#include"SrvTableWidget.h"
 QT_BEGIN_NAMESPACE
 
 class Ui_Server_VSClass
 {
 public:
+    QAction *actionDMTM;
+    QAction *action1;
     QWidget *centralWidget;
     QGroupBox *groupBox;
     QPushButton *DeleteBtn;
@@ -39,15 +42,20 @@ public:
     QGroupBox *groupBox_3;
     QLabel *label;
     QLabel *StatusLabel;
-    QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
+    QMenuBar *menuBar;
+    QMenu *menu;
 
     void setupUi(QMainWindow *Server_VSClass)
     {
         if (Server_VSClass->objectName().isEmpty())
             Server_VSClass->setObjectName(QStringLiteral("Server_VSClass"));
         Server_VSClass->resize(1280, 768);
+        actionDMTM = new QAction(Server_VSClass);
+        actionDMTM->setObjectName(QStringLiteral("actionDMTM"));
+        action1 = new QAction(Server_VSClass);
+        action1->setObjectName(QStringLiteral("action1"));
         centralWidget = new QWidget(Server_VSClass);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         groupBox = new QGroupBox(centralWidget);
@@ -78,16 +86,21 @@ public:
         StatusLabel->setObjectName(QStringLiteral("StatusLabel"));
         StatusLabel->setGeometry(QRect(70, 20, 500, 16));
         Server_VSClass->setCentralWidget(centralWidget);
-        menuBar = new QMenuBar(Server_VSClass);
-        menuBar->setObjectName(QStringLiteral("menuBar"));
-        menuBar->setGeometry(QRect(0, 0, 1280, 23));
-        Server_VSClass->setMenuBar(menuBar);
         mainToolBar = new QToolBar(Server_VSClass);
         mainToolBar->setObjectName(QStringLiteral("mainToolBar"));
         Server_VSClass->addToolBar(Qt::TopToolBarArea, mainToolBar);
         statusBar = new QStatusBar(Server_VSClass);
         statusBar->setObjectName(QStringLiteral("statusBar"));
         Server_VSClass->setStatusBar(statusBar);
+        menuBar = new QMenuBar(Server_VSClass);
+        menuBar->setObjectName(QStringLiteral("menuBar"));
+        menuBar->setGeometry(QRect(0, 0, 1280, 23));
+        menu = new QMenu(menuBar);
+        menu->setObjectName(QStringLiteral("menu"));
+        Server_VSClass->setMenuBar(menuBar);
+
+        menuBar->addAction(menu->menuAction());
+        menu->addAction(actionDMTM);
 
         retranslateUi(Server_VSClass);
 
@@ -96,7 +109,12 @@ public:
 
     void retranslateUi(QMainWindow *Server_VSClass)
     {
-        Server_VSClass->setWindowTitle(QApplication::translate("Server_VSClass", "\346\234\215\345\212\241\345\231\250\347\256\241\347\220\206", nullptr));
+        Server_VSClass->setWindowTitle(QApplication::translate("Server_VSClass", "\344\270\232\345\212\241\346\234\215\345\212\241\345\271\263\345\217\260\350\275\257\344\273\266", nullptr));
+        actionDMTM->setText(QApplication::translate("Server_VSClass", "\350\241\245\346\212\204\346\225\260\346\215\256", nullptr));
+#ifndef QT_NO_TOOLTIP
+        actionDMTM->setToolTip(QApplication::translate("Server_VSClass", "\350\241\245\346\212\204\346\225\260\346\215\256", nullptr));
+#endif // QT_NO_TOOLTIP
+        action1->setText(QApplication::translate("Server_VSClass", "1", nullptr));
         groupBox->setTitle(QApplication::translate("Server_VSClass", "\344\270\232\345\212\241\347\247\215\347\261\273\345\210\227\350\241\250", nullptr));
         DeleteBtn->setText(QApplication::translate("Server_VSClass", "-", nullptr));
         RunBtn->setText(QApplication::translate("Server_VSClass", "+", nullptr));
@@ -104,6 +122,7 @@ public:
         groupBox_3->setTitle(QApplication::translate("Server_VSClass", "\347\212\266\346\200\201\346\240\217", nullptr));
         label->setText(QApplication::translate("Server_VSClass", "\350\277\220\350\241\214\347\212\266\346\200\201", nullptr));
         StatusLabel->setText(QApplication::translate("Server_VSClass", "\350\277\220\350\241\214\346\255\243\345\270\270", nullptr));
+        menu->setTitle(QApplication::translate("Server_VSClass", "\345\212\237\350\203\275", nullptr));
     } // retranslateUi
 
 };

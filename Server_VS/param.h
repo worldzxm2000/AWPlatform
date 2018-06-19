@@ -31,47 +31,36 @@ typedef struct
 {
 	SOCKET socket;  //客户端socekt
 	SOCKADDR_IN ClientAddr;  //客户端socekt地址
-	int ClientIndex;//客户端对应索引号
+	//int ClientIndex;//客户端对应索引号
 	LPCSTR ClientIP;//客户端IP
 	int Port;//客户端端口
-	bool Status;//客户端连接状态
-	int count;//数据接收量
-	//LPCSTR ServiceTypeID;//服务类型
-	//LPCSTR StationID;//区站号
-	//LPCSTR ObserveTime;//观察时间
-	bool Connected;//设备状态
+	//bool Status;//客户端连接状态
+	int Count;//总数据接收量
 	char Frame[DataBuffSize] = {0};//一帧数据
-	int DataCount;//一帧数据数量
-    bool IsWholeFrame;//判断是否是一帧数据
+	int DataCount;//一帧数据中字节个数
+   bool IsWholeFrame;//判断是否是一帧数据
 }PER_HANDLE_DATA, *LPPER_HANDLE_DATA;
 
+//IOCP中结构体
 typedef struct
 {
-	HANDLE completionPort;
-	HANDLE fatherClass;
+	HANDLE completionPort;//IO端口号
+	HANDLE fatherClass;//父类地址
 }PARAMS,*LPPARAMS;
-//业务编号
-enum FacilityID
-{
-	AirforceFacilityID = 1031,
-	AgricultureFacilityID = 1032
-};
 
+//业务列表
 enum ServiceID
 {
-	NW=01,//郑州农田管理
+	NW=01,//农委
 	TRSF=02,//土壤水分
+	NTXQH=03,//农田小气候
+	JTQX=04,//交通气象
 	HKQX = 05//航空气象
 };
+
+//区站号信息
 typedef struct
 {
-	char data[1024 * 8];
-	int len;
-} Recv_Data;
-//客户端socket信息
-typedef struct
-{
-	
 	//IP号
 	QString IP;
 	//端口号
@@ -79,9 +68,11 @@ typedef struct
 	//socket号
 	SOCKET SocketID;
 	//区站号
-	int StationID;
+	QString StationID;
 	//最新心跳时间
 	QDateTime LatestTimeOfHeartBeat;
+	//状态
+	bool Online;
 } CLIENTINFO, *LPCLIENTINFO;
 
 //终端命令
