@@ -38,12 +38,11 @@ void IOCP::Stop()
     bIsListened = false;
 	
 	
-	for (int i = 0; i < 2; i++)
+	for (int i = 0; i < iThreadsCount; i++)
 	{
 		// 通知所有的完成端口操作退出  
 		result=PostQueuedCompletionStatus(completionPort, 0, NULL, NULL);
 	}
-	//WaitForMultipleObjects(iThreadsCount, m_phWorkerThreads, TRUE, INFINITE);
 	int count = Sockets.count();
 	for (int i = 0; i < count; i++)
 	{
@@ -83,8 +82,7 @@ void IOCP::run()
 	pparam.fatherClass = (HANDLE)this;
 	SYSTEM_INFO mySysInfo;
 	GetSystemInfo(&mySysInfo);
-	iThreadsCount = 1;
-	//(mySysInfo.dwNumberOfProcessors * 2);
+	iThreadsCount = (mySysInfo.dwNumberOfProcessors * 2);
 	m_phWorkerThreads = new HANDLE[iThreadsCount];
 	for (unsigned i = 0; i < iThreadsCount; ++i)
 	{
