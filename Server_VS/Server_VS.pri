@@ -15,20 +15,20 @@ HEADERS += ./SimpleProducer.h \
     ./IOCP.h \
     ./ConfigWnd.h \
     ./CommandDlg.h \
-    ./LogWrite.h \
     ./DoDMTD.h \
-    ./DMTDDlg.h
+    ./DMTDDlg.h \
+    ./LogWrite.h
 SOURCES += ./CommandDlg.cpp \
     ./ConfigWnd.cpp \
+    ./DMTDDlg.cpp \
+    ./DoDMTD.cpp \
     ./IOCP.cpp \
     ./LogWrite.cpp \
     ./main.cpp \
     ./server_vs.cpp \
     ./SimpleProducer.cpp \
     ./SocketServerForWeb.cpp \
-    ./SrvTableWidget.cpp \
-    ./DoDMTD.cpp \
-    ./DMTDDlg.cpp
+    ./SrvTableWidget.cpp
 FORMS += ./server_vs.ui \
     ./ConfigWnd.ui \
     ./CommandDlg.ui \

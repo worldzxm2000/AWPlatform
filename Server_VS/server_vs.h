@@ -32,6 +32,8 @@ typedef struct
 	QString ServerName;
 	//是否在运行
 	bool IsRun;
+	//IP
+	QString IP;
 	//业务下连接socket的IP号和端口号
 	vector<CLIENTINFO> clients;
 } Facility, *LPFacility;
@@ -49,7 +51,7 @@ private:
 	//添加解析DLL
 	LRESULT AddDll();
 	//开启新的IOCP
-	void AddIOCP(Char2Json func, int port);
+	void AddIOCP(Char2Json func, int port,QString IP);
 	//通过设备号和端口查询到设备索引号
 	int FindRowIndex(int SrvPort, QString StationID);
 	//通过服务器端口号查找业务编号
@@ -70,10 +72,7 @@ private:
 	int FindSocketID(int ServiceTypeID, int StationID, int FacilityID);
 	//判断port号的合法性
 	bool IsLegallyPort(int port);
-	//添加区站号
-	//void AddClientInfoStation(QString ip, int port, QString StationID);
-	//更新设备在线离线状态
-	void SetFacilityOffLine(int SocketID);
+
 	//添加SIM卡号
 	void Convert2StationID();
 private:
@@ -172,6 +171,10 @@ private slots:
 	void CheckDataCorrection();
 	//补抄数据功能
 	void Func_DMTD();
+	//业务列表点击
+    void on_ServerList_itemClicked(QTableWidgetItem *item);
+	//离线处理
+	void  OffLine(int SrvPort,int CltSocket);
 };
 
 #endif // SERVER_VS_H

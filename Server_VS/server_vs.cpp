@@ -51,7 +51,7 @@ Server_VS::Server_VS(QWidget *parent)
 	//心跳监听时间 6min
 	timer = new QTimer(this);
 	connect(timer,SIGNAL(timeout()),this,SLOT(Func_HeartBeat()));
-	timer->start(1000 * 60*6);
+	timer->start(1000 * 60*10);
 	//自动校正时间 24hour
 	day_timer = new QTimer(this);
 	connect(day_timer, SIGNAL(timeout()), this, SLOT(SetTimeCorrection()));
@@ -91,7 +91,7 @@ Server_VS::~Server_VS()
 	{
 		if (ClientInfo[i].pICOP != NULL)
 		{
-			if (ClientInfo[i].pICOP->GetStatus())
+			if (ClientInfo[i].IsRun)
 				ClientInfo[i].pICOP->Stop();
 		}
 	}
@@ -112,27 +112,13 @@ void Server_VS::Func_HeartBeat()
 			{
 				int RowIndex = -1;
 				RowIndex = FindRowIndex(ClientInfo[i].ServerPortID,ClientInfo[i].clients[j].StationID);
+				if (RowIndex < 0)
+					return;
 				//设置UI设备列表状态
 				ui.clientList->setItem(RowIndex, 5, new QTableWidgetItem("离线"));
-				QDateTime current_date_time = QDateTime::currentDateTime();
-				QString current_date = current_date_time.toString("yyyy.MM.dd hh:mm:ss");
 				ui.clientList->setItem(RowIndex, 2, new QTableWidgetItem(current_date));
 				ClientInfo[i].clients[j].Online = false;
-				LogWrite::LogMsgOutput("Socket is offline at this time, SocketID  is " + ClientInfo[i].clients[j].SocketID);
 			}
-		}
-	}
-}
-
-//设置设备在线离线状态
-void Server_VS:: SetFacilityOffLine(int SocketID)
-{
-	for (int i = 0; i < ui.clientList->rowCount(); i++)
-	{
-		if (ui.clientList->item(i, 8)->text() == QString::number(SocketID))
-		{
-			
-			
 		}
 	}
 }
@@ -377,7 +363,6 @@ void Server_VS::on_DeleteBtn_clicked()
 		{
 			if (ClientInfo[i].pICOP != NULL)
 			{
-				bool b = ClientInfo[i].pICOP->GetStatus();
 				if (ClientInfo[i].IsRun==true)
 				{
 					QMessageBox::warning(NULL, "警告", "请先停止运行，再移除业务！");
@@ -458,6 +443,7 @@ LRESULT Server_VS::AddDll()
 		fcty.ServerPortID = CfgWnd.m_Port;
 		fcty.ServerName = func_GetServiceTypeName();
 		fcty.Path = strName;
+		fcty.IP = CfgWnd.m_IP;
 		fcty.Attribute = CfgWnd.m_Attribute;
 		ui.ServerList->AddRow(fcty.ServerName, strName);
 		//设备连接信息
@@ -470,11 +456,11 @@ LRESULT Server_VS::AddDll()
 //判断port号的合法性
 bool Server_VS::IsLegallyPort(int port)
 {
-	for (int i = 0; i < ClientInfo.size(); i++)
-	{
-		if (ClientInfo[i].ServerPortID == port)
-			return false;
-	}
+	//for (int i = 0; i < ClientInfo.size(); i++)
+	//{
+	//	if (ClientInfo[i].ServerPortID == port)
+	//		return false;
+	//}
 	return true;
 }
 
@@ -555,6 +541,13 @@ void Server_VS::GetErrorMSG(int error)
 	case -4:
 		strMSG = "服务器间通信异常！";
 		break;
+	case -5:
+		strMSG = "设备已登出！";
+		break;
+	case -10311:
+		strMSG = "端口号监听失败！";
+		QMessageBox::warning(NULL, "警告", strMSG);
+		break;
 	default:
 		strMSG = QString::number(error);
 		break;
@@ -584,8 +577,6 @@ void Server_VS::UpdateUI(QString stationID, QString observeTime, int count, bool
 	//第一次连接
 	else
 	{
-		//将台站号添加到内存
-		//AddClientInfoStation(ip, port, stationID);
 		bool ok;
 		QString stServiceTypeID = FindserviceTypeIDByPort(SrvPort);
 		//更新UI
@@ -601,45 +592,6 @@ void Server_VS::UpdateUI(QString stationID, QString observeTime, int count, bool
 		ui.clientList->setItem(RowIndex, 8, new QTableWidgetItem(QString::number(socket)));
 	}
 }
-
-////添加区站号
-//void Server_VS::AddClientInfoStation(QString ip, int port, QString StationID)
-//{
-//	for (int i = 0; i < ClientInfo.size(); i++)
-//	{
-//		for (int j = 0; j < ClientInfo[i].clients.size(); j++)
-//		{
-//			if (ClientInfo[i].clients[j].IP == ip&&ClientInfo[i].clients[j].Port == port)
-//			{
-//				bool ok;
-//				ClientInfo[i].clients[j].StationID = StationID.toInt(&ok, 10);
-//			}
-//		}
-//	}
-//}
-
-////有新的客户端连接 "业务类型" << "区站号" << "时间" << "数据数量" << "设备状态" << "连接" << "IP" << "端口号"<<"socket号"
-//void Server_VS::AddNewClient(QString clientIp, int clientPort, int serverPort, int socketID)
-//{
-//	//添加到业务数组内存
-//	AddClient(clientIp, clientPort, serverPort, socketID);
-//	//更新UI
-//	int RowCount = ui.clientList->rowCount();
-//	ui.clientList->insertRow(RowCount);
-//	QString serviceTypeID = FindserviceTypeIDByPort(serverPort);
-//	ui.clientList->setItem(RowCount, 0, new QTableWidgetItem(serviceTypeID));
-//	QDateTime current_date_time = QDateTime::currentDateTime();
-//	QString current_date = current_date_time.toString("yyyy.MM.dd hh:mm:ss");
-//	ui.clientList->setItem(RowCount, 1, new QTableWidgetItem("未知"));
-//	ui.clientList->setItem(RowCount, 2, new QTableWidgetItem(current_date));
-//	ui.clientList->setItem(RowCount, 3, new QTableWidgetItem("0"));
-//	//ui.clientList->setItem(RowCount, 4, new QTableWidgetItem("未知"));
-//	ui.clientList->setItem(RowCount, 5, new QTableWidgetItem("在线"));
-//	ui.clientList->setItem(RowCount, 6, new QTableWidgetItem(clientIp));
-//	ui.clientList->setItem(RowCount, 7, new QTableWidgetItem(QString::number(clientPort, 10)));
-//	ui.clientList->setItem(RowCount, 8, new QTableWidgetItem(QString::number(socketID)));
-//	//ReleaseMutex(hMutex);
-//}
 
 //添加到设备数组
 bool Server_VS::AddClient(QString ip, int port, int serverpot, SOCKET socketID,QString StationID)
@@ -686,7 +638,6 @@ int Server_VS::FindRowIndex(int SrvPort, QString StationID)
 		{
 			return row;
 		}
-
 	}
 	return -1;
 }
@@ -726,20 +677,6 @@ QString Server_VS::FindserviceTypeIDByPort(int SrvPort)
 	}
 	return NULL;
 }
-
-////通过连接端口找到业务类型
-//QString Server_VS::FindserviceTypeIDByServiceID(int SrvPort)
-//{
-//	QString serviceTypeID;
-//	for (int i = 0; i < ClientInfo.size(); i++)
-//	{
-//		if (ClientInfo[i].ServerPortID == SrvPort)
-//		{
-//			return ClientInfo[i].ServerName;
-//		}
-//	}
-//	return NULL;
-//}
 
 //业务列表右键事件
 void Server_VS::on_ServerList_customContextMenuRequested(const QPoint &pos)
@@ -824,16 +761,16 @@ void Server_VS::Lib_Run(int ServerIndex)
 			return;
 		}
 		//启动一个IOCP来监听设备
-		AddIOCP(func_Char2Json, ClientInfo[iSelectIndexOfService].ServerPortID);
+		AddIOCP(func_Char2Json, ClientInfo[iSelectIndexOfService].ServerPortID, ClientInfo[iSelectIndexOfService].IP);
 	}
 }
 
 //开启新的IOCP
-void Server_VS::AddIOCP(Char2Json func, int port)
+void Server_VS::AddIOCP(Char2Json func, int port,QString ip)
 {
 	IOCP *iocp = new IOCP();
-	//新设备连接通知
-	//connect(iocp, SIGNAL(NoticfyUINewClient(QString, int, int, int)), this, SLOT(AddNewClient(QString, int, int, int)), Qt::QueuedConnection);
+	//设备离线通知
+	connect(iocp,SIGNAL(NoticfyOffLine(int,int)),this,SLOT(OffLine(int,int)),Qt::QueuedConnection);
 	//设备数据错误通知
 	connect(iocp, SIGNAL(NoticfyServerError(int)), this, SLOT(GetErrorMSG(int)), Qt::QueuedConnection);
 	//设备新数据通知
@@ -848,7 +785,7 @@ void Server_VS::AddIOCP(Char2Json func, int port)
 	//数据拆包函数
 	iocp->func_Char2Json = func;
 	//启动监听号开始监听设备
-	iocp->SetListenedPort(port);
+	iocp->SetListenedPort(port,ip);
 	//启动
 	pool.start(iocp);
 
@@ -863,13 +800,13 @@ void Server_VS::AddIOCP(Char2Json func, int port)
 	}
 }
 
-
 //心跳处理
 void Server_VS::HeartBeat(QString IP,int Port,int SrvPort, int CltSocket,QString StationID,QString ServiceTypeID)
 {
 	bool bIsExited = false;
+	QString serviceTypeID = FindserviceTypeIDByPort(SrvPort);
 	//农委
-	if (SrvPort == 9002)
+	if (serviceTypeID == "农委气象业务")
 	{
 		if (SIM2Staion.contains(StationID))
 		{
@@ -887,7 +824,7 @@ void Server_VS::HeartBeat(QString IP,int Port,int SrvPort, int CltSocket,QString
 		//未找到
 		if (RowIndex < 0)
 			return;
-		QString serviceTypeID = FindserviceTypeIDByPort(SrvPort);
+		
 		ui.clientList->setItem(RowIndex, 0, new QTableWidgetItem(serviceTypeID));
 		QDateTime current_date_time = QDateTime::currentDateTime();
 		QString current_date = current_date_time.toString("yyyy.MM.dd hh:mm:ss");
@@ -966,6 +903,7 @@ void Server_VS::Func_DMTD()
 	dmtddlg.exec();
 
 }
+
 //查看业务属性
 void Server_VS::Lib_Attri()
 {
@@ -1131,4 +1069,42 @@ void Server_VS::SetTimeCorrection()
 void Server_VS::CheckDataCorrection()
 {
 
+}
+
+//业务列表点击
+void Server_VS::on_ServerList_itemClicked(QTableWidgetItem *item)
+{
+	iSelectIndexOfService = item->row();
+}
+
+//离线处理
+void Server_VS::OffLine(int SrvPort, int CltSocket)
+{
+	QString StationID;
+	for (int i = 0; i < ClientInfo.size(); i++)
+	{
+		if (ClientInfo[i].ServerPortID == SrvPort)
+		{
+			for (int j = 0; j < ClientInfo[i].clients.size(); j++)
+			{
+				//找到离线
+				if (ClientInfo[i].clients[j].SocketID == CltSocket)
+				{
+					StationID = ClientInfo[i].clients[j].StationID;
+					ClientInfo[i].clients[j].Online = false;
+				}
+			}
+		}
+	}
+		//找到设备对应的UI行
+		int RowIndex = -1;
+		RowIndex = FindRowIndex(SrvPort, StationID);
+		//未找到
+		if (RowIndex < 0)
+			return;
+		QDateTime current_date_time = QDateTime::currentDateTime();
+		QString current_date = current_date_time.toString("yyyy.MM.dd hh:mm:ss");
+		ui.clientList->setItem(RowIndex, 2, new QTableWidgetItem(current_date));
+		ui.clientList->setItem(RowIndex, 5, new QTableWidgetItem("离线"));
+		LogWrite::LogMsgOutput("No."+ StationID+" Station is Off line!");
 }

@@ -23,11 +23,11 @@ IOCP::~IOCP()
 {
 }
 
-void IOCP::SetListenedPort(int port)
+void IOCP::SetListenedPort(int port,QString IP)
 {
 	bIsListened = true;
 	this->m_port = port;
-
+	this->m_IP = IP;
 }
 
 void IOCP::Stop()
@@ -35,20 +35,24 @@ void IOCP::Stop()
 	if (bIsListened != true)
 		return;
 	int result = -1;
-	bIsListened = false;
-	int count = Sockets.count();
-	for (int i = 0; i < count; i++)
-	{
-		result = closesocket(Sockets.at(i));
-	}
-	Sockets.clear();
-	result = closesocket(srvSocket);
-	//CloseHandle((HANDLE)srvSocket);
-	for (int i = 0; i < iThreadsCount; i++)
+    bIsListened = false;
+	
+	
+	for (int i = 0; i < 2; i++)
 	{
 		// 通知所有的完成端口操作退出  
 		result=PostQueuedCompletionStatus(completionPort, 0, NULL, NULL);
 	}
+	//WaitForMultipleObjects(iThreadsCount, m_phWorkerThreads, TRUE, INFINITE);
+	int count = Sockets.count();
+	for (int i = 0; i < count; i++)
+	{
+		result = shutdown((SOCKET)Sockets.at(i),2);
+		result = closesocket(Sockets.at(i));
+	}
+	Sockets.clear();
+	result = closesocket(srvSocket);
+	WSACleanup();
 }
 
 //获取当前运行状态
@@ -79,31 +83,39 @@ void IOCP::run()
 	pparam.fatherClass = (HANDLE)this;
 	SYSTEM_INFO mySysInfo;
 	GetSystemInfo(&mySysInfo);
-	iThreadsCount = (mySysInfo.dwNumberOfProcessors * 2);
+	iThreadsCount = 1;
+	//(mySysInfo.dwNumberOfProcessors * 2);
+	m_phWorkerThreads = new HANDLE[iThreadsCount];
 	for (unsigned i = 0; i < iThreadsCount; ++i)
 	{
 		HANDLE threadhandle = (HANDLE)_beginthreadex(NULL, 0, ServerWorkThread, &pparam, 0, NULL);
+		m_phWorkerThreads[i] = threadhandle;
 		::ResumeThread(threadhandle);
 	}
 	//设置socket
 	srvSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
-	sockaddr_in srvAddr;
-	srvAddr.sin_addr.s_addr = INADDR_ANY;
+	SOCKADDR_IN  srvAddr;
+	char*  ch;
+	QByteArray ba = m_IP.toLatin1();
+	ch = ba.data();
+	srvAddr.sin_addr.S_un.S_addr = inet_addr(ch);
 	srvAddr.sin_family = AF_INET;
 	srvAddr.sin_port = htons(m_port);
 	//绑定SOCKET到本机
-	int bindResult = ::bind(srvSocket, (SOCKADDR*)&srvAddr, sizeof(srvAddr));
+	int bindResult = ::bind(srvSocket, (SOCKADDR*)&srvAddr, sizeof(SOCKADDR_IN));
 	if (SOCKET_ERROR == bindResult)
 	{
 
 		NoticfyServerError(-10311);
+		return;
 	}
 	// 将SOCKET设置为监听模式
-	int listenResult = listen(srvSocket, SOMAXCONN);
+	int listenResult = ::listen(srvSocket, SOMAXCONN);
 	if (SOCKET_ERROR == listenResult)
 	{
 
 		NoticfyServerError(-10311);
+		return;
 	}
 
 	while (1)
@@ -122,7 +134,6 @@ void IOCP::run()
 			// 接收客户端失败
 			break;
 		}
-
 		//客户端socket与IOCP关联
 		PerHandleData = (LPPER_HANDLE_DATA)GlobalAlloc(GPTR, sizeof(PER_HANDLE_DATA));
 		PerHandleData->socket = acceptSocket;
@@ -175,25 +186,45 @@ unsigned IOCP::ServerWorkThread(LPVOID pParam)
 		DWORD RecvBytes;
 		DWORD Flags = 0;
 		BOOL bRet = FALSE;
-
+		int nError = -1;
 		while (1)
 		{
 			bRet = GetQueuedCompletionStatus(completionPort, &BytesTransferred, (PULONG_PTR)&PerHandleData, (LPOVERLAPPED*)&IpOverlapped, INFINITE);
-			//退出线程
-			if (IpOverlapped == NULL || bRet == 0)
+			DWORD h = ::GetCurrentThreadId();
+			if (bRet== FALSE)
 			{
-			//	DWORD dwErr = GetLastError();
-				//pIOCP->NoticfyServerError(dwErr);
-				break;
-			}
+				nError = GetLastError();
+				if (IpOverlapped==NULL)
+				{
+					if (pIOCP != NULL)
+						LogWrite::LogMsgOutput("IOCP of " + QString::number(pIOCP->m_port) + " is out,GetQueuedCompletionStatus is false and Overlapped is null!");
+					break;
+				}
+				else
+				{
 
+				}
+			}
+			
 			PerIoData = (LPPER_IO_DATA)CONTAINING_RECORD(IpOverlapped, PER_IO_DATA, overlapped);
 			if (0 == BytesTransferred)
 			{
-				closesocket(PerHandleData->socket);
-				GlobalFree(PerHandleData);
-				GlobalFree(PerIoData);
-				continue;
+				//客户端主动断开连接
+				if (PerHandleData != NULL)
+				{
+					BOOL bOK= CancelIo((HANDLE)PerHandleData->socket);
+					//更新UI客户端断开连接
+					pIOCP->NoticfyOffLine(pIOCP->m_port,PerHandleData->socket);
+					if (closesocket(PerHandleData->socket) == SOCKET_ERROR)
+					{
+						int result = WSAGetLastError();	
+						pIOCP->NoticfyServerError(result);
+					}
+					GlobalFree(PerHandleData);
+					GlobalFree(PerIoData);
+					continue;
+				}
+				break;
 			}
 			//线程处理函数
 			UnboxData(PerIoData, BytesTransferred, PerHandleData, pIOCP);

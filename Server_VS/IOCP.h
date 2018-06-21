@@ -33,12 +33,14 @@ protected:
     void run();
 public:
     //设置监听号
-    void SetListenedPort(int port);
+    void SetListenedPort(int port,QString IP);
 	//停止监听
 	void Stop();
 	//获取当前运行状态
 	bool GetStatus();
 private:
+	//线程句柄
+	HANDLE* m_phWorkerThreads;
 	//获取区站号
 	bool bIsGetStationID;
 	//服务器端
@@ -55,6 +57,8 @@ private:
 	static void UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA PerHandleData, IOCP *P);
     // 端口号
     int m_port;
+	//IP
+	QString m_IP;
     //监听启动/结束
     bool bIsListened;
     //信号量
@@ -82,6 +86,8 @@ signals:
 	void NoticfyServerRecvValue(QJsonObject RecvJson,bool IsComm);
 	//心跳处理
 	void NoticfyServerHB(QString IP,int Port,int SrvPort,int CltSocket,QString StationID,QString ServiceTypeID);
+	//离线通知
+	void NoticfyOffLine(int SrvPort,int CltSocket);
 private slots:
     //监听处理线程
 };
