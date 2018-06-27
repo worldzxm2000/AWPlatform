@@ -1,4 +1,4 @@
-/********************************************************************************
+﻿/********************************************************************************
 ** Form generated from reading UI file 'server_vs.ui'
 **
 ** Created by: Qt User Interface Compiler version 5.10.1
@@ -32,6 +32,8 @@ class Ui_Server_VSClass
 public:
     QAction *actionDMTM;
     QAction *action1;
+    QAction *action_SYSLog;
+    QAction *action_DataLog;
     QWidget *centralWidget;
     QGroupBox *groupBox;
     QPushButton *DeleteBtn;
@@ -46,6 +48,7 @@ public:
     QStatusBar *statusBar;
     QMenuBar *menuBar;
     QMenu *menu;
+    QMenu *menu_2;
 
     void setupUi(QMainWindow *Server_VSClass)
     {
@@ -56,6 +59,10 @@ public:
         actionDMTM->setObjectName(QStringLiteral("actionDMTM"));
         action1 = new QAction(Server_VSClass);
         action1->setObjectName(QStringLiteral("action1"));
+        action_SYSLog = new QAction(Server_VSClass);
+		action_SYSLog->setObjectName(QStringLiteral("actionSYSLOG"));
+        action_DataLog = new QAction(Server_VSClass);
+		action_DataLog->setObjectName(QStringLiteral("actionDATALOG"));
         centralWidget = new QWidget(Server_VSClass);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         groupBox = new QGroupBox(centralWidget);
@@ -97,10 +104,15 @@ public:
         menuBar->setGeometry(QRect(0, 0, 1280, 23));
         menu = new QMenu(menuBar);
         menu->setObjectName(QStringLiteral("menu"));
+        menu_2 = new QMenu(menuBar);
+        menu_2->setObjectName(QStringLiteral("menu_2"));
         Server_VSClass->setMenuBar(menuBar);
 
         menuBar->addAction(menu->menuAction());
+        menuBar->addAction(menu_2->menuAction());
         menu->addAction(actionDMTM);
+        menu_2->addAction(action_SYSLog);
+        menu_2->addAction(action_DataLog);
 
         retranslateUi(Server_VSClass);
 
@@ -115,6 +127,8 @@ public:
         actionDMTM->setToolTip(QApplication::translate("Server_VSClass", "\350\241\245\346\212\204\346\225\260\346\215\256", nullptr));
 #endif // QT_NO_TOOLTIP
         action1->setText(QApplication::translate("Server_VSClass", "1", nullptr));
+        action_SYSLog->setText(QApplication::translate("Server_VSClass", "\347\263\273\347\273\237\346\227\245\345\277\227", nullptr));
+		action_DataLog->setText(QApplication::translate("Server_VSClass", "\346\225\260\346\215\256\346\227\245\345\277\227", nullptr));
         groupBox->setTitle(QApplication::translate("Server_VSClass", "\344\270\232\345\212\241\347\247\215\347\261\273\345\210\227\350\241\250", nullptr));
         DeleteBtn->setText(QApplication::translate("Server_VSClass", "-", nullptr));
         RunBtn->setText(QApplication::translate("Server_VSClass", "+", nullptr));
@@ -123,6 +137,7 @@ public:
         label->setText(QApplication::translate("Server_VSClass", "\350\277\220\350\241\214\347\212\266\346\200\201", nullptr));
         StatusLabel->setText(QApplication::translate("Server_VSClass", "\350\277\220\350\241\214\346\255\243\345\270\270", nullptr));
         menu->setTitle(QApplication::translate("Server_VSClass", "\345\212\237\350\203\275", nullptr));
+        menu_2->setTitle(QApplication::translate("Server_VSClass", "\346\237\245\347\234\213\346\227\245\345\277\227", nullptr));
     } // retranslateUi
 
 };

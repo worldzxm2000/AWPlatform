@@ -8,43 +8,35 @@
 #include<qjsondocument.h>
 #include<qdir.h>
 using namespace std;
-//IOCP *g_iocp;
 
 HANDLE hMutex = CreateMutex(NULL, FALSE, NULL);
 
 IOCP::IOCP()
 {
-	bIsListened = false;
-	//g_iocp = this;
-	bIsGetStationID = false;
+	
 }
 
-IOCP::~IOCP()
-{
+IOCP::~IOCP(){
+	
 }
 
 void IOCP::SetListenedPort(int port,QString IP)
 {
-	bIsListened = true;
 	this->m_port = port;
 	this->m_IP = IP;
 }
 
 void IOCP::Stop()
 {
-	if (bIsListened != true)
-		return;
 	int result = -1;
-    bIsListened = false;
-	
-	
 	for (int i = 0; i < iThreadsCount; i++)
 	{
 		// 通知所有的完成端口操作退出  
 		result=PostQueuedCompletionStatus(completionPort, 0, NULL, NULL);
 	}
+	//断开socket连接
 	int count = Sockets.count();
-	for (int i = 0; i < count; i++)
+	for (int i = 0; i <count; i++)
 	{
 		result = shutdown((SOCKET)Sockets.at(i),2);
 		result = closesocket(Sockets.at(i));
@@ -53,13 +45,6 @@ void IOCP::Stop()
 	result = closesocket(srvSocket);
 	WSACleanup();
 }
-
-//获取当前运行状态
-bool IOCP::GetStatus()
-{
-	return bIsListened;
-}
-
 
 void IOCP::run()
 {
@@ -80,14 +65,13 @@ void IOCP::run()
 	PARAMS pparam;
 	pparam.completionPort = completionPort;
 	pparam.fatherClass = (HANDLE)this;
+
 	SYSTEM_INFO mySysInfo;
 	GetSystemInfo(&mySysInfo);
 	iThreadsCount = (mySysInfo.dwNumberOfProcessors * 2);
-	m_phWorkerThreads = new HANDLE[iThreadsCount];
 	for (unsigned i = 0; i < iThreadsCount; ++i)
 	{
 		HANDLE threadhandle = (HANDLE)_beginthreadex(NULL, 0, ServerWorkThread, &pparam, 0, NULL);
-		m_phWorkerThreads[i] = threadhandle;
 		::ResumeThread(threadhandle);
 	}
 	//设置socket
@@ -103,7 +87,7 @@ void IOCP::run()
 	int bindResult = ::bind(srvSocket, (SOCKADDR*)&srvAddr, sizeof(SOCKADDR_IN));
 	if (SOCKET_ERROR == bindResult)
 	{
-
+		Stop();
 		NoticfyServerError(-10311);
 		return;
 	}
@@ -111,7 +95,7 @@ void IOCP::run()
 	int listenResult = ::listen(srvSocket, SOMAXCONN);
 	if (SOCKET_ERROR == listenResult)
 	{
-
+		Stop();
 		NoticfyServerError(-10311);
 		return;
 	}
@@ -119,8 +103,8 @@ void IOCP::run()
 	while (1)
 	{
 		//结束监听
-		if (false == bIsListened)
-			return;
+	//	if (false == bIsListened)
+		//	return;
 		LPPER_HANDLE_DATA PerHandleData = NULL;
 		SOCKADDR_IN saRemote;
 		int RemoteLen = sizeof(saRemote);
@@ -188,19 +172,14 @@ unsigned IOCP::ServerWorkThread(LPVOID pParam)
 		while (1)
 		{
 			bRet = GetQueuedCompletionStatus(completionPort, &BytesTransferred, (PULONG_PTR)&PerHandleData, (LPOVERLAPPED*)&IpOverlapped, INFINITE);
-			DWORD h = ::GetCurrentThreadId();
 			if (bRet== FALSE)
 			{
 				nError = GetLastError();
 				if (IpOverlapped==NULL)
 				{
 					if (pIOCP != NULL)
-						LogWrite::LogMsgOutput("IOCP of " + QString::number(pIOCP->m_port) + " is out,GetQueuedCompletionStatus is false and Overlapped is null!");
+						LogWrite::LogMsgOutput("IOCP is out,GetQueuedCompletionStatus is false and Overlapped is null!");
 					break;
-				}
-				else
-				{
-
 				}
 			}
 			
@@ -213,11 +192,19 @@ unsigned IOCP::ServerWorkThread(LPVOID pParam)
 					BOOL bOK= CancelIo((HANDLE)PerHandleData->socket);
 					//更新UI客户端断开连接
 					pIOCP->NoticfyOffLine(pIOCP->m_port,PerHandleData->socket);
-					if (closesocket(PerHandleData->socket) == SOCKET_ERROR)
+					for (int i = 0; i <pIOCP->Sockets.size(); i++)
+					{
+						if (pIOCP->Sockets[i]==PerHandleData->socket)
+						{
+							pIOCP->Sockets.erase(pIOCP->Sockets.begin() + i);
+							break;
+						}
+					}
+					/*if (closesocket(PerHandleData->socket) == SOCKET_ERROR)
 					{
 						int result = WSAGetLastError();	
 						pIOCP->NoticfyServerError(result);
-					}
+					}*/
 					GlobalFree(PerHandleData);
 					GlobalFree(PerIoData);
 					continue;
@@ -253,7 +240,7 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 		QJsonObject JsonObj;
 		LRESULT pResult = -1;
 		//数据内存判断，如果数据内存大于1.5M说明有错误数据 需要清空内存，否则会造成内存溢
-		if (PerHandleData->DataCount > 1536)
+		if (PerHandleData->DataCount > 4096)
 		{
 			memset(PerHandleData->Frame, 0, sizeof(PerHandleData->Frame) / sizeof(char));
 			PerHandleData->DataCount = 0;

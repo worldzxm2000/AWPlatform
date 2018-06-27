@@ -42,7 +42,7 @@ void ConfigWnd::on_SetBtn_clicked()
 	m_Port = ui.PortEdit->text().toInt(&ok,10);
 	m_IP = ui.IPEdit->text();
 	m_Attribute = ui.AttrTextEdit->toPlainText();
-	this->close();
+	this->accept();
 }
 
 int ConfigWnd::exec()

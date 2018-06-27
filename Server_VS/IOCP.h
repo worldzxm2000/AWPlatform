@@ -13,8 +13,6 @@
 
 using namespace std;
 class IOCP;
-//extern IOCP *pIocp;
-
 struct pParam
 {
 	HANDLE HandleIOCP;
@@ -36,13 +34,7 @@ public:
     void SetListenedPort(int port,QString IP);
 	//停止监听
 	void Stop();
-	//获取当前运行状态
-	bool GetStatus();
 private:
-	//线程句柄
-	HANDLE* m_phWorkerThreads;
-	//获取区站号
-	bool bIsGetStationID;
 	//服务器端
 	SOCKET srvSocket;
 	//存放Socket数组
@@ -59,12 +51,8 @@ private:
     int m_port;
 	//IP
 	QString m_IP;
-    //监听启动/结束
-    bool bIsListened;
     //信号量
 signals:
-    //线程状态信号
-    void GetStatus(int result);
 	//发送错误信息
 	void NoticfyServerError(int errorMSG);
 	//数据通知
@@ -88,7 +76,5 @@ signals:
 	void NoticfyServerHB(QString IP,int Port,int SrvPort,int CltSocket,QString StationID,QString ServiceTypeID);
 	//离线通知
 	void NoticfyOffLine(int SrvPort,int CltSocket);
-private slots:
-    //监听处理线程
 };
 

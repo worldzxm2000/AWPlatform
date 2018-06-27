@@ -13,6 +13,7 @@
 #include<qlibrary.h>
 #include"SocketServerForWeb.h"
 #include "qtimer.h"
+#include"qnetworkreply.h"
 //业务类型连接信息
 typedef struct
 {
@@ -67,7 +68,7 @@ private:
 	//初始化消息中间件
 	LRESULT InitializeMQ();
 	//初始化终端命令Socket
-	LRESULT InitializeCommandSocket();
+	//LRESULT InitializeCommandSocket();
 	//通过业务和区站号找到对应的Socket号
 	int FindSocketID(int ServiceTypeID, int StationID, int FacilityID);
 	//判断port号的合法性
@@ -175,6 +176,10 @@ private slots:
     void on_ServerList_itemClicked(QTableWidgetItem *item);
 	//离线处理
 	void  OffLine(int SrvPort,int CltSocket);
+	//打开系统日志
+	void OpenSYSLog();
+	//打开数据日志
+	void OpenDataLog();
 };
 
 #endif // SERVER_VS_H

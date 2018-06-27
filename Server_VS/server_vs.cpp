@@ -2,14 +2,14 @@
 #include<QJsonDocument>
 #include<qfiledialog.h>
 #include"ConfigWnd.h"
-//#include"QtNetwork"
-//#include<QtNetwork>
+#include<QtNetwork>
 #include<QSettings>
 #include <iphlpapi.h>
 #include"CommandDlg.h"
 #include"qdebug.h"
 #include"qtcpsocket.h"
 #include"DMTDDlg.h"
+#include"SYSLogDlg.h"
 using namespace std;
 //消息中间件类
 SimpleProducer g_SimpleProducer;
@@ -21,6 +21,9 @@ Server_VS::Server_VS(QWidget *parent)
 	this->setFixedSize(1280, 768);
 	strOperateType = "未知操作";
 
+	//menu功能
+	connect(ui.action_SYSLog, SIGNAL(triggered()), this, SLOT(OpenSYSLog()));
+	connect(ui.action_DataLog, SIGNAL(triggered()), this, SLOT(OpenDataLog()));
 	//读取配置文件
 	Convert2StationID();
 	//业务类型列表
@@ -31,11 +34,12 @@ Server_VS::Server_VS(QWidget *parent)
 
 	//设备连接列表
 	ui.clientList->setColumnCount(9);
-	ui.clientList->setHorizontalHeaderLabels(QStringList() << "业务类型" << "区站号" << "时间" << "数据数量" << "设备状态" << "连接" << "IP" << "端口号"<<"socket号");
+	ui.clientList->setHorizontalHeaderLabels(QStringList() << "业务类型" << "区站号" << "登录时间" << "数据数量" << "设备状态" << "连接" << "IP" << "端口号"<<"socket号");
 	QHeaderView *header = ui.clientList->verticalHeader();
 	header->setHidden(true);// 隐藏行号 
 	ui.clientList->setColumnHidden(8, true);//隐藏第九列 Socket号
 	ui.clientList->setColumnHidden(4, true);//隐藏第五列 设备状态
+	ui.clientList->setColumnHidden(3,true);
 	ui.clientList->setSelectionBehavior(QAbstractItemView::SelectRows);//整行选中的方式
 	ui.clientList->setEditTriggers(QAbstractItemView::NoEditTriggers);//禁止修改
 	ui.clientList->setSelectionMode(QAbstractItemView::SingleSelection);//可以选中单个
@@ -47,27 +51,26 @@ Server_VS::Server_VS(QWidget *parent)
 	CreateClientListActions();
 
 
-	
+	LogWrite::LogMsgOutput("主程序已启动...");
 	//心跳监听时间 6min
 	timer = new QTimer(this);
 	connect(timer,SIGNAL(timeout()),this,SLOT(Func_HeartBeat()));
-	timer->start(1000 * 60*10);
+	timer->start(1000 * 10);
 	//自动校正时间 24hour
 	day_timer = new QTimer(this);
 	connect(day_timer, SIGNAL(timeout()), this, SLOT(SetTimeCorrection()));
-//	day_timer->start(1000 * 60 * 60*24);
+	day_timer->start(1000 * 60*60*24 );
 	//自动补抄数据 1hour
 	hour_timer = new QTimer(this);
 	connect(hour_timer, SIGNAL(timeout), this, SLOT(CheckDataCorrection()));
 	//hour_timer->start(1000 * 60 * 60);
-
 	iSelectIndexOfService = -1;
 	LRESULT pResult = -1;
 	//消息中间件的初始化
 	pResult = InitializeMQ();
 
 	//web服务器Socket的初始化
-	pResult = InitializeCommandSocket();
+//	pResult = InitializeCommandSocket();
 	switch (pResult)
 	{
 	case -1:
@@ -77,6 +80,7 @@ Server_VS::Server_VS(QWidget *parent)
 		QMessageBox::warning(NULL, "警告", "Web服务器初始化失败!");
 		return;
 	default:
+		LogWrite::LogMsgOutput("消息中间件已启动...");
 		break;
 	}
 
@@ -86,13 +90,16 @@ Server_VS::Server_VS(QWidget *parent)
 Server_VS::~Server_VS()
 {
 	timer->stop();
-	delete socket4web;
+	//delete socket4web;
 	for (int i = 0; i < ClientInfo.size(); i++)
 	{
 		if (ClientInfo[i].pICOP != NULL)
 		{
 			if (ClientInfo[i].IsRun)
+			{
 				ClientInfo[i].pICOP->Stop();
+				ClientInfo[i].pICOP = NULL;
+			}
 		}
 	}
 }
@@ -108,7 +115,7 @@ void Server_VS::Func_HeartBeat()
 		{
 			int time_t = currentTime.toTime_t() - ClientInfo[i].clients[j].LatestTimeOfHeartBeat.toTime_t();
 			//大于5分钟
-			if (time_t >299 && ClientInfo[i].clients[j].Online == true)
+			if (time_t >300 && ClientInfo[i].clients[j].Online == true)
 			{
 				int RowIndex = -1;
 				RowIndex = FindRowIndex(ClientInfo[i].ServerPortID,ClientInfo[i].clients[j].StationID);
@@ -118,6 +125,8 @@ void Server_VS::Func_HeartBeat()
 				ui.clientList->setItem(RowIndex, 5, new QTableWidgetItem("离线"));
 				ui.clientList->setItem(RowIndex, 2, new QTableWidgetItem(current_date));
 				ClientInfo[i].clients[j].Online = false;
+				closesocket(ClientInfo[i].clients[j].SocketID);
+				LogWrite::LogMsgOutput("区站号 "+ClientInfo[i].clients[j].StationID+" 离线");
 			}
 		}
 	}
@@ -154,25 +163,25 @@ LRESULT Server_VS::InitializeMQ()
 }
 
 //初始化Web监听线程
-LRESULT Server_VS::InitializeCommandSocket()
-{
-	try
-	{
-		//开启WebSocket线程
-		socket4web = new SocketServerForWeb();
-		connect(socket4web, SIGNAL(NoticfyServerError(int)), this, SLOT(GetErrorMSG(int)), Qt::AutoConnection);
-		//处理web端发送过来命令类型
-		connect(socket4web, SIGNAL(NoticfyServerFacilityID(int, int, int, int, QString, QString)), this, SLOT(RequestForReadCOMM(int, int, int, int, QString, QString)), Qt::AutoConnection);
-		socket4web->m_portServer = 1030;
-		socket4web->setAutoDelete(false);
-		pool.start(socket4web);
-		return 1;
-	}
-	catch (const std::exception&)
-	{
-		return -2;
-	}
-}
+//LRESULT Server_VS::InitializeCommandSocket()
+//{
+//	try
+//	{
+//		//开启WebSocket线程
+//		socket4web = new SocketServerForWeb();
+//		connect(socket4web, SIGNAL(NoticfyServerError(int)), this, SLOT(GetErrorMSG(int)), Qt::AutoConnection);
+//		//处理web端发送过来命令类型
+//		connect(socket4web, SIGNAL(NoticfyServerFacilityID(int, int, int, int, QString, QString)), this, SLOT(RequestForReadCOMM(int, int, int, int, QString, QString)), Qt::AutoConnection);
+//		socket4web->m_portServer = 1030;
+//		socket4web->setAutoDelete(false);
+//		pool.start(socket4web);
+//		return 1;
+//	}
+//	catch (const std::exception&)
+//	{
+//		return -2;
+//	}
+//}
 
 //读取设备参数指令
 void Server_VS::RequestForReadCOMM(int ServiceTypeID, int StationID, int FacilityID, int Command, QString Param1, QString Param2)
@@ -370,8 +379,17 @@ void Server_VS::on_DeleteBtn_clicked()
 				}
 				ClientInfo[i].pICOP->Stop();
 				ClientInfo[i].IsRun = false;
+				ClientInfo[i].pICOP = NULL;
 			}
 			ClientInfo.erase(ClientInfo.begin() + i);
+		}
+	}
+	//移除设备列表
+	for (int i = 0; i < ui.clientList->rowCount(); i++)
+	{
+		if (ui.clientList->item(i,0)->text()== selecteditem->text())
+		{
+			ui.clientList->removeRow(i);
 		}
 	}
 	//从UI列表中移除
@@ -433,7 +451,11 @@ LRESULT Server_VS::AddDll()
 		//开启IP和端口设置窗体
 		ConfigWnd CfgWnd(this);
 		CfgWnd.DialogMode = true;
-		CfgWnd.exec();
+		int r = CfgWnd.exec();
+	    if (r != QDialog::Accepted)
+		{
+			return 1;
+		}
 		if (!IsLegallyPort(CfgWnd.m_Port))
 			return -2;
 		//添加到业务类型内存中
@@ -509,7 +531,7 @@ void Server_VS::GetCommandRecvValue(QJsonObject RecvJson)
 		}
 	}
 	ui.StatusLabel->setText(strOperateType+":"+valueString);
-	socket4web->Send2WebServerJson(RecvJson);
+	//socket4web->Send2WebServerJson(RecvJson);
 }
 
 //终端返回读取值
@@ -536,7 +558,10 @@ void Server_VS::GetErrorMSG(int error)
 		strMSG = "";
 		break;
 	case -3:
+	{
 		strMSG = "消息中间件通信异常！";
+	//	g_SimpleProducer.start("admin", "admin", "tcp://117.158.216.250:61616", 2000, "DataFromFacility", false, false);
+	}
 		break;
 	case -4:
 		strMSG = "服务器间通信异常！";
@@ -573,6 +598,9 @@ void Server_VS::UpdateUI(QString stationID, QString observeTime, int count, bool
 			return;
 		ui.clientList->setItem(RowIndex, 3, new QTableWidgetItem(QString::number(count, 10)));
 		ui.clientList->setItem(RowIndex, 5, new QTableWidgetItem("在线"));
+		ui.clientList->setItem(RowIndex, 6, new QTableWidgetItem(ip));
+		ui.clientList->setItem(RowIndex, 7, new QTableWidgetItem(QString::number(port, 10)));
+		ui.clientList->setItem(RowIndex, 8, new QTableWidgetItem(QString::number(socket)));
 	}
 	//第一次连接
 	else
@@ -609,6 +637,7 @@ bool Server_VS::AddClient(QString ip, int port, int serverpot, SOCKET socketID,Q
 				{
 					QDateTime current_date_time = QDateTime::currentDateTime();
 					ClientInfo[i].clients[j].LatestTimeOfHeartBeat = current_date_time;
+					ClientInfo[i].clients[j].SocketID = socketID;
 					ClientInfo[i].clients[j].Online = true;
 					bIsExist = true;
 				}
@@ -622,7 +651,6 @@ bool Server_VS::AddClient(QString ip, int port, int serverpot, SOCKET socketID,Q
 	}
 	return bIsExist;
 }
-
 
 //通过设备ip和端口查询到设备索引号
 int Server_VS::FindRowIndex(int SrvPort, QString StationID)
@@ -832,6 +860,9 @@ void Server_VS::HeartBeat(QString IP,int Port,int SrvPort, int CltSocket,QString
 		ui.clientList->setItem(RowIndex, 2, new QTableWidgetItem(current_date));
 		//ui.clientList->setItem(RowCount, 4, new QTableWidgetItem("未知"));
 		ui.clientList->setItem(RowIndex, 5, new QTableWidgetItem("在线"));
+		ui.clientList->setItem(RowIndex, 6, new QTableWidgetItem(IP));
+		ui.clientList->setItem(RowIndex, 7, new QTableWidgetItem(QString::number(Port, 10)));
+		ui.clientList->setItem(RowIndex, 8, new QTableWidgetItem(QString::number(CltSocket)));
 	}
 	//新的连接
 	else
@@ -883,6 +914,7 @@ void Server_VS::Lib_Stop(int ServerIndex)
 	{
 		ClientInfo[iSelectIndexOfService].pICOP->Stop();
 		ClientInfo[iSelectIndexOfService].IsRun = false;
+		ClientInfo[iSelectIndexOfService].pICOP = NULL;
 	}
 }
 
@@ -904,6 +936,17 @@ void Server_VS::Func_DMTD()
 
 }
 
+//打开系统运行日志
+void Server_VS::OpenSYSLog()
+{
+	SYSLogDlg syslogdlg;
+	syslogdlg.exec();
+}
+//查看数据运行日志
+void Server_VS::OpenDataLog()
+{
+
+}
 //查看业务属性
 void Server_VS::Lib_Attri()
 {
@@ -990,79 +1033,81 @@ void Server_VS::GetCommName(QString CommName)
 //自动校正时钟
 void Server_VS::SetTimeCorrection()
 {
-	////获取网络时间
-	//QTcpSocket *socket = new QTcpSocket();
-	//socket->connectToHost("time-d-b.nist.gov", 13);
-	//QString datetime;
-	//if (socket->waitForConnected())
-	//{
-	//	if (socket->waitForReadyRead())
-	//	{
-	//		QString str(socket->readAll());
-	//		str = str.trimmed();
-	//		str = str.section(" ", 1, 2);
-	//		datetime = "20" + str;
-	//	}
-	//}
-	//socket->close();
-	//delete socket;
-	////校正设备时钟
-	//for (int i = 0; i < ClientInfo.size(); i++)
-	//{
-	//	switch (ClientInfo[i].ServiceID)
-	//	{
-	//	case NW:
-	//		break;
-	//	case HKQX:
-	//	{
-	//		for (int j = 0; j < ClientInfo[i].clients.size(); j++)
-	//		{
-	//			int socketID = ClientInfo[i].clients[j].SocketID;
-	//			QString Comm = "DATETIME " + datetime + "\r\n";
-	//			QByteArray ba = Comm.toLatin1();
-	//			LPCSTR ch = ba.data();
-	//			int len = Comm.length();
-	//			::send(socketID, ch, len, 0);
-	//		}
-	//		break;
-	//	}
-	//	case NTXQH:
-	//		break;
-	//	case JTQX:
-	//		break;
-	//	case TRSF:
-	//	{
-	//		for (int j = 0; j < ClientInfo[i].clients.size(); j++)
-	//		{
-	//			int socketID = ClientInfo[i].clients[j].SocketID;
-	//			BYTE bytes[1024];
-	//			bytes[0] = 0xff;
-	//			bytes[1] = 0xff;
-	//			bytes[2] = 0xff;
-	//			bytes[3] = 0xaa;
-	//			bytes[4] = 0x0a;
-	//			bytes[5] = 0x81;
-	//			bytes[6] = 0x00;
-	//			//bytes[7] = 0x;//目的地址
-	//			bytes[8] = 0x14;//20
-	//		//	bytes[9] = 0x;//2018
-	//			bytes[10] = 0xff;//月
-	//			bytes[11] = 0xff;//日
-	//			bytes[12] = 0xff;//时
-	//			bytes[13] = 0xff;//分
-	//			bytes[14] = 0xff;//秒
-	//			bytes[15] = 0xff;//校验位
-	//			bytes[16] = 0xdd;
-	//			bytes[17] = 0xff;
-	//			
-	//			//::send(socketID, ch, len, 0);
-	//		}
-	//		break;
-	//	}
-	//	default:
-	//		break;
-	//	}
-	//}
+
+	//获取网络时间
+	QTcpSocket *socket = new QTcpSocket();
+	socket->connectToHost("time.nist.gov", 13);
+	QString datetime;
+	if (socket->waitForConnected())
+	{
+		if (socket->waitForReadyRead())
+		{
+			QString str(socket->readAll());
+			str = str.trimmed();
+			str = str.section(" ", 1, 2);
+			datetime = "20" + str;
+		}
+	}
+	socket->close();
+	delete socket;
+	socket = NULL;
+	QDateTime current_datetime = QDateTime::fromString(datetime,"yyyy-MM-dd hh:mm:ss");
+	uint diff_time= current_datetime.toTime_t();
+	diff_time += 28800;//北京时间 需要加上8小时
+	QDateTime nowtime = QDateTime::fromTime_t(diff_time);
+	datetime=nowtime.toString("yyyy.MM.dd hh:mm:ss"); 
+	//校正设备时钟
+	for (int i = 0; i < ClientInfo.size(); i++)
+	{
+		switch (ClientInfo[i].ServiceID)
+		{
+		case NW:case HKQX:case NTXQH:case JTQX:
+		{
+			for (int j = 0; j < ClientInfo[i].clients.size(); j++)
+			{
+				int socketID = ClientInfo[i].clients[j].SocketID;
+				QString Comm = "DATETIME " + datetime + "\r\n";
+				QByteArray ba = Comm.toLatin1();
+				LPCSTR ch = ba.data();
+				int len = Comm.length();
+				::send(socketID, ch, len, 0);
+			}
+			break;
+		}
+		case TRSF:
+		{
+			//for (int j = 0; j < ClientInfo[i].clients.size(); j++)
+			//{
+			//	int socketID = ClientInfo[i].clients[j].SocketID;
+			//	BYTE bytes[1024];
+			//	bytes[0] = 0xff;
+			//	bytes[1] = 0xff;
+			//	bytes[2] = 0xff;
+			//	bytes[3] = 0xaa;
+			//	bytes[4] = 0x0a;
+			//	bytes[5] = 0x81;
+			//	bytes[6] = 0x00;
+			//	//bytes[7] = 0x;//目的地址
+			//	bytes[8] = 0x14;//20
+			////	bytes[9] = 0x;//2018
+			//	bytes[10] = 0xff;//月
+			//	bytes[11] = 0xff;//日
+			//	bytes[12] = 0xff;//时
+			//	bytes[13] = 0xff;//分
+			//	bytes[14] = 0xff;//秒
+			//	bytes[15] = 0xff;//校验位
+			//	bytes[16] = 0xdd;
+			//	bytes[17] = 0xff;
+			//	
+			//	//::send(socketID, ch, len, 0);
+			//}
+			break;
+		}
+		default:
+			break;
+		}
+	}
+	LogWrite::LogMsgOutput("setting time is over!");
 }
 
 //自动补抄
@@ -1091,9 +1136,12 @@ void Server_VS::OffLine(int SrvPort, int CltSocket)
 				if (ClientInfo[i].clients[j].SocketID == CltSocket)
 				{
 					StationID = ClientInfo[i].clients[j].StationID;
+					ClientInfo[i].clients[j].SocketID = 0;
 					ClientInfo[i].clients[j].Online = false;
+					break;
 				}
 			}
+			break;
 		}
 	}
 		//找到设备对应的UI行
@@ -1106,5 +1154,5 @@ void Server_VS::OffLine(int SrvPort, int CltSocket)
 		QString current_date = current_date_time.toString("yyyy.MM.dd hh:mm:ss");
 		ui.clientList->setItem(RowIndex, 2, new QTableWidgetItem(current_date));
 		ui.clientList->setItem(RowIndex, 5, new QTableWidgetItem("离线"));
-		LogWrite::LogMsgOutput("No."+ StationID+" Station is Off line!");
+		LogWrite::LogMsgOutput("区站号 " + StationID + " 离线");
 }
