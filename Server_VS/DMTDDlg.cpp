@@ -52,6 +52,8 @@ unsigned DMTDDlg::Process(LPVOID pParam)
 	if (pDMTDDlg->path == "")
 		return 0;
 	pDMTDDlg->LoadTXT(pDMTDDlg->path);
+	pDMTDDlg->ui.DoingBar->setRange(0, pDMTDDlg->count);
+	pDMTDDlg->ui.NumberLabel->setText(QString::fromLocal8Bit("共计: ") + QString::number(pDMTDDlg->count));
 	return 1;
 }
 
@@ -127,8 +129,7 @@ void DMTDDlg::LoadTXT(QString path)
 		i++;
 	} while (i < fileInfo->size());
 
-	ui.DoingBar->setRange(0, count);
-	ui.NumberLabel->setText(QString::fromLocal8Bit("共计: ")+QString::number(count));
+	
 }
 
 //导入按钮事件
@@ -138,7 +139,7 @@ void DMTDDlg::on_ImpBtn_clicked()
 	switch (pResult)
 	{
 	case -1:
-		LogWrite::LogMsgOutput("消息中间件通信异常,数据未发送成功！");
+		LogWrite::SYSLogMsgOutPut("消息中间件通信异常,数据未发送成功！");
 		break;
 	default:
 		break;

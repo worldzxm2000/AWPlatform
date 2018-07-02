@@ -154,8 +154,8 @@
     <property name="title">
      <string>查看日志</string>
     </property>
-    <addaction name="action"/>
-    <addaction name="action_2"/>
+    <addaction name="action_SYSLog"/>
+    <addaction name="action_DataLog"/>
    </widget>
    <addaction name="menu"/>
    <addaction name="menu_2"/>
@@ -173,12 +173,12 @@
     <string>1</string>
    </property>
   </action>
-  <action name="action">
+  <action name="action_SYSLog">
    <property name="text">
     <string>系统日志</string>
    </property>
   </action>
-  <action name="action_2">
+  <action name="action_DataLog">
    <property name="text">
     <string>数据日志</string>
    </property>

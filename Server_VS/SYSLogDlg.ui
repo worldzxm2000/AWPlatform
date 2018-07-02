@@ -6,62 +6,76 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>707</width>
+    <width>623</width>
     <height>471</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>系统日志</string>
   </property>
-  <widget class="QTableView" name="tableView">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>10</y>
-     <width>711</width>
-     <height>401</height>
-    </rect>
-   </property>
-  </widget>
   <widget class="QWidget" name="horizontalLayoutWidget">
    <property name="geometry">
     <rect>
-     <x>190</x>
+     <x>120</x>
      <y>420</y>
-     <width>271</width>
+     <width>431</width>
      <height>41</height>
     </rect>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
-     <widget class="QLabel" name="label">
+     <widget class="QLabel" name="CurrentPageLabel">
       <property name="text">
        <string>第100页</string>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QLabel" name="label_2">
+     <widget class="QLabel" name="TotalPageabel">
       <property name="text">
        <string>共10000页</string>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="pushButton">
+     <widget class="QPushButton" name="PageToBeginBtn">
+      <property name="text">
+       <string>首页</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="PageDownBtn">
       <property name="text">
        <string>前一页</string>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="pushButton_2">
+     <widget class="QPushButton" name="PageUpBtn">
       <property name="text">
        <string>后一页</string>
       </property>
      </widget>
     </item>
+    <item>
+     <widget class="QPushButton" name="PageToEndBtn">
+      <property name="text">
+       <string>末页</string>
+      </property>
+     </widget>
+    </item>
    </layout>
+  </widget>
+  <widget class="QTableWidget" name="DataListTable">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>601</width>
+     <height>401</height>
+    </rect>
+   </property>
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>

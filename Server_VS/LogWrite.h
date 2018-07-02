@@ -19,8 +19,8 @@ public:
 	LogWrite();
 	~LogWrite();
 
-   static void LogMsgOutput(QString ErrMSG);
+	//写入系统日志
+   static void SYSLogMsgOutPut(QString ErrMSG);
+   static void DataLogMsgOutPut(QString MSG);
 
-signals:
-   void test(int x);
 };

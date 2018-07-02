@@ -139,7 +139,6 @@ private slots:
 	void GetCommandStatus(int result);
 	//终端操作返回读取值
 	void GetCommandRecvValue(QJsonObject RecvJson);
-	void GetCommandRecvValue(QJsonObject RecvJson,bool IsComm);
 	//添加Lib按钮事件
     void on_RunBtn_clicked();
 	//移除业务Lib

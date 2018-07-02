@@ -8,7 +8,6 @@
 #include<qjsondocument.h>
 #include<qdir.h>
 using namespace std;
-
 HANDLE hMutex = CreateMutex(NULL, FALSE, NULL);
 
 IOCP::IOCP()
@@ -44,6 +43,7 @@ void IOCP::Stop()
 	Sockets.clear();
 	result = closesocket(srvSocket);
 	WSACleanup();
+	LogWrite::SYSLogMsgOutPut("服务已关闭，端口号为：" + QString::number(m_port));
 }
 
 void IOCP::run()
@@ -68,7 +68,7 @@ void IOCP::run()
 
 	SYSTEM_INFO mySysInfo;
 	GetSystemInfo(&mySysInfo);
-	iThreadsCount = (mySysInfo.dwNumberOfProcessors * 2);
+	iThreadsCount = (mySysInfo.dwNumberOfProcessors*2);
 	for (unsigned i = 0; i < iThreadsCount; ++i)
 	{
 		HANDLE threadhandle = (HANDLE)_beginthreadex(NULL, 0, ServerWorkThread, &pparam, 0, NULL);
@@ -143,9 +143,9 @@ void IOCP::run()
 		PerHandleData->ClientIP = ch;
 		//客户端socket添加入客户端数组，通知主程序
 		Sockets.push_back(acceptSocket);
-		LogWrite::LogMsgOutput("Socket is " +QString::number(acceptSocket)+" ServiceID is "+QString::number(m_port));
+		LogWrite::SYSLogMsgOutPut("新的连接已建立，业务端口号为："+QString::number(m_port));
 		//通知UI
-		NoticfyUINewClient(ip, port, m_port, acceptSocket);
+		//NoticfyUINewClient(ip, port, m_port, acceptSocket);
 
 		DWORD RecvBytes = 0;
 		DWORD Flags = 0;
@@ -178,7 +178,7 @@ unsigned IOCP::ServerWorkThread(LPVOID pParam)
 				if (IpOverlapped==NULL)
 				{
 					if (pIOCP != NULL)
-						LogWrite::LogMsgOutput("IOCP is out,GetQueuedCompletionStatus is false and Overlapped is null!");
+						LogWrite::SYSLogMsgOutPut("监听线程意外断开！");
 					break;
 				}
 			}
@@ -200,11 +200,6 @@ unsigned IOCP::ServerWorkThread(LPVOID pParam)
 							break;
 						}
 					}
-					/*if (closesocket(PerHandleData->socket) == SOCKET_ERROR)
-					{
-						int result = WSAGetLastError();	
-						pIOCP->NoticfyServerError(result);
-					}*/
 					GlobalFree(PerHandleData);
 					GlobalFree(PerIoData);
 					continue;
@@ -220,7 +215,6 @@ unsigned IOCP::ServerWorkThread(LPVOID pParam)
 			PerIoData->databuff.len = 4 * 1024;
 			PerIoData->databuff.buf = PerIoData->buffer;
 			PerIoData->operationType = 0;
-
 			WSARecv(PerHandleData->socket, &(PerIoData->databuff), 1, &RecvBytes, &Flags, &(PerIoData->overlapped), NULL);
 		}
 		return 0;
@@ -272,14 +266,6 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 			QJsonDocument document;
 			document.setObject(JsonObj);
 			QByteArray byteArray = document.toJson(QJsonDocument::Compact);
-
-			QString DataTypeID = JsonObj.find("DataTypeID").value().toString();
-			//即时采集数据
-			if (DataTypeID == "01")
-			{
-				p->NoticfyServerRecvValue(JsonObj);
-				return;
-			}
 			LPCSTR dataChar;
 			dataChar = byteArray.data();
 			if (g_SimpleProducer.send(dataChar, strlen(dataChar)) < 0)
@@ -357,7 +343,6 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 			json_one = JsonObj.find("1").value().toObject();
 			json_another = JsonObj.find("2").value().toObject();
 
-			QString DataTypeID = json_one.find("DataTypeID").value().toString();
 			//发送消息第一根
 			QJsonDocument document_one;
 			document_one.setObject(json_one);
@@ -430,6 +415,8 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 
 		default://-1：表示无效数据
 		{
+			QString str = QString(QLatin1String(perIOData->buffer));
+			LogWrite::DataLogMsgOutPut("台站Socket号"+QString::number(PerHandleData->socket)+"意外的接收字节："+str);
 			//清空数据，为下一阵做准备
 			PerHandleData->IsWholeFrame = true;
 			PerHandleData->DataCount = 0;

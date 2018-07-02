@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
 ** Form generated from reading UI file 'server_vs.ui'
 **
 ** Created by: Qt User Interface Compiler version 5.10.1
@@ -59,10 +59,10 @@ public:
         actionDMTM->setObjectName(QStringLiteral("actionDMTM"));
         action1 = new QAction(Server_VSClass);
         action1->setObjectName(QStringLiteral("action1"));
-        action_SYSLog = new QAction(Server_VSClass);
-		action_SYSLog->setObjectName(QStringLiteral("actionSYSLOG"));
-        action_DataLog = new QAction(Server_VSClass);
-		action_DataLog->setObjectName(QStringLiteral("actionDATALOG"));
+		action_SYSLog = new QAction(Server_VSClass);
+		action_SYSLog->setObjectName(QStringLiteral("actionSYSLog"));
+		action_DataLog = new QAction(Server_VSClass);
+		action_DataLog->setObjectName(QStringLiteral("actionDataLog"));
         centralWidget = new QWidget(Server_VSClass);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         groupBox = new QGroupBox(centralWidget);
@@ -127,7 +127,7 @@ public:
         actionDMTM->setToolTip(QApplication::translate("Server_VSClass", "\350\241\245\346\212\204\346\225\260\346\215\256", nullptr));
 #endif // QT_NO_TOOLTIP
         action1->setText(QApplication::translate("Server_VSClass", "1", nullptr));
-        action_SYSLog->setText(QApplication::translate("Server_VSClass", "\347\263\273\347\273\237\346\227\245\345\277\227", nullptr));
+		action_SYSLog->setText(QApplication::translate("Server_VSClass", "\347\263\273\347\273\237\346\227\245\345\277\227", nullptr));
 		action_DataLog->setText(QApplication::translate("Server_VSClass", "\346\225\260\346\215\256\346\227\245\345\277\227", nullptr));
         groupBox->setTitle(QApplication::translate("Server_VSClass", "\344\270\232\345\212\241\347\247\215\347\261\273\345\210\227\350\241\250", nullptr));
         DeleteBtn->setText(QApplication::translate("Server_VSClass", "-", nullptr));
