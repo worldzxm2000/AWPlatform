@@ -6,6 +6,7 @@ CommandDlg::CommandDlg(int ServiceType)
 {
 	
 	ui.setupUi(this);
+	setWindowFlags(Qt::WindowCloseButtonHint);
 	completer = new QCompleter();
 	completer->setFilterMode(Qt::MatchContains);
 	completer->setCompletionMode(QCompleter::PopupCompletion);

@@ -1,11 +1,13 @@
 ﻿#include "SYSLogDlg.h"
 #include"ReadSYSLogTXT.h"
-
+#include<qtooltip.h>
 SYSLogDlg::SYSLogDlg(QWidget *parent)
 	: QDialog(parent)
 {
 	ui.setupUi(this);
-	ReadSYSLogTXT *readTxtThread=new ReadSYSLogTXT();
+	setWindowFlags(Qt::WindowCloseButtonHint);
+	setFixedSize(623, 470);
+	ReadSYSLogTXT *readTxtThread=new ReadSYSLogTXT("SYSLog");
 	connect(readTxtThread,SIGNAL(SendToUI(QStringList)), this, SLOT(GetLogTxt(QStringList)));
 	pool.start(readTxtThread);
 	//设置显示列表控件
@@ -18,13 +20,23 @@ SYSLogDlg::SYSLogDlg(QWidget *parent)
 	ui.DataListTable->horizontalHeader()->setHighlightSections(false);//禁止表头选中高亮
 	ui.DataListTable->horizontalHeader()->setStyleSheet("QHeaderView::section{background:skyblue;}"); //设置表头背景色
 	ui.DataListTable->horizontalHeader()->setStretchLastSection(true);//列宽
-	//ui.DataListTable->setAutoScroll(false);
+	ui.DataListTable->setMouseTracking(true);//tip提示
+	connect(ui.DataListTable, SIGNAL(entered(QModelIndex)), this, SLOT(ShowToolTip(QModelIndex)));
 }
 
 SYSLogDlg::~SYSLogDlg()
 {
 }
 
+void SYSLogDlg::ShowToolTip(QModelIndex index)
+{
+	if (!index.isValid()) {
+		return;
+
+	}
+
+	QToolTip::showText(QCursor::pos(), index.data().toString());
+}
 //获取SYSLog数据
 void SYSLogDlg::GetLogTxt(QStringList strlist)
 {
@@ -35,7 +47,8 @@ void SYSLogDlg::GetLogTxt(QStringList strlist)
 	ui.PageDownBtn->setEnabled(false);
 	ui.CurrentPageLabel->setText(QString::fromLocal8Bit("第1页"));
 	ui.TotalPageabel->setText(QString::fromLocal8Bit("共")+QString::number(TotalPage)+ QString::fromLocal8Bit("页"));
-	for (int i = 0; i < 20; i++)
+	int len = strlist.count() <= 20 ? strlist.count() : 20;
+	for (int i = 0; i < len; i++)
 	{
 		ui.DataListTable->insertRow(i);
 		ui.DataListTable->setItem(i, 0, new QTableWidgetItem(dataList.at(i)));
@@ -45,9 +58,7 @@ void SYSLogDlg::GetLogTxt(QStringList strlist)
 void SYSLogDlg:: GetDataInCurrentPage(int CurrentPage)
 {
 	ui.CurrentPageLabel->setText(QString::fromLocal8Bit("第")+QString::number(CurrentPage)+ QString::fromLocal8Bit("页"));
-	int len = 20;
-	if (CurrentPage == TotalPage)
-		len = dataList.count() - (dataList.count() / 20) * 20;
+	int len = CurrentPage == TotalPage ? len = dataList.count() - (dataList.count() / 20) * 20 : 20;
 	CurrentPage -= 1;
 	ui.DataListTable->clearContents ();
 

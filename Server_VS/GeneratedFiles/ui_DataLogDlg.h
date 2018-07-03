@@ -1,19 +1,18 @@
 /********************************************************************************
-** Form generated from reading UI file 'SYSLogDlg.ui'
+** Form generated from reading UI file 'DataLogDlg.ui'
 **
 ** Created by: Qt User Interface Compiler version 5.10.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
 
-#ifndef UI_SYSLOGDLG_H
-#define UI_SYSLOGDLG_H
+#ifndef UI_DATALOGDLG_H
+#define UI_DATALOGDLG_H
 
 #include <QtCore/QVariant>
 #include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QButtonGroup>
-#include <QtWidgets/QDialog>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
@@ -23,9 +22,10 @@
 
 QT_BEGIN_NAMESPACE
 
-class Ui_SYSLogDlg
+class Ui_DataLogDlg
 {
 public:
+    QTableWidget *DataListTable;
     QWidget *horizontalLayoutWidget;
     QHBoxLayout *horizontalLayout;
     QLabel *CurrentPageLabel;
@@ -34,16 +34,18 @@ public:
     QPushButton *PageDownBtn;
     QPushButton *PageUpBtn;
     QPushButton *PageToEndBtn;
-    QTableWidget *DataListTable;
 
-    void setupUi(QDialog *SYSLogDlg)
+    void setupUi(QWidget *DataLogDlg)
     {
-        if (SYSLogDlg->objectName().isEmpty())
-            SYSLogDlg->setObjectName(QStringLiteral("SYSLogDlg"));
-        SYSLogDlg->resize(623, 471);
-        horizontalLayoutWidget = new QWidget(SYSLogDlg);
+        if (DataLogDlg->objectName().isEmpty())
+            DataLogDlg->setObjectName(QStringLiteral("DataLogDlg"));
+        DataLogDlg->resize(623, 471);
+        DataListTable = new QTableWidget(DataLogDlg);
+        DataListTable->setObjectName(QStringLiteral("DataListTable"));
+        DataListTable->setGeometry(QRect(10, 10, 601, 401));
+        horizontalLayoutWidget = new QWidget(DataLogDlg);
         horizontalLayoutWidget->setObjectName(QStringLiteral("horizontalLayoutWidget"));
-        horizontalLayoutWidget->setGeometry(QRect(90, 420, 431, 41));
+        horizontalLayoutWidget->setGeometry(QRect(80, 420, 431, 41));
         horizontalLayout = new QHBoxLayout(horizontalLayoutWidget);
         horizontalLayout->setSpacing(6);
         horizontalLayout->setContentsMargins(11, 11, 11, 11);
@@ -79,32 +81,29 @@ public:
 
         horizontalLayout->addWidget(PageToEndBtn);
 
-        DataListTable = new QTableWidget(SYSLogDlg);
-        DataListTable->setObjectName(QStringLiteral("DataListTable"));
-        DataListTable->setGeometry(QRect(10, 10, 601, 401));
 
-        retranslateUi(SYSLogDlg);
+        retranslateUi(DataLogDlg);
 
-        QMetaObject::connectSlotsByName(SYSLogDlg);
+        QMetaObject::connectSlotsByName(DataLogDlg);
     } // setupUi
 
-    void retranslateUi(QDialog *SYSLogDlg)
+    void retranslateUi(QWidget *DataLogDlg)
     {
-        SYSLogDlg->setWindowTitle(QApplication::translate("SYSLogDlg", "\347\263\273\347\273\237\346\227\245\345\277\227", nullptr));
-        CurrentPageLabel->setText(QApplication::translate("SYSLogDlg", "\347\254\254100\351\241\265", nullptr));
-        TotalPageabel->setText(QApplication::translate("SYSLogDlg", "\345\205\26110000\351\241\265", nullptr));
-        PageToBeginBtn->setText(QApplication::translate("SYSLogDlg", "\351\246\226\351\241\265", nullptr));
-        PageDownBtn->setText(QApplication::translate("SYSLogDlg", "\345\211\215\344\270\200\351\241\265", nullptr));
-        PageUpBtn->setText(QApplication::translate("SYSLogDlg", "\345\220\216\344\270\200\351\241\265", nullptr));
-        PageToEndBtn->setText(QApplication::translate("SYSLogDlg", "\346\234\253\351\241\265", nullptr));
+        DataLogDlg->setWindowTitle(QApplication::translate("DataLogDlg", "\346\225\260\346\215\256\346\227\245\345\277\227", nullptr));
+        CurrentPageLabel->setText(QApplication::translate("DataLogDlg", "\347\254\254100\351\241\265", nullptr));
+        TotalPageabel->setText(QApplication::translate("DataLogDlg", "\345\205\26110000\351\241\265", nullptr));
+        PageToBeginBtn->setText(QApplication::translate("DataLogDlg", "\351\246\226\351\241\265", nullptr));
+        PageDownBtn->setText(QApplication::translate("DataLogDlg", "\345\211\215\344\270\200\351\241\265", nullptr));
+        PageUpBtn->setText(QApplication::translate("DataLogDlg", "\345\220\216\344\270\200\351\241\265", nullptr));
+        PageToEndBtn->setText(QApplication::translate("DataLogDlg", "\346\234\253\351\241\265", nullptr));
     } // retranslateUi
 
 };
 
 namespace Ui {
-    class SYSLogDlg: public Ui_SYSLogDlg {};
+    class DataLogDlg: public Ui_DataLogDlg {};
 } // namespace Ui
 
 QT_END_NAMESPACE
 
-#endif // UI_SYSLOGDLG_H
+#endif // UI_DATALOGDLG_H

@@ -6,7 +6,7 @@ using namespace std;
 ConfigWnd::ConfigWnd(QWidget *parent)
 {
 	ui.setupUi(this);
-	
+	setWindowFlags(Qt::WindowCloseButtonHint);
 	GetLocalIP();
 
 }

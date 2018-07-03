@@ -43,7 +43,7 @@ void IOCP::Stop()
 	Sockets.clear();
 	result = closesocket(srvSocket);
 	WSACleanup();
-	LogWrite::SYSLogMsgOutPut("服务已关闭，端口号为：" + QString::number(m_port));
+	LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit("服务已关闭，端口号为：") + QString::number(m_port));
 }
 
 void IOCP::run()
@@ -143,7 +143,7 @@ void IOCP::run()
 		PerHandleData->ClientIP = ch;
 		//客户端socket添加入客户端数组，通知主程序
 		Sockets.push_back(acceptSocket);
-		LogWrite::SYSLogMsgOutPut("新的连接已建立，业务端口号为："+QString::number(m_port));
+		LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit( "新的连接已建立，业务端口号为：") + QString::number(m_port));
 		//通知UI
 		//NoticfyUINewClient(ip, port, m_port, acceptSocket);
 
@@ -178,7 +178,7 @@ unsigned IOCP::ServerWorkThread(LPVOID pParam)
 				if (IpOverlapped==NULL)
 				{
 					if (pIOCP != NULL)
-						LogWrite::SYSLogMsgOutPut("监听线程意外断开！");
+						LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit("监听线程意外断开！"));
 					break;
 				}
 			}
@@ -349,14 +349,16 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 			QByteArray byteArray_one = document_one.toJson(QJsonDocument::Compact);
 			LPCSTR dataChar_one;
 			dataChar_one = byteArray_one.data();
-			g_SimpleProducer.send(dataChar_one, strlen(dataChar_one));
+			if (g_SimpleProducer.send(dataChar_one, strlen(dataChar_one)) < 0)
+				p->NoticfyServerError(-3);
 			//发送消息第二根
 			QJsonDocument document_another;
 			document_another.setObject(json_another);
 			QByteArray byteArray_another = document_another.toJson(QJsonDocument::Compact);
 			LPCSTR dataChar_another;
 			dataChar_another = byteArray_another.data();
-			g_SimpleProducer.send(dataChar_another, strlen(dataChar_another));
+			if (g_SimpleProducer.send(dataChar_another, strlen(dataChar_another)) < 0)
+				p->NoticfyServerError(-3);
 			//获取区站号
 			QString StationID = json_one.find("StationID").value().toString();
 			//获取业务号
@@ -416,7 +418,7 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 		default://-1：表示无效数据
 		{
 			QString str = QString(QLatin1String(perIOData->buffer));
-			LogWrite::DataLogMsgOutPut("台站Socket号"+QString::number(PerHandleData->socket)+"意外的接收字节："+str);
+			LogWrite::DataLogMsgOutPut(QString::fromLocal8Bit("台站Socket号")+QString::number(PerHandleData->socket)+QString::fromLocal8Bit("意外的接收字节:")+str);
 			//清空数据，为下一阵做准备
 			PerHandleData->IsWholeFrame = true;
 			PerHandleData->DataCount = 0;

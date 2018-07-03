@@ -9,7 +9,7 @@ message("You are running qmake on a generated .pro file. This may not work!")
 
 HEADERS += ./SimpleProducer.h \
     ./param.h \
-    ./server_vs.h \
+    ./Server_VS.h \
     ./SYSLogDlg.h \
     ./SrvTableWidget.h \
     ./SocketServerForWeb.h \
@@ -17,16 +17,18 @@ HEADERS += ./SimpleProducer.h \
     ./ConfigWnd.h \
     ./CommandDlg.h \
     ./DMTDDlg.h \
+    ./DataLogDlg.h \
     ./ReadSYSLogTXT.h \
     ./LogWrite.h
 SOURCES += ./CommandDlg.cpp \
     ./ConfigWnd.cpp \
+    ./DataLogDlg.cpp \
     ./DMTDDlg.cpp \
     ./IOCP.cpp \
     ./LogWrite.cpp \
     ./main.cpp \
     ./ReadSYSLogTXT.cpp \
-    ./server_vs.cpp \
+    ./Server_VS.cpp \
     ./SimpleProducer.cpp \
     ./SocketServerForWeb.cpp \
     ./SrvTableWidget.cpp \
@@ -35,5 +37,6 @@ FORMS += ./server_vs.ui \
     ./ConfigWnd.ui \
     ./CommandDlg.ui \
     ./DMTDDlg.ui \
-    ./SYSLogDlg.ui
+    ./SYSLogDlg.ui \
+    ./DataLogDlg.ui
 RESOURCES += server_vs.qrc

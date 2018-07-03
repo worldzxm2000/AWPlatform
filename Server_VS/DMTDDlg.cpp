@@ -13,6 +13,7 @@ DMTDDlg::DMTDDlg(QWidget *parent)
 	: QDialog(parent)
 {
 	ui.setupUi(this); 
+	setWindowFlags(Qt::WindowCloseButtonHint);
 	setFixedSize(525, 160);
 	ui.DoingBar->setWindowTitle(QString::fromLocal8Bit("上传要素数据"));
 	count = 0;
@@ -116,9 +117,26 @@ void DMTDDlg::LoadTXT(QString path)
 					}
 						
 					LRESULT pResult =func_Char2Json(buff, len, json);
-					if (pResult != 1)
+					//一根数据
+					if (pResult == 1)
+					{
+						JsonList.append(json);
+					}
+					//农委两根数据
+					else if (pResult==20)
+					{
+						QJsonObject json_one;
+						QJsonObject json_another;
+
+						json_one = json.find("1").value().toObject();
+						json_another = json.find("2").value().toObject();
+						JsonList.append(json_one);
+						JsonList.append(json_another);
+					}
+					else
+					{
 						continue;
-					JsonList.append(json);
+					}
 					count++;
 					ui.NumberLabel->setText(QString::number(count));
 					Sleep(10);

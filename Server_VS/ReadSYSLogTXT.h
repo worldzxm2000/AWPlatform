@@ -8,10 +8,12 @@ class ReadSYSLogTXT : public QObject,public QRunnable
 
 public:
 	ReadSYSLogTXT(QObject *parent);
-	ReadSYSLogTXT();
+	ReadSYSLogTXT(QString txtPath);
 	~ReadSYSLogTXT();
 protected:
 	void run();
+private:
+	QString m_TXTPath;
 signals:
 	void SendToUI(QStringList strlist);
 };

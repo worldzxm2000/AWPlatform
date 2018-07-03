@@ -31,4 +31,5 @@ private slots:
     void on_PageUpBtn_clicked();
     void on_PageToBeginBtn_clicked();
     void on_PageToEndBtn_clicked();
+	void ShowToolTip(QModelIndex index);
 };

@@ -10,6 +10,7 @@
 #include"qtcpsocket.h"
 #include"DMTDDlg.h"
 #include"SYSLogDlg.h"
+#include"DataLogDlg.h"
 using namespace std;
 //消息中间件类
 SimpleProducer g_SimpleProducer;
@@ -492,7 +493,7 @@ bool Server_VS::IsLegallyPort(int port)
 void Server_VS::GetCommandStatus(int result)
 {
 	//操作状态
-	QString strOperateStatus;
+	QString strOperateStatus("未知值");
 	switch (result)
 	{
 		//无效操作
@@ -511,7 +512,8 @@ void Server_VS::GetCommandStatus(int result)
 		strOperateStatus =QString::number(result);
 		break;
 	}
-	ui.StatusLabel->setText(strOperateType + strOperateStatus);
+	LogWrite::DataLogMsgOutPut(QString("终端命令:")+strOperateType +QString(",解析终端值:") + strOperateStatus);
+	ui.StatusLabel->setText(strOperateType +":"+ strOperateStatus);
     //LogWrite::LogWrite();
 }
 
@@ -520,7 +522,7 @@ void Server_VS::GetCommandRecvValue(QJsonObject RecvJson)
 {
 	QJsonObject::Iterator it;
 	QString keyString = "未知值";
-	QString valueString = "位置值";
+	QString valueString = "未知值";
 	for (it = RecvJson.begin(); it != RecvJson.end(); it++)
 	{
 		keyString = it.key();
@@ -529,10 +531,15 @@ void Server_VS::GetCommandRecvValue(QJsonObject RecvJson)
 			QString value = it.value().toString();
 			if (value == "N")
 				continue;
-			valueString += it.value().toString()+" ";
+			valueString += " ";
+			valueString += value;
 		}
 	}
 	ui.StatusLabel->setText(strOperateType+":"+valueString);
+	QJsonDocument document;
+	document.setObject(RecvJson);
+	QString strRecv(document.toJson(QJsonDocument::Compact));
+	LogWrite::DataLogMsgOutPut(QString("解析终端值:")+strRecv);
 	//socket4web->Send2WebServerJson(RecvJson);
 }
 
@@ -614,7 +621,7 @@ void Server_VS::UpdateUI(QString StationID, QString ObserveTime, int Count, bool
 		ui.clientList->setItem(RowIndex, 7, new QTableWidgetItem(QString::number(Port, 10)));
 		ui.clientList->setItem(RowIndex, 8, new QTableWidgetItem(QString::number(Socket)));
 	}
-	LogWrite::DataLogMsgOutPut(stServiceTypeID+"业务有新的数据，台站号为:"+StationID);
+	LogWrite::DataLogMsgOutPut(stServiceTypeID+"有新的数据,台站号为:"+StationID+QString(",Socket号为:")+QString::number(Socket));
 }
 
 //添加到设备数组
@@ -919,6 +926,7 @@ void Server_VS::Func_DMTD()
 	//未选中业务服务
 	if (iSelectIndexOfService < 0)
 		return;
+
 	//初始化
 	DMTDDlg dmtddlg;
 	if (ClientInfo[iSelectIndexOfService].pICOP == NULL)
@@ -937,11 +945,14 @@ void Server_VS::OpenSYSLog()
 	SYSLogDlg syslogdlg;
 	syslogdlg.exec();
 }
+
 //查看数据运行日志
 void Server_VS::OpenDataLog()
 {
-
+	DataLogDlg datalogdlg;
+	datalogdlg.exec();
 }
+
 //查看业务属性
 void Server_VS::Lib_Attri()
 {

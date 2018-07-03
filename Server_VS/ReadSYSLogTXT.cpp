@@ -7,9 +7,9 @@ ReadSYSLogTXT::ReadSYSLogTXT(QObject *parent)
 {
 }
 
-ReadSYSLogTXT::ReadSYSLogTXT()
+ReadSYSLogTXT::ReadSYSLogTXT(QString txtPath)
 {
-
+	m_TXTPath = txtPath;
 }
 ReadSYSLogTXT::~ReadSYSLogTXT()
 {
@@ -17,7 +17,7 @@ ReadSYSLogTXT::~ReadSYSLogTXT()
 
 void ReadSYSLogTXT::run()
 {
-	QString path= QCoreApplication::applicationDirPath() + "\\Log\\SYSLog.txt";
+	QString path= QCoreApplication::applicationDirPath() + "\\Log\\"+m_TXTPath+".txt";
 	QFile file(path);
 	if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
 		return;
