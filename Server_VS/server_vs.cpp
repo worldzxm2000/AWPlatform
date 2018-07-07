@@ -153,7 +153,7 @@ LRESULT Server_VS::InitializeMQ()
 		brokerURI = "tcp://117.158.216.250:61616";
 
 		unsigned int numMessages = 2000;
-		destURI = "DataFromFacility";
+		destURI = "tmp";
 		clientAck = false;
 		useTopics = false;
 		g_SimpleProducer.start(UserName, Password, brokerURI, numMessages, destURI, useTopics, clientAck);
@@ -383,6 +383,7 @@ void Server_VS::on_DeleteBtn_clicked()
 				ClientInfo[i].pICOP->Stop();
 				ClientInfo[i].IsRun = false;
 				ClientInfo[i].pICOP = NULL;
+				
 			}
 			ClientInfo.erase(ClientInfo.begin() + i);
 		}
@@ -521,8 +522,8 @@ void Server_VS::GetCommandStatus(int result)
 void Server_VS::GetCommandRecvValue(QJsonObject RecvJson)
 {
 	QJsonObject::Iterator it;
-	QString keyString = "未知值";
-	QString valueString = "未知值";
+	QString keyString = "";
+	QString valueString = "";
 	for (it = RecvJson.begin(); it != RecvJson.end(); it++)
 	{
 		keyString = it.key();
@@ -621,7 +622,7 @@ void Server_VS::UpdateUI(QString StationID, QString ObserveTime, int Count, bool
 		ui.clientList->setItem(RowIndex, 7, new QTableWidgetItem(QString::number(Port, 10)));
 		ui.clientList->setItem(RowIndex, 8, new QTableWidgetItem(QString::number(Socket)));
 	}
-	LogWrite::DataLogMsgOutPut(stServiceTypeID+"有新的数据,台站号为:"+StationID+QString(",Socket号为:")+QString::number(Socket));
+	//LogWrite::DataLogMsgOutPut(stServiceTypeID+"有新的数据,台站号为:"+StationID+QString(",Socket号为:")+QString::number(Socket));
 }
 
 //添加到设备数组
@@ -742,7 +743,7 @@ void Server_VS::CreateServerListActions()
 
 }
 
-////区站号列表右键事件
+//区站号列表右键事件
 void Server_VS::on_clientList_customContextMenuRequested(const QPoint &pos)
 {
 	QTableWidgetItem* selecteditem = ui.clientList->itemAt(pos); //get right click pos item
@@ -793,6 +794,7 @@ void Server_VS::Lib_Run(int ServerIndex)
 		}
 		//启动一个IOCP来监听设备
 		AddIOCP(func_Char2Json, ClientInfo[iSelectIndexOfService].ServerPortID, ClientInfo[iSelectIndexOfService].IP);
+		//lib.unload();
 	}
 }
 
@@ -986,6 +988,9 @@ void Server_VS::SendCOMM()
 			break;
 		}
 	}
+
+
+
 	CommandDlg commdlg(severtype);
 	commdlg.Socket = SocketID;
 	connect(&commdlg,SIGNAL(NoticfyUICOMMSTR(QString)),this,SLOT(GetCommName(QString)));
@@ -1062,6 +1067,14 @@ void Server_VS::SetTimeCorrection()
 	diff_time += 28800;//北京时间 需要加上8小时
 	QDateTime nowtime = QDateTime::fromTime_t(diff_time);
 	datetime=nowtime.toString("yyyy.MM.dd hh:mm:ss"); 
+	QString year, month, day, hour, min, sec;
+	year = nowtime.toString("yy");
+	month = nowtime.toString("MM");
+	day = nowtime.toString("dd");
+	hour = nowtime.toString("hh");
+	min = nowtime.toString("mm");
+	sec = nowtime.toString("ss");
+
 	//校正设备时钟
 	for (int i = 0; i < ClientInfo.size(); i++)
 	{
@@ -1082,31 +1095,41 @@ void Server_VS::SetTimeCorrection()
 		}
 		case TRSF:
 		{
-			//for (int j = 0; j < ClientInfo[i].clients.size(); j++)
-			//{
-			//	int socketID = ClientInfo[i].clients[j].SocketID;
-			//	BYTE bytes[1024];
-			//	bytes[0] = 0xff;
-			//	bytes[1] = 0xff;
-			//	bytes[2] = 0xff;
-			//	bytes[3] = 0xaa;
-			//	bytes[4] = 0x0a;
-			//	bytes[5] = 0x81;
-			//	bytes[6] = 0x00;
-			//	//bytes[7] = 0x;//目的地址
-			//	bytes[8] = 0x14;//20
-			////	bytes[9] = 0x;//2018
-			//	bytes[10] = 0xff;//月
-			//	bytes[11] = 0xff;//日
-			//	bytes[12] = 0xff;//时
-			//	bytes[13] = 0xff;//分
-			//	bytes[14] = 0xff;//秒
-			//	bytes[15] = 0xff;//校验位
-			//	bytes[16] = 0xdd;
-			//	bytes[17] = 0xff;
-			//	
-			//	//::send(socketID, ch, len, 0);
-			//}
+			for (int j = 0; j < ClientInfo[i].clients.size(); j++)
+			{
+				int chk = 0;
+				int socketID = ClientInfo[i].clients[j].SocketID;
+				BYTE bytes[1024];
+				bytes[0] = 0xff;
+				bytes[1] = 0xff;
+				bytes[2] = 0xff;
+				bytes[3] = 0xaa;
+				bytes[4] = 0x0a;//帧长度
+				bytes[5] = 0x81;//帧命令
+				chk += bytes[5];
+				bytes[6] = 0x00;//源地址
+				chk += bytes[6];
+				bytes[7] = ClientInfo[i].clients[j].StationID.toInt();//目的地址
+				chk += bytes[7];
+				bytes[8] = 0x14;//20
+				chk += bytes[8];
+				bytes[9] = year.toInt();
+				chk += bytes[9];
+				bytes[10] = month.toInt();
+				chk += bytes[10];
+				bytes[11] = day.toInt();
+				chk += bytes[11];
+				bytes[12] = hour.toInt();
+				chk += bytes[12];
+				bytes[13] = min.toInt();
+				chk += bytes[13];
+				bytes[14] = sec.toInt();
+				chk += bytes[14];
+				bytes[15] = chk& 0xff;//校验位
+				bytes[16] = (chk>>8)&0xff;
+				bytes[17] = 0xff;
+				::send(socketID, (char *)bytes, 18, 0);
+			}
 			break;
 		}
 		default:

@@ -91,7 +91,10 @@ void DataLogDlg::on_PageUpBtn_clicked()
 	ui.PageDownBtn->setEnabled(true);
 	//向前按钮变灰
 	if (currentPage + 1 > TotalPage)
+	{
 		ui.PageUpBtn->setEnabled(false);
+		return;
+	}
 
 	//填充数据列表
 	GetDataInCurrentPage(currentPage);

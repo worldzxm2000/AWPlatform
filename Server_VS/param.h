@@ -9,7 +9,8 @@ typedef int(*Fun)(int, int, string*); //定义函数指针,int add(int a,int b);
 typedef LRESULT(*Char2Json)(LPCSTR buff, int len, QJsonObject &json);//解析数据函数
 typedef int(*GetServiceTypeID)();//获取业务类型
 typedef QString(*GetServiceTypeName)();//获取业务名称
-
+typedef int(*GetPort());//获取端口
+typedef QString(*GetVersionNo());//获取版本号
 
 const int DataBuffSize = 4 * 1024;
 extern 	SimpleProducer g_SimpleProducer;

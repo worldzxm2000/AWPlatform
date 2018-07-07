@@ -79,6 +79,9 @@ void SYSLogDlg::on_PageDownBtn_clicked()
 	//向前按钮变灰
 	if (currentPage < 2)
 		ui.PageDownBtn->setEnabled(false);
+	//只有一页
+	if (currentPage == 0)
+		return;
 	//填充数据列表
 	GetDataInCurrentPage(currentPage);
 }
@@ -91,7 +94,10 @@ void SYSLogDlg::on_PageUpBtn_clicked()
 	ui.PageDownBtn->setEnabled(true);
 	//向前按钮变灰
 	if (currentPage + 1 > TotalPage)
+	{
 		ui.PageUpBtn->setEnabled(false);
+		return;
+	}
 	
 	//填充数据列表
 	GetDataInCurrentPage(currentPage);
