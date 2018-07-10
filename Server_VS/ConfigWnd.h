@@ -23,6 +23,8 @@ public:
 	QString m_Attribute;
 	//窗体打开模式
 	bool DialogMode;
+	//设置端口号
+	void SetServicePort(int Port);
 	int exec();
 private slots:
     void on_SetBtn_clicked();

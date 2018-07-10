@@ -12,12 +12,10 @@ HANDLE hMutex = CreateMutex(NULL, FALSE, NULL);
 
 IOCP::IOCP()
 {
-	
+
 }
 
-IOCP::~IOCP(){
-	
-}
+IOCP::~IOCP(){}
 
 void IOCP::SetListenedPort(int port,QString IP)
 {
@@ -434,3 +432,7 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 		
 }
 
+int IOCP:: GetSocket()
+{
+	return srvSocket;
+}

@@ -153,7 +153,7 @@ LRESULT Server_VS::InitializeMQ()
 		brokerURI = "tcp://117.158.216.250:61616";
 
 		unsigned int numMessages = 2000;
-		destURI = "tmp";
+		destURI = "DataFromFacility";
 		clientAck = false;
 		useTopics = false;
 		g_SimpleProducer.start(UserName, Password, brokerURI, numMessages, destURI, useTopics, clientAck);
@@ -435,12 +435,14 @@ LRESULT Server_VS::AddDll()
 		return 0;
 	strName = fileDialog->selectedFiles()[0];
 	//读取dll
-	QLibrary lib(strName);
+	QLibrary lib;
+	lib.setFileName(strName);
+	//(strName);
 	//读取成功
 	if (lib.load())
 	{
-		GetServiceTypeID func_GetServiceTypeID = (GetServiceTypeID)lib.resolve("GetServiceTypeID");//获取业务ID
-		GetServiceTypeName func_GetServiceTypeName = (GetServiceTypeName)lib.resolve("GetServiceTypeName");//获取业务名称
+		GetServiceTypeID_Lib func_GetServiceTypeID = (GetServiceTypeID_Lib)lib.resolve("GetServiceTypeID");//获取业务ID
+		GetServiceTypeName_Lib func_GetServiceTypeName = (GetServiceTypeName_Lib)lib.resolve("GetServiceTypeName");//获取业务名称
 		//是否成功连接上 add() 函数  
 		if (!(func_GetServiceTypeID&&func_GetServiceTypeName))
 			return -3;
@@ -454,6 +456,7 @@ LRESULT Server_VS::AddDll()
 		}
 		//开启IP和端口设置窗体
 		ConfigWnd CfgWnd(this);
+		CfgWnd.SetServicePort(9090);
 		CfgWnd.DialogMode = true;
 		int r = CfgWnd.exec();
 	    if (r != QDialog::Accepted)
@@ -1089,7 +1092,8 @@ void Server_VS::SetTimeCorrection()
 				QByteArray ba = Comm.toLatin1();
 				LPCSTR ch = ba.data();
 				int len = Comm.length();
-				::send(socketID, ch, len, 0);
+				int result=::send(socketID, ch, len, 0);
+				LogWrite::SYSLogMsgOutPut("自动矫正结果:"+QString::number(result));
 			}
 			break;
 		}
@@ -1128,7 +1132,8 @@ void Server_VS::SetTimeCorrection()
 				bytes[15] = chk& 0xff;//校验位
 				bytes[16] = (chk>>8)&0xff;
 				bytes[17] = 0xff;
-				::send(socketID, (char *)bytes, 18, 0);
+				int result=::send(socketID, (char *)bytes, 18, 0);
+				LogWrite::SYSLogMsgOutPut("土壤水分自动矫正结果:" + QString::number(result));
 			}
 			break;
 		}

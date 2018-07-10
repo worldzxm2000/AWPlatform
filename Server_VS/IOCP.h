@@ -2,6 +2,7 @@
 #define IOCP_H
 
 #endif // IOCP_H
+#include<QWidget>
 #include<QObject>
 #include"param.h"
 #include<Windows.h>
@@ -34,6 +35,8 @@ public:
     void SetListenedPort(int port,QString IP);
 	//停止监听
 	void Stop();
+	//获取服务端Socket号
+	int GetSocket();
 private:
 	//服务器端
 	SOCKET srvSocket;

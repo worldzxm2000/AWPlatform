@@ -31,11 +31,17 @@ void ConfigWnd::GetLocalIP()
 	}
 	m_IP=QString("%1").arg(ip);
 }
+
+
 ConfigWnd::~ConfigWnd()
 {
 
 }
-
+void ConfigWnd::SetServicePort(int Port)
+{
+	m_Port = Port;
+	ui.PortEdit->setText(QString::number(m_Port));
+}
 void ConfigWnd::on_SetBtn_clicked()
 {
 	bool ok;
@@ -60,7 +66,7 @@ int ConfigWnd::exec()
 	else
 	{
 		ui.IPEdit->setText(m_IP);
-		ui.PortEdit->setText("1031");
+		ui.PortEdit->setText(QString::number(m_Port));
 	}
 	return QDialog::exec();
 }
