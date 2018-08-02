@@ -10,13 +10,19 @@ ReadSYSLogTXT::ReadSYSLogTXT(QObject *parent)
 ReadSYSLogTXT::ReadSYSLogTXT(QString txtPath)
 {
 	m_TXTPath = txtPath;
+	FlagOver = false;
 }
 ReadSYSLogTXT::~ReadSYSLogTXT()
 {
 }
 
+void ReadSYSLogTXT::SetFlagOver()
+{
+	FlagOver = false;
+}
 void ReadSYSLogTXT::run()
 {
+	FlagOver = true;
 	QString path= QCoreApplication::applicationDirPath() + "\\Log\\"+m_TXTPath+".txt";
 	QFile file(path);
 	if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -25,8 +31,11 @@ void ReadSYSLogTXT::run()
 	QStringList strlist;
 	QString line = in.readLine();
 	strlist.append(line);
+
 	while (!line.isNull())
 	{
+		if (!FlagOver)
+			break;
 		line = in.readLine();
 		strlist.append(line);
 	}

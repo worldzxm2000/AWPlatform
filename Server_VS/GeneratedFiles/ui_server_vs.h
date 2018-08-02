@@ -40,7 +40,7 @@ public:
     QPushButton *RunBtn;
 	SrvTableWidget *ServerList;
     QGroupBox *groupBox_2;
-    QTableWidget *clientList;
+    QTableWidget *ClientList;
     QGroupBox *groupBox_3;
     QLabel *label;
     QLabel *StatusLabel;
@@ -55,6 +55,10 @@ public:
         if (Server_VSClass->objectName().isEmpty())
             Server_VSClass->setObjectName(QStringLiteral("Server_VSClass"));
         Server_VSClass->resize(1280, 768);
+        QIcon icon;
+        icon.addFile(QStringLiteral("../Image/Weather.ico"), QSize(), QIcon::Normal, QIcon::Off);
+        Server_VSClass->setWindowIcon(icon);
+        Server_VSClass->setWindowOpacity(1);
         actionDMTM = new QAction(Server_VSClass);
         actionDMTM->setObjectName(QStringLiteral("actionDMTM"));
         action1 = new QAction(Server_VSClass);
@@ -80,9 +84,9 @@ public:
         groupBox_2 = new QGroupBox(centralWidget);
         groupBox_2->setObjectName(QStringLiteral("groupBox_2"));
         groupBox_2->setGeometry(QRect(260, 10, 1011, 641));
-        clientList = new QTableWidget(groupBox_2);
-        clientList->setObjectName(QStringLiteral("clientList"));
-        clientList->setGeometry(QRect(10, 20, 991, 611));
+        ClientList = new QTableWidget(groupBox_2);
+        ClientList->setObjectName(QStringLiteral("ClientList"));
+        ClientList->setGeometry(QRect(10, 20, 991, 611));
         groupBox_3 = new QGroupBox(centralWidget);
         groupBox_3->setObjectName(QStringLiteral("groupBox_3"));
         groupBox_3->setGeometry(QRect(0, 660, 1271, 51));

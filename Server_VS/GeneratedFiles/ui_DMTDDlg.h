@@ -38,6 +38,9 @@ public:
         if (DMTDDlg->objectName().isEmpty())
             DMTDDlg->setObjectName(QStringLiteral("DMTDDlg"));
         DMTDDlg->resize(525, 160);
+        QIcon icon;
+        icon.addFile(QStringLiteral("../Image/upload.ico"), QSize(), QIcon::Normal, QIcon::Off);
+        DMTDDlg->setWindowIcon(icon);
         BrowsingBtn = new QPushButton(DMTDDlg);
         BrowsingBtn->setObjectName(QStringLiteral("BrowsingBtn"));
         BrowsingBtn->setGeometry(QRect(430, 40, 75, 21));

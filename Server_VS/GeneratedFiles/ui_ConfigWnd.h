@@ -38,6 +38,9 @@ public:
         if (ConfigWnd->objectName().isEmpty())
             ConfigWnd->setObjectName(QStringLiteral("ConfigWnd"));
         ConfigWnd->resize(345, 300);
+        QIcon icon;
+        icon.addFile(QStringLiteral("../Image/setup.ico"), QSize(), QIcon::Normal, QIcon::Off);
+        ConfigWnd->setWindowIcon(icon);
         IPEdit = new QLineEdit(ConfigWnd);
         IPEdit->setObjectName(QStringLiteral("IPEdit"));
         IPEdit->setGeometry(QRect(100, 20, 113, 20));

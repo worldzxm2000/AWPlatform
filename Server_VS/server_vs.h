@@ -9,7 +9,7 @@
 #include<QThreadPool>
 #include"LogWrite.h"
 #include<qjsonobject.h>
-#include"IOCP.h"
+#include"EHTPool.h"
 #include<qlibrary.h>
 #include"SocketServerForWeb.h"
 #include "qtimer.h"
@@ -52,9 +52,9 @@ private:
 	//添加解析DLL
 	LRESULT AddDll();
 	//开启新的IOCP
-	void AddIOCP(Char2Json func, int port,QString IP);
+	void AddIOCP(Char2Json func, int port, QString IP);
 	//通过设备号和端口查询到设备索引号
-	int FindRowIndex(int SrvPort, QString StationID);
+	int FindRowIndex(QString SrvName, QString StationID);
 	//通过服务器端口号查找业务编号
 	QString FindserviceTypeIDByPort(int servicePort);
 	//通过服务器类型查找业务编号
@@ -78,11 +78,12 @@ private:
 	void Convert2StationID();
 private:
 	Ui::Server_VSClass ui;
-	QMessageBox msg;
+	//业务类型数组
+	EHTPool EHTPool;
 	//UPD线程
 	SocketServerForWeb *socket4web;
 	//IOCP线程池
-	QThreadPool pool;
+	//QThreadPool ThreadPool;
 	//操作类型
 	QString strOperateType;
 	//业务列表右键菜单
@@ -110,11 +111,11 @@ private:
 	//获取即时要素数据
 	QAction action_GetData;
 	//获取参数
-    QAction action_GetConfig;
-	//服务列表选中项
-	int iSelectIndexOfService;
-	//区站号列表选中项
-	QTableWidgetItem* ServiceTypeItem;
+	QAction action_GetConfig;
+	//业务ListCtrl选中行
+	int iSelectedRowOfServiceListCtrl;
+	//台站号ListCtrl选中行
+	int iSelectedRowOfClientListCtrl;
 	//业务类型数组
 	vector<Facility> ClientInfo;
 	//SIM卡号对应区站号
@@ -126,13 +127,17 @@ private:
 	//自动补抄
 	QTimer *hour_timer;
 
-private slots:
-    //终端读取设备命令
-    void RequestForReadCOMM(int ServiceTypeID,int StationID,int FacilityID, int Command, QString Param1, QString Param2);
+	private slots:
+	//设备离线ListCtrl控件信息
+	void OffLineListCtrl(QString SrvName, QString StationID, QDateTime LastTime, QDateTime LoginTime);
+	//刷新设备ListCtrl控件信息
+	void RefreshListCtrl(QString SrvName, QString StationID, QDateTime LastTime, QDateTime LoginTime);
+	//终端读取设备命令
+	void RequestForReadCOMM(int ServiceTypeID, int StationID, int FacilityID, int Command, QString Param1, QString Param2);
 	//错误提示
 	void GetErrorMSG(int error);
 	//更新UI界面
-	void UpdateUI(QString stationID, QString observeTime, int count, bool connected, QString ip, int port,int socket,int SrvPort);
+	void UpdateUI(QString stationID, QString observeTime, int count, bool connected, QString ip, int port, int socket, int SrvPort);
 	//新客户端连接
 	//void AddNewClient(QString clientIp, int clientPort, int serverPort, int socketNo);
 	//终端操作返回信息
@@ -140,19 +145,19 @@ private slots:
 	//终端操作返回读取值
 	void GetCommandRecvValue(QJsonObject RecvJson);
 	//添加Lib按钮事件
-    void on_RunBtn_clicked();
+	void on_RunBtn_clicked();
 	//移除业务Lib
 	void on_DeleteBtn_clicked();
 	//业务列表右键事件
-    void on_ServerList_customContextMenuRequested(const QPoint &pos);
+	void on_ServerList_customContextMenuRequested(const QPoint &pos);
 	//action_run事件
 	void Lib_Run(int ServerIndex);
 	//action_stop事件
 	void Lib_Stop(int ServerIndex);
 	//action_attri事件
 	void Lib_Attri();
-   //区站号列表右键事件
-	void on_clientList_customContextMenuRequested(const QPoint &pos);
+	//区站号列表右键事件
+	void on_ClientList_customContextMenuRequested(const QPoint &pos);
 	//获取即时采集数据
 	void GetFeature();
 	//获取参数设置
@@ -161,8 +166,6 @@ private slots:
 	void SendCOMM();
 	//心跳处理
 	void HeartBeat(QString IP, int Port, int SrvPort, int CltSocket, QString StationID, QString  ServiceTypeID);
-	//心跳Timer处理
-	void Func_HeartBeat();
 	//获取终端命令名称
 	void GetCommName(QString CommName);
 	//自动对时
@@ -172,9 +175,9 @@ private slots:
 	//补抄数据功能
 	void Func_DMTD();
 	//业务列表点击
-    void on_ServerList_itemClicked(QTableWidgetItem *item);
+	void on_ServerList_itemClicked(QTableWidgetItem *item);
 	//离线处理
-	void  OffLine(int SrvPort,int CltSocket);
+	void  OffLine(int SrvPort, int CltSocket);
 	//打开系统日志
 	void OpenSYSLog();
 	//打开数据日志

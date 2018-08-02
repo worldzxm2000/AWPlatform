@@ -16,7 +16,7 @@ public:
 	int m_portServer;
 private:
 	//服务器端Socket
-	SOCKET srvSocket;
+	SOCKET m_SrvSocket;
 	//Web端地址
 	SOCKADDR_IN from;
 protected:
@@ -37,7 +37,7 @@ public:
 	void Send2WebServerJson(QJsonObject RecvValue);
 signals:
 	//通知UI错误信息
-	void NoticfyServerError(int Error);
+	void GetErrorSignal(int Error);
 	//通知UI读取设备参数指令
 	void NoticfyServerFacilityID(int,int,int,int,QString,QString);
 };

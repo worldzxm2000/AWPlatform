@@ -11,14 +11,6 @@
 #include<QRunnable>
 #include<QString>
 #include<QJsonObject>
-
-using namespace std;
-class IOCP;
-struct pParam
-{
-	HANDLE HandleIOCP;
-	HANDLE HandleClass;
-};
 class  IOCP:public QObject,public QRunnable
 {
 
@@ -32,52 +24,45 @@ protected:
     void run();
 public:
     //设置监听号
-    void SetListenedPort(int port,QString IP);
+    void SetListenedPort(int Port, QString IP, int SrvID);
 	//停止监听
 	void Stop();
 	//获取服务端Socket号
 	int GetSocket();
 private:
 	//服务器端
-	SOCKET srvSocket;
+	SOCKET m_SrvSocket;
 	//存放Socket数组
 	QVector<SOCKET> Sockets;
 	//创建完成端口号
-	HANDLE completionPort;
+	HANDLE m_CompletionPort;
 	//创建线程个数
-	int iThreadsCount;
+	int m_ThreadsCount;
     //IOCP处理线程
     static unsigned __stdcall ServerWorkThread(LPVOID pParam);
     //处理设备发送数据
-	static void UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA PerHandleData, IOCP *P);
+    void UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA PerHandleData);
     // 端口号
-    int m_port;
+    int m_Port;
 	//IP
 	QString m_IP;
+	//业务ID
+	int m_SrvID;
     //信号量
 signals:
 	//发送错误信息
-	void NoticfyServerError(int errorMSG);
-	//数据通知
-	void NoticfyServerUpdateUI(
-		QString StationID,
-		QString ObserveTime,
-		int count,
-		bool Connected,
-		QString IP,
-		int Port,
-		int Socket,
-		int SrvPort);
+	void GetErrorSignal(int errorMSG);
+	//数据通知(观测数据或者心跳数据)
+	void NewDataSignal(QString StationID,QString IP,int Port, unsigned int Socket);
 	//新设备连接信号
-	void NoticfyUINewClient(QString IP, int Port, int m_port, int socketNo);
+	void NewConnectionSignal(QString IP, int Port, int m_Port, unsigned int Socket);
 	//终端操作命令信号
 	void NoticfyServerOperateStatus(int Result);
-	//终端操作命令返回值
-	void NoticfyServerRecvValue(QJsonObject RecvJson);
-	void NoticfyServerRecvValue(QJsonObject RecvJson,bool IsComm);
-	//心跳处理
-	void NoticfyServerHB(QString IP,int Port,int SrvPort,int CltSocket,QString StationID,QString ServiceTypeID);
+	//终端操作命令返回值dd
+	void OperationResultSignal(QString Value,int SrvPort,QString StationID);
+	void OperationResultSignal(QString Value1, QString Value2, int SrvPort, QString StationID);
+	void OperationResultSignal(QString Command, QString Value1, QString Value2, QString Value3, QString Value4, int SrvPort, QString StationID);
 	//离线通知
-	void NoticfyOffLine(int SrvPort,int CltSocket);
+	void OffLineSignal(unsigned int CltSocket);
 };
 

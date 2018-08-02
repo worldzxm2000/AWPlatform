@@ -15,7 +15,7 @@ SocketServerForWeb::SocketServerForWeb(QObject *parent)
 SocketServerForWeb::~SocketServerForWeb()
 {
 	IsClose = true;
-	closesocket(srvSocket);
+	closesocket(m_SrvSocket);
 }
 
 //开启线程处理
@@ -28,17 +28,17 @@ void SocketServerForWeb::run()
 	SOCKADDR_IN  RecvAddr;//服务器地址
 	int len = sizeof(SOCKADDR);
 	//创建Socket对象
-	srvSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	m_SrvSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	//设置服务器地址
 	RecvAddr.sin_family = AF_INET;
 	RecvAddr.sin_port = htons(m_portServer);
 	RecvAddr.sin_addr.s_addr = INADDR_ANY;
 		//inet_addr("172.18.2.160");
-	int a = bind(srvSocket, (SOCKADDR*)&RecvAddr, len);
+	int a = bind(m_SrvSocket, (SOCKADDR*)&RecvAddr, len);
 	while (1)
 	{
 		char buff[LENGTH] = {0};
-		int RecvLen=recvfrom(srvSocket,buff,LENGTH,0,(SOCKADDR*)&from,&len);
+		int RecvLen=recvfrom(m_SrvSocket,buff,LENGTH,0,(SOCKADDR*)&from,&len);
 		if (RecvLen == SOCKET_ERROR)
 		{
 			int error=WSAGetLastError();
@@ -50,7 +50,7 @@ void SocketServerForWeb::run()
 			else
 			{
 				//发送错误信息
-				NoticfyServerError(error);
+				GetErrorSignal(error);
 				continue;
 			}
 		}
@@ -68,7 +68,7 @@ void SocketServerForWeb::Send2WebServerJson(QJsonObject RecvValue)
 	LPCSTR dataChar;
 	dataChar = byteArray.data();
 	int len = sizeof(SOCKADDR);
-	sendto(srvSocket, dataChar, strlen(dataChar),0,(SOCKADDR*)&from, len);
+	sendto(m_SrvSocket, dataChar, strlen(dataChar),0,(SOCKADDR*)&from, len);
 }
 //解析数据
 void SocketServerForWeb::ResolveData(LPCSTR buff,int len)
@@ -80,7 +80,7 @@ void SocketServerForWeb::ResolveData(LPCSTR buff,int len)
 	//帧头或者帧尾不正确
 	if (!(header== "BG" && tailer== "ED"))
 	{
-		NoticfyServerError(-4);
+		GetErrorSignal(-4);
 		return;
 	}
 	bool ok;

@@ -4,6 +4,7 @@
 #include "ui_DataLogDlg.h"
 #include<qthreadpool.h>
 #include<qstringlist.h>
+#include"ReadSYSLogTXT.h"
 class DataLogDlg : public QDialog
 {
 	Q_OBJECT
@@ -33,7 +34,10 @@ private:
 	int currentPage;
 	//总共页数
 	int TotalPage;
+	ReadSYSLogTXT *readTxtThread;
 private:
 	//获取当前页数数据
 	void GetDataInCurrentPage(int CurrentPage);
+	//关闭窗体
+	virtual void closeEvent(QCloseEvent *e);
 };

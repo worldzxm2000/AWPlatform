@@ -1,5 +1,4 @@
 #include "DataLogDlg.h"
-#include"ReadSYSLogTXT.h"
 #include"qtooltip.h"
 DataLogDlg::DataLogDlg(QWidget *parent)
 	: QDialog(parent)
@@ -7,7 +6,7 @@ DataLogDlg::DataLogDlg(QWidget *parent)
 	ui.setupUi(this);
 	setFixedSize(623, 470);
 	setWindowFlags(Qt::WindowCloseButtonHint);
-	ReadSYSLogTXT *readTxtThread = new ReadSYSLogTXT("DataLog");
+	readTxtThread = new ReadSYSLogTXT("DataLog");
 	connect(readTxtThread, SIGNAL(SendToUI(QStringList)), this, SLOT(GetLogTxt(QStringList)));
 	pool.start(readTxtThread);
 	//设置显示列表控件
@@ -22,6 +21,8 @@ DataLogDlg::DataLogDlg(QWidget *parent)
 	ui.DataListTable->horizontalHeader()->setStretchLastSection(true);//列宽
 	ui.DataListTable->setMouseTracking(true);//tip提示
 	connect(ui.DataListTable, SIGNAL(entered(QModelIndex)), this, SLOT(ShowToolTip(QModelIndex)));
+	currentPage = 0;
+	TotalPage = 0;
 }
 
 DataLogDlg::~DataLogDlg()
@@ -57,6 +58,8 @@ void DataLogDlg::GetLogTxt(QStringList strlist)
 //获取当前页数的数据
 void DataLogDlg::GetDataInCurrentPage(int CurrentPage)
 {
+	if (TotalPage < 1)
+		return;
 	ui.CurrentPageLabel->setText(QString::fromLocal8Bit("第") + QString::number(CurrentPage) + QString::fromLocal8Bit("页"));
 	int len = CurrentPage == TotalPage ? len = dataList.count() - (dataList.count() / 20) * 20 : 20;
 	CurrentPage -= 1;
@@ -78,7 +81,14 @@ void DataLogDlg::on_PageDownBtn_clicked()
 	ui.PageUpBtn->setEnabled(true);
 	//向前按钮变灰
 	if (currentPage < 2)
+	{
 		ui.PageDownBtn->setEnabled(false);
+		ui.PageToBeginBtn->setFocus();
+	}
+		
+	//只有一页
+	if (currentPage == 0)
+		return;
 	//填充数据列表
 	GetDataInCurrentPage(currentPage);
 }
@@ -90,11 +100,8 @@ void DataLogDlg::on_PageUpBtn_clicked()
 	currentPage += 1;
 	ui.PageDownBtn->setEnabled(true);
 	//向前按钮变灰
-	if (currentPage + 1 > TotalPage)
-	{
+	if (currentPage ==TotalPage)
 		ui.PageUpBtn->setEnabled(false);
-		return;
-	}
 
 	//填充数据列表
 	GetDataInCurrentPage(currentPage);
@@ -116,4 +123,9 @@ void DataLogDlg::on_PageToEndBtn_clicked()
 	ui.PageUpBtn->setEnabled(false);
 	currentPage = TotalPage;
 	GetDataInCurrentPage(currentPage);
+}
+
+void DataLogDlg::closeEvent(QCloseEvent *e)
+{
+	readTxtThread->SetFlagOver();
 }

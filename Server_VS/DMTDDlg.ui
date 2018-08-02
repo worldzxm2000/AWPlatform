@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>补抄数据</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../Image/upload.ico</normaloff>../Image/upload.ico</iconset>
+  </property>
   <widget class="QPushButton" name="BrowsingBtn">
    <property name="geometry">
     <rect>

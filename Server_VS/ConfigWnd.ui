@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>IP端口号配置</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../Image/setup.ico</normaloff>../Image/setup.ico</iconset>
+  </property>
   <widget class="QLineEdit" name="IPEdit">
    <property name="geometry">
     <rect>

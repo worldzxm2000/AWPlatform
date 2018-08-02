@@ -13,6 +13,13 @@
   <property name="windowTitle">
    <string>业务服务平台软件</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../Image/Weather.ico</normaloff>../Image/Weather.ico</iconset>
+  </property>
+  <property name="windowOpacity">
+   <double>1.000000000000000</double>
+  </property>
   <widget class="QWidget" name="centralWidget">
    <widget class="QGroupBox" name="groupBox">
     <property name="geometry">
@@ -75,7 +82,7 @@
     <property name="title">
      <string>设备列表</string>
     </property>
-    <widget class="QTableWidget" name="clientList">
+    <widget class="QTableWidget" name="ClientList">
      <property name="geometry">
       <rect>
        <x>10</x>

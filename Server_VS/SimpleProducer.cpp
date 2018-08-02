@@ -44,8 +44,8 @@ void SimpleProducer::initialize()
 {
 	try {
 		// Create a ConnectionFactory                                         /////////////////////
-		//ActiveMQConnectionFactory *connectionFactory = new ActiveMQConnectionFactory(brokerURI, UserName, Password);
-		auto_ptr<ConnectionFactory> connectionFactory(ConnectionFactory::createCMSConnectionFactory(brokerURI));
+		ActiveMQConnectionFactory *connectionFactory = new ActiveMQConnectionFactory(brokerURI, UserName, Password);
+	//	auto_ptr<ConnectionFactory> connectionFactory(ConnectionFactory::createCMSConnectionFactory(brokerURI));
 		// Create a Connection
 		try
 		{
@@ -91,10 +91,10 @@ LRESULT SimpleProducer::send(const char* Message, int nSize)
 		// 创建一个文本类型的消息
 		if (session == nullptr)
 			return -1;
-		auto_ptr<BytesMessage> bytesMessage(session->createBytesMessage((unsigned char*)Message, nSize));
+		BytesMessage* bytesMessage=session->createBytesMessage((unsigned char*)Message, nSize);
 		// 发送消息
 		//printf( "Sent message  from thread %s\n", threadIdStr.c_str() );
-		producer->send(bytesMessage.get());
+		producer->send(bytesMessage);
 		return 1;
 	}
 	catch (CMSException& e)

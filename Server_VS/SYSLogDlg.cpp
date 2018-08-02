@@ -1,5 +1,5 @@
 ﻿#include "SYSLogDlg.h"
-#include"ReadSYSLogTXT.h"
+
 #include<qtooltip.h>
 SYSLogDlg::SYSLogDlg(QWidget *parent)
 	: QDialog(parent)
@@ -7,7 +7,7 @@ SYSLogDlg::SYSLogDlg(QWidget *parent)
 	ui.setupUi(this);
 	setWindowFlags(Qt::WindowCloseButtonHint);
 	setFixedSize(623, 470);
-	ReadSYSLogTXT *readTxtThread=new ReadSYSLogTXT("SYSLog");
+	readTxtThread =new ReadSYSLogTXT("SYSLog");
 	connect(readTxtThread,SIGNAL(SendToUI(QStringList)), this, SLOT(GetLogTxt(QStringList)));
 	pool.start(readTxtThread);
 	//设置显示列表控件
@@ -78,7 +78,10 @@ void SYSLogDlg::on_PageDownBtn_clicked()
 	ui.PageUpBtn->setEnabled(true);
 	//向前按钮变灰
 	if (currentPage < 2)
+	{
 		ui.PageDownBtn->setEnabled(false);
+		ui.PageToBeginBtn->setFocus();
+	}
 	//只有一页
 	if (currentPage == 0)
 		return;
@@ -93,10 +96,10 @@ void SYSLogDlg::on_PageUpBtn_clicked()
 	currentPage += 1;
 	ui.PageDownBtn->setEnabled(true);
 	//向前按钮变灰
-	if (currentPage + 1 > TotalPage)
+	if (currentPage == TotalPage)
 	{
 		ui.PageUpBtn->setEnabled(false);
-		return;
+
 	}
 	
 	//填充数据列表
@@ -119,4 +122,9 @@ void SYSLogDlg::on_PageToEndBtn_clicked()
 	ui.PageUpBtn->setEnabled(false);
 	currentPage = TotalPage;
 	GetDataInCurrentPage(currentPage);
+}
+
+void SYSLogDlg::closeEvent(QCloseEvent *e)
+{
+	readTxtThread->SetFlagOver();
 }

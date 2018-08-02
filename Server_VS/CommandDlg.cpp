@@ -73,6 +73,42 @@ QStringList CommandDlg::LoadCommandIni(int ServiceType)
 		}
 		break;
 	}
+	case JTQX:
+	{
+		//终端命令个数
+		int Count = configIniRead.value("JTQX/COMMCount").toInt();
+		//遍历终端命令
+		for (int i = 0; i < Count; i++)
+		{
+			QString comm = "/JTQX/COMM" + QString::number(i);
+			list.append(configIniRead.value(comm).toString());
+		}
+		break;
+	}
+	case NW:
+	{
+		//终端命令个数
+		int Count = configIniRead.value("NW/COMMCount").toInt();
+		//遍历终端命令
+		for (int i = 0; i < Count; i++)
+		{
+			QString comm = "/NW/COMM" + QString::number(i);
+			list.append(configIniRead.value(comm).toString());
+		}
+		break;
+	}
+	case NTXQH:
+	{
+		//终端命令个数
+		int Count = configIniRead.value("NTXQH/COMMCount").toInt();
+		//遍历终端命令
+		for (int i = 0; i < Count; i++)
+		{
+			QString comm = "/NTXQH/COMM" + QString::number(i);
+			list.append(configIniRead.value(comm).toString());
+		}
+		break;
+	}
 	default:
 		break;
 	}

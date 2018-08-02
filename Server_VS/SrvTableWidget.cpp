@@ -45,7 +45,7 @@ void SrvTableWidget::AddRow(QString header1="header", QString header2="header")
 
 	QPushButton *StatusBtn = new QPushButton();
 	connect(StatusBtn, SIGNAL(clicked()), this, SLOT(On_Run_Btn()));
-	StatusBtn->setText(QString::fromLocal8Bit("运行"));
+	StatusBtn->setText(QString::fromLocal8Bit("停止"));
 	setCellWidget(rowIndex, 1, StatusBtn);
 
 }
