@@ -1,8 +1,7 @@
 ﻿#include "SrvTableWidget.h"
-#include<qheaderview.h>
-#include<qpushbutton.h>
-#include<qmessagebox.h>
-#include <qlabel.h>
+#include<QHeaderview>
+#include<QMessageBox>
+#include <QLabel>
 #include<QDateTimeEdit.h>
 #include<QComboBox.h>
 #include<QSpinBox>
@@ -10,6 +9,7 @@ SrvTableWidget::SrvTableWidget(QWidget *parent)
 	:QTableWidget(parent)
 {
 	setColumnCount(3);
+	StatusBtn = nullptr;
 	int row = 0;
 	QStringList headerlist;
 	headerlist.append(QString::fromLocal8Bit("业务类型"));
@@ -22,7 +22,7 @@ SrvTableWidget::SrvTableWidget(QWidget *parent)
 	setEditTriggers(QAbstractItemView::NoEditTriggers);//禁止修改
 	setSelectionMode(QAbstractItemView::SingleSelection);//可以选中单个
 	horizontalHeader()->setHighlightSections(false);//禁止表头选中高亮
-	horizontalHeader()->setStyleSheet("QHeaderView::section{background:skyblue;}"); //设置表头背景色
+	horizontalHeader()->setStyleSheet("QHeaderView::section{background:rgb(77,77,77);color:white;}"); //设置表头背景色
 	setColumnWidth(0,150);
 	setColumnWidth(1, 30);//设置第二列宽度50
 	horizontalHeader()->setStretchLastSection(true);//列宽
@@ -40,14 +40,16 @@ void SrvTableWidget::AddRow(QString header1="header", QString header2="header")
 	QTableWidgetItem *firstTableWidgetItem = new QTableWidgetItem(header1);
 	setItem(rowIndex, 0, firstTableWidgetItem);
 
+	firstTableWidgetItem->setForeground(Qt::white);
+	firstTableWidgetItem->setBackgroundColor(QColor(77, 77, 77));
 	QTableWidgetItem *thirdTableWidgetItem = new QTableWidgetItem(header2);
 	setItem(rowIndex, 2, thirdTableWidgetItem);
 
-	QPushButton *StatusBtn = new QPushButton();
+	StatusBtn = new QPushButton(this);
+	StatusBtn->setStyleSheet("QPushButton{background:rgb(77,77,77);color:white;}");
 	connect(StatusBtn, SIGNAL(clicked()), this, SLOT(On_Run_Btn()));
 	StatusBtn->setText(QString::fromLocal8Bit("停止"));
 	setCellWidget(rowIndex, 1, StatusBtn);
-
 }
 //运行按钮
 void SrvTableWidget::On_Run_Btn()
@@ -68,4 +70,19 @@ void SrvTableWidget::On_Run_Btn()
 		NoticfyServerStop(row);
 		senderObj->setText(QString::fromLocal8Bit("运行"));
 	}
+}
+
+void SrvTableWidget::focusOutEvent(QFocusEvent *event)
+{
+	if (StatusBtn == NULL)
+		return;
+	StatusBtn->setStyleSheet("QPushButton{background:rgb(77,77,77);color:white;}");
+	clearSelection();
+}
+
+void SrvTableWidget::focusInEvent(QFocusEvent *event)
+{
+	if (StatusBtn == NULL)
+		return;
+	StatusBtn->setStyleSheet("QPushButton{background:rgb(50,50,50);color:white;}");
 }

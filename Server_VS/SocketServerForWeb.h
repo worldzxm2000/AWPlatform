@@ -3,6 +3,7 @@
 #include <QObject>
 #include<QRunnable>
 #include<WinSock2.h>
+#include<qjsonobject.h>
 #define LENGTH 4*1024
 class SocketServerForWeb : public QObject,public QRunnable
 {
@@ -32,12 +33,12 @@ public:
 	int m_StationID ;
 	//终端命令设备号
 	int m_FacilityID ;
-public:
+	public slots:
 	//向Web发送处理后的数据
-	void Send2WebServerJson(QJsonObject RecvValue);
+	void SendToWebServiceSlot(QJsonObject RecvValue);
 signals:
 	//通知UI错误信息
 	void GetErrorSignal(int Error);
 	//通知UI读取设备参数指令
-	void NoticfyServerFacilityID(int,int,int,int,QString,QString);
+	void NoticfyServerFacilityID(int, QString, QString,int,QString,QString);
 };

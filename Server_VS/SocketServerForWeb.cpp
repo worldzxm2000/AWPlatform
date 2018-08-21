@@ -60,7 +60,7 @@ void SocketServerForWeb::run()
 }
 
 //发送数据至Web服务器
-void SocketServerForWeb::Send2WebServerJson(QJsonObject RecvValue)
+void SocketServerForWeb::SendToWebServiceSlot(QJsonObject RecvValue)
 {
 	QJsonDocument document;
 	document.setObject(RecvValue);
@@ -73,7 +73,8 @@ void SocketServerForWeb::Send2WebServerJson(QJsonObject RecvValue)
 //解析数据
 void SocketServerForWeb::ResolveData(LPCSTR buff,int len)
 {
-	QString str = QString(QLatin1String(buff));
+	QString str = QString(QLatin1String(buff,len));
+	str = str.simplified();
 	QStringList strlist = str.split(",");
 	QString header = strlist.at(0);
 	QString tailer = strlist.at(strlist.length() - 1);
@@ -87,9 +88,9 @@ void SocketServerForWeb::ResolveData(LPCSTR buff,int len)
 	//业务编号
 	int ServiceTypeID = strlist.at(2).toInt(&ok,10);
 	//区站号
-	int StationID = strlist.at(4).toInt(&ok, 10);
+	QString StationID = strlist.at(4);
 	//设备号
-	int FacilityID = strlist.at(6).toInt(&ok, 10);
+	QString FacilityID = strlist.at(6);
 	//命令号
 	int CommandID = strlist.at(8).toInt(&ok, 10);
 	//参数1
@@ -97,5 +98,5 @@ void SocketServerForWeb::ResolveData(LPCSTR buff,int len)
 	//参数2
 	QString Param2 = strlist.at(12);
 	//处理发送命令
-	NoticfyServerFacilityID(ServiceTypeID, StationID, FacilityID,CommandID,Param1,Param2);
+	 emit NoticfyServerFacilityID(ServiceTypeID, StationID, FacilityID,CommandID,Param1,Param2);
 }

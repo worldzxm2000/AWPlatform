@@ -11,10 +11,9 @@ typedef int(*GetServiceTypeID_Lib)();//获取业务类型
 typedef QString(*GetServiceTypeName_Lib)();//获取业务名称
 typedef int(*GetPort_Lib)();//获取端口
 typedef QString(*GetVersionNo_Lib)();//获取版本号
-
-const int DataBuffSize = 4 * 1024;
 extern 	SimpleProducer g_SimpleProducer;
 extern SimpleProducer g_SimpleProducer_ZDH;
+const int DataBuffSize = 4 * 1024;
 typedef void* HLIB;		//动态库句柄
 typedef struct
 {
@@ -55,6 +54,7 @@ enum ServiceID
 	HKQX = 05//航空气象
 };
 
+//错误返回值
 enum ErrorMSG
 {
 	SOCKET_INIT_ERROR=10300,//SOCKET初始化失败
@@ -84,8 +84,9 @@ typedef struct
 } CLIENTINFO, *LPCLIENTINFO;
 
 //终端命令
-enum Command
+enum OPCommand
 {
+	NONE = -1,
 	BASEINFO = 231,
 	DATETIME = 232,
 	ID = 233,

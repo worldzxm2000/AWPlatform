@@ -50,6 +50,7 @@ private:
 	int m_SrvID;
     //信号量
 signals:
+	void WebCommandSignal();
 	//发送错误信息
 	void GetErrorSignal(int errorMSG);
 	//数据通知(观测数据或者心跳数据)
@@ -64,5 +65,7 @@ signals:
 	void OperationResultSignal(QString Command, QString Value1, QString Value2, QString Value3, QString Value4, int SrvPort, QString StationID);
 	//离线通知
 	void OffLineSignal(unsigned int CltSocket);
+	//发送至消息中间件
+	void SendToActiveMQSignal(QJsonObject Json);
 };
 

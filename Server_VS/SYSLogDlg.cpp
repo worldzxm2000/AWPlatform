@@ -1,15 +1,30 @@
 ﻿#include "SYSLogDlg.h"
-
 #include<qtooltip.h>
+#include<QFile>
+#include<QTextStream>
 SYSLogDlg::SYSLogDlg(QWidget *parent)
 	: QDialog(parent)
 {
 	ui.setupUi(this);
 	setWindowFlags(Qt::WindowCloseButtonHint);
 	setFixedSize(623, 470);
+
+	m_pLoadingLabel = new QLabel(this);
+	m_pLoadingLabel->setGeometry(this->width()/2-75, this->height()/2-200, 200, 200);
+	m_pTimer = new QTimer(this);
+
+	// 设定超时时间100毫秒
+	m_pTimer->setInterval(100);
+	connect(m_pTimer, SIGNAL(timeout()), this,SLOT(updatePixmap()));
+	StartAnimation();
+
+	//读取线程
 	readTxtThread =new ReadSYSLogTXT("SYSLog");
-	connect(readTxtThread,SIGNAL(SendToUI(QStringList)), this, SLOT(GetLogTxt(QStringList)));
-	pool.start(readTxtThread);
+	connect(readTxtThread,SIGNAL(SendToUI(QStringList)), this, SLOT(GetLogTxt(QStringList)),Qt::BlockingQueuedConnection);
+	connect(readTxtThread, SIGNAL(finished()), readTxtThread, SLOT(deleteLater()));
+	connect(this, SIGNAL(SetFlagOverSignal()), readTxtThread, SLOT(EndThread()));
+	readTxtThread->start();
+	//pool.start(readTxtThread);
 	//设置显示列表控件
 	ui.DataListTable->setColumnCount(1);
 	ui.DataListTable->setHorizontalHeaderLabels(QStringList() <<QString::fromLocal8Bit( "日志详情"));
@@ -28,6 +43,30 @@ SYSLogDlg::~SYSLogDlg()
 {
 }
 
+// 启动定时器
+void SYSLogDlg::StartAnimation()
+{
+	m_pTimer->start();
+}
+
+// 停止定时器
+void SYSLogDlg::StopAnimation()
+{
+	m_pLoadingLabel->hide();
+	m_pTimer->stop();
+}
+
+// 更新图标
+void SYSLogDlg::updatePixmap()
+{
+	// 若当前图标下标超过8表示到达末尾，重新计数。
+	m_nIndex++;
+	if (m_nIndex > 8)
+		m_nIndex = 1;
+
+	QPixmap pixmap(QString("F:\\Server_VS\\Image\\png\\Loading%1.png").arg(m_nIndex));
+	m_pLoadingLabel->setPixmap(pixmap);
+}
 void SYSLogDlg::ShowToolTip(QModelIndex index)
 {
 	if (!index.isValid()) {
@@ -53,6 +92,7 @@ void SYSLogDlg::GetLogTxt(QStringList strlist)
 		ui.DataListTable->insertRow(i);
 		ui.DataListTable->setItem(i, 0, new QTableWidgetItem(dataList.at(i)));
 	}
+	StopAnimation();
 }
 //获取当前页数的数据
 void SYSLogDlg:: GetDataInCurrentPage(int CurrentPage)
@@ -126,5 +166,5 @@ void SYSLogDlg::on_PageToEndBtn_clicked()
 
 void SYSLogDlg::closeEvent(QCloseEvent *e)
 {
-	readTxtThread->SetFlagOver();
+	emit SetFlagOverSignal();
 }

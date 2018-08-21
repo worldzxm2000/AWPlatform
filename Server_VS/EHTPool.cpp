@@ -1,4 +1,4 @@
-#include "EHTPool.h"
+﻿#include "EHTPool.h"
 
 EHTPool::EHTPool(QObject *parent)
 	: QObject(parent)
@@ -22,53 +22,42 @@ void EHTPool::Start(EHT* pEHT)
 
 void EHTPool::Stop(int Index)
 {
-	QList<EHT*>::iterator iter = AllEHTList.begin();
-	while (iter != AllEHTList.end())
+	for (int i = AllEHTList.count() - 1; i > -1; i--)
 	{
-		if ((*iter)->GetServiceID() == Index)
+		if (AllEHTList[i]->GetServiceID() == Index)
 		{
-			(*iter)->Stop();
-			delete (*iter);
-			(*iter) = NULL;
-			AllEHTList.erase(iter++);
-		}
-		else
-		{
-			iter++;
+			AllEHTList[i]->Stop();
+			delete AllEHTList[i];
+			AllEHTList[i] = nullptr;
+			AllEHTList.removeAt(i);
 		}
 	}
 }
 
 void EHTPool::Stop(QString ServiceName)
 {
-	QList<EHT*>::iterator iter = AllEHTList.begin();
-	while (iter != AllEHTList.end())
+	for (int i = AllEHTList.count() - 1; i > -1; i--)
 	{
-		if ((*iter)->GetServiceName() == ServiceName)
+		if (AllEHTList[i]->GetServiceName() == ServiceName)
 		{
-			(*iter)->Stop();
-			delete (*iter);
-			(*iter) = NULL;
-			AllEHTList.erase(iter++);
-		}
-		else
-		{
-			iter++;
+			AllEHTList[i]->Stop();
+			delete AllEHTList[i];
+			AllEHTList[i] = nullptr;
+			AllEHTList.removeAt(i);
 		}
 	}
 }
 
 void EHTPool::StopAll()
 {
-	QList<EHT*>::iterator iter = AllEHTList.begin();
-	while (iter != AllEHTList.end())
+	for (int i = AllEHTList.count() - 1; i > -1; i--)
 	{
-		(*iter)->Stop();
-		delete (*iter);
-		(*iter) = NULL;
-		AllEHTList.erase(iter++);
-	}
+		AllEHTList[i]->Stop();
+		delete AllEHTList[i];
+		AllEHTList[i] = nullptr;
+		AllEHTList.removeAt(i);
 
+	}
 }
 
 void EHTPool::Pause(int Index)
@@ -106,7 +95,7 @@ void EHTPool::PauseAll()
 	{
 		(*iter)->Stop();
 		iter++;
-		
+
 	}
 }
 
@@ -149,13 +138,25 @@ void EHTPool::RunAll()
 	}
 }
 
-//��ȡEHT
+//获取EHT
 EHT* EHTPool::GetEHT(QString ServiceName)
 {
-	
-	for (QList<EHT*>::iterator iter = AllEHTList.begin(); iter != AllEHTList.end();++iter)
+
+	for (QList<EHT*>::iterator iter = AllEHTList.begin(); iter != AllEHTList.end(); ++iter)
 	{
-		if ((*iter)->GetServiceName()==ServiceName)
+		if ((*iter)->GetServiceName() == ServiceName)
+		{
+			return (*iter);
+		}
+	}
+	return NULL;
+}
+
+EHT* EHTPool::GetEHT(int ServiceID)
+{
+	for (QList<EHT*>::iterator iter = AllEHTList.begin(); iter != AllEHTList.end(); ++iter)
+	{
+		if ((*iter)->GetServiceID() == ServiceID)
 		{
 			return (*iter);
 		}

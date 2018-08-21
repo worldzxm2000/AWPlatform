@@ -1,8 +1,8 @@
 #pragma once
 
 #include <QObject>
-#include<qrunnable.h>
-class ReadSYSLogTXT : public QObject,public QRunnable
+#include<QThread>
+class ReadSYSLogTXT :public QThread
 {
 	Q_OBJECT
 
@@ -10,13 +10,15 @@ public:
 	ReadSYSLogTXT(QObject *parent);
 	ReadSYSLogTXT(QString txtPath);
 	~ReadSYSLogTXT();
-	void SetFlagOver();
 protected:
 	void run();
 private:
 	QString m_TXTPath;
 	bool FlagOver;
-	
 signals:
+	//将数据返回给主线程
 	void SendToUI(QStringList strlist);
+public slots:
+    //强制结束线程
+	void EndThread();
 };

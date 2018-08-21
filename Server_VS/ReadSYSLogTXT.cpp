@@ -1,9 +1,10 @@
-#include "ReadSYSLogTXT.h"
+﻿#include "ReadSYSLogTXT.h"
 #include<qfile.h>
 #include<qtextstream.h>
 #include "qcoreapplication.h"
+#include"qthread.h"
+#include"qdebug.h"
 ReadSYSLogTXT::ReadSYSLogTXT(QObject *parent)
-	: QObject(parent)
 {
 }
 
@@ -16,10 +17,6 @@ ReadSYSLogTXT::~ReadSYSLogTXT()
 {
 }
 
-void ReadSYSLogTXT::SetFlagOver()
-{
-	FlagOver = false;
-}
 void ReadSYSLogTXT::run()
 {
 	FlagOver = true;
@@ -31,7 +28,7 @@ void ReadSYSLogTXT::run()
 	QStringList strlist;
 	QString line = in.readLine();
 	strlist.append(line);
-
+	//读取数据
 	while (!line.isNull())
 	{
 		if (!FlagOver)
@@ -41,4 +38,10 @@ void ReadSYSLogTXT::run()
 	}
 	file.close();	
 	SendToUI(strlist);
+
+}
+
+void ReadSYSLogTXT::EndThread()
+{
+	FlagOver = false;
 }

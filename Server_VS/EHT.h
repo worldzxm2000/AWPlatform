@@ -5,8 +5,8 @@
 #include<QLibrary>
 #include<QThreadPool>
 #include"IOCP.h"
-#include<qmap.h>
-#include"qtimer.h"
+#include<QMap>
+#include<QTimer>
 class EHT : public QWidget
 {
 	Q_OBJECT
@@ -43,6 +43,12 @@ public:
 	bool IsRun();
 	//获取连接客户端数组
 	QList<CLIENTINFO> Clients;
+	//发送COMMAND指令
+	void SendCommand(OPCommand cmm,QString StationID, QString Params1, QString Params2, bool WebCommand);
+	//当前COMMAND指令
+	OPCommand CurrentCommand;
+	//锁住操作变量，判断是否是Web发送的请求
+	bool WebCommand;
 private:
 	//初始化IOCP
 	void InitIOCP();
@@ -93,6 +99,8 @@ private slots:
 	void OperationResultSlot(QString Value, int SrvPort, QString StationID);
 	void OperationResultSlot(QString Value1, QString Value2, int SrvPort, QString StationID);
 	void OperationResultSlot(QString Command, QString Value1, QString Value2, QString Value3, QString Value4, int SrvPort, QString StationID);
+	//发送消息中间件
+	void SendToActiveMQSlot(QJsonObject Json);
 signals:
 	 //UI登录时间
 	 void LoginTimeSignal(int SrvPort, QString Station);
@@ -100,4 +108,6 @@ signals:
 	 void OnLineSignal(QString SrvName,QString StationID, QDateTime LastTime, QDateTime LoginTime);
 	 //UI设备离线信息
 	 void OffLineSignal(QString SrvName, QString StationID, QDateTime LastTime, QDateTime LoginTime);
+	 //Web服务器发送
+	 void SendToWebServiceSignal(QJsonObject Json);
 };

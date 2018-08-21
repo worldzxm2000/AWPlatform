@@ -15,9 +15,6 @@ private slots:
     void on_BrowsingBtn_clicked();
 
     void on_ImpBtn_clicked();
-
-    void on_DoingBar_valueChanged(int value);
-
 private:
 	Ui::DMTDDlg ui;
 	//数据路径
@@ -32,6 +29,10 @@ private:
 	int count;
 	//处理函数
 	static unsigned __stdcall Process(LPVOID pParam);
+	//初始化消息中间件
+	void InitActiveMQ();
+	//消息中间件
+	SimpleProducer m_SimpleProducer, m_SimpleProducer_ZDH;
 protected:
 	void closeEvent(QCloseEvent *event);
 	HANDLE threadhandle;

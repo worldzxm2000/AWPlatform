@@ -50,9 +50,8 @@ private:
 	bool useTopic;
 	bool clientAck;
 	unsigned int numMessages;
-	std::string UserName;
-	std::string Password;
-	std::string brokerURI;
-	std::string destURI;
-	TextMessage *textMessage;
+	string UserName;
+	string Password;
+	string brokerURI;
+	string destURI;
 };

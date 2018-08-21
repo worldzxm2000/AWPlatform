@@ -7,7 +7,8 @@
 message("You are running qmake on a generated .pro file. This may not work!")
 
 
-HEADERS += ./SimpleProducer.h \
+HEADERS += ./resource.h \
+    ./SimpleProducer.h \
     ./param.h \
     ./Server_VS.h \
     ./SYSLogDlg.h \
@@ -18,15 +19,21 @@ HEADERS += ./SimpleProducer.h \
     ./CommandDlg.h \
     ./DMTDDlg.h \
     ./DataLogDlg.h \
+    ./EHT.h \
+    ./EHTPool.h \
     ./ReadSYSLogTXT.h \
+    ./MyButton.h \
     ./LogWrite.h
 SOURCES += ./CommandDlg.cpp \
     ./ConfigWnd.cpp \
     ./DataLogDlg.cpp \
     ./DMTDDlg.cpp \
+    ./EHT.cpp \
+    ./EHTPool.cpp \
     ./IOCP.cpp \
     ./LogWrite.cpp \
     ./main.cpp \
+    ./MyButton.cpp \
     ./ReadSYSLogTXT.cpp \
     ./Server_VS.cpp \
     ./SimpleProducer.cpp \

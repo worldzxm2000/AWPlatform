@@ -128,7 +128,7 @@ void IOCP::run()
 
 		//客户端socket添加入客户端数组，通知主程序
 		Sockets.push_back(acceptSocket);
-		LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit( "新的连接已建立，业务端口号为：") + QString::number(m_Port)+ QString::fromLocal8Bit("，连接IP：")+PerHandleData->ClientIP+ QString::fromLocal8Bit(",连接端口为：")+PerHandleData->Port);
+		LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit( "新的连接已建立，业务端口号为：") + QString::number(m_Port)+ QString::fromLocal8Bit("，连接IP：")+PerHandleData->ClientIP+ QString::fromLocal8Bit(",连接端口为：")+QString::number(PerHandleData->Port));
 
 		DWORD RecvBytes = 0;
 		DWORD Flags = 0;
@@ -256,6 +256,7 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 					QByteArray byteArray = document.toJson(QJsonDocument::Compact);
 					LPCSTR dataChar;
 					dataChar = byteArray.data();
+					//发送至消息中间件
 					//发送至消息中间件
 					if (g_SimpleProducer.send(dataChar, strlen(dataChar)) < 0)
 						GetErrorSignal(10304);

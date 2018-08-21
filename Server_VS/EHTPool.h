@@ -29,6 +29,7 @@ public:
 	void RunAll();
 	//ªÒ»°EHT
 	EHT* GetEHT(QString ServiceName);
+	EHT* GetEHT(int ServiceID);
 private:
 	QList<EHT *> AllEHTList;
 	QThreadPool ThreadPool;

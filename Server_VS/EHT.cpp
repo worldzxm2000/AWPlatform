@@ -1,15 +1,16 @@
-#include "EHT.h"
+ï»¿#include "EHT.h"
 #include "ConfigWnd.h"
 #include"LogWrite.h"
-#include<qsettings.h>
+#include<QSettings>
 EHT::EHT(QWidget *parent)
 	: QWidget(parent)
 {
-	//³õÊ¼»¯IOCP
+	//åˆå§‹åŒ–IOCP
 	InitIOCP();
-	//¶ÁÈ¡SIM¿¨ºÅÅäÖÃÎÄ¼ş£¬×ª³ÉÇøÕ¾ºÅ
+	//è¯»å–SIMå¡å·é…ç½®æ–‡ä»¶ï¼Œè½¬æˆåŒºç«™å·
 	Convert2StationID();
 	m_IsRun = false;
+	WebCommand = false;
 	SetTimeTimer = new QTimer(parent);
 	connect(SetTimeTimer, SIGNAL(timeout()), this, SLOT(SetTime()));
 	SetTimeTimer->start(1000 * 60 * 60*24);
@@ -22,80 +23,80 @@ EHT::EHT(QWidget *parent)
 EHT::~EHT()
 {
 }
-//¼ÓÔØ¶¯Ì¬Á´½Ó¿â
+//åŠ è½½åŠ¨æ€é“¾æ¥åº“
 LRESULT EHT::LoadLib(QString Lib_Path)
 {
 	m_Lib.setFileName(Lib_Path);
 	//(strName);
-	//¶ÁÈ¡³É¹¦
+	//è¯»å–æˆåŠŸ
 	if (m_Lib.load())
 	{
-		GetServiceTypeID_Lib func_GetServiceTypeID = (GetServiceTypeID_Lib)m_Lib.resolve("GetServiceTypeID");//»ñÈ¡ÒµÎñID
-		GetServiceTypeName_Lib func_GetServiceTypeName = (GetServiceTypeName_Lib)m_Lib.resolve("GetServiceTypeName");//»ñÈ¡ÒµÎñÃû³Æ
-		GetPort_Lib func_GetPort = (GetPort_Lib)m_Lib.resolve("GetPort");//»ñÈ¡¶Ë¿ÚºÅ
-		GetVersionNo_Lib func_GetVersionNo = (GetVersionNo_Lib)m_Lib.resolve("GetVersionNo");//»ñÈ¡°æ±¾ºÅ
-		Char2Json func_Char2Json = (Char2Json)(m_Lib.resolve("Char2Json"));//»ñÈ¡½âÎöÊı¾İ
+		GetServiceTypeID_Lib func_GetServiceTypeID = (GetServiceTypeID_Lib)m_Lib.resolve("GetServiceTypeID");//è·å–ä¸šåŠ¡ID
+		GetServiceTypeName_Lib func_GetServiceTypeName = (GetServiceTypeName_Lib)m_Lib.resolve("GetServiceTypeName");//è·å–ä¸šåŠ¡åç§°
+		GetPort_Lib func_GetPort = (GetPort_Lib)m_Lib.resolve("GetPort");//è·å–ç«¯å£å·
+		GetVersionNo_Lib func_GetVersionNo = (GetVersionNo_Lib)m_Lib.resolve("GetVersionNo");//è·å–ç‰ˆæœ¬å·
+		Char2Json func_Char2Json = (Char2Json)(m_Lib.resolve("Char2Json"));//è·å–è§£ææ•°æ®
 		if (!(func_GetServiceTypeID && func_GetServiceTypeName && func_GetVersionNo && func_GetPort&&func_Char2Json))
 			return -1;
 
-		//»ñÈ¡ÒµÎñÀàĞÍ
+		//è·å–ä¸šåŠ¡ç±»å‹
 		m_ServiceID = func_GetServiceTypeID();
-		//»ñÈ¡¶Ë¿ÚºÅ
+		//è·å–ç«¯å£å·
 		m_Port = func_GetPort();
-		//»ñÈ¡ÒµÎñÃû³Æ
+		//è·å–ä¸šåŠ¡åç§°
 		m_ServiceName = func_GetServiceTypeName();
-		//»ñÈ¡°æ±¾ºÅ
+		//è·å–ç‰ˆæœ¬å·
 		m_Vesion = func_GetVersionNo();
-		//¿ªÆôIPºÍ¶Ë¿ÚÉèÖÃ´°Ìå
+		//å¼€å¯IPå’Œç«¯å£è®¾ç½®çª—ä½“
 		ConfigWnd CfgWnd(this->parentWidget());
-		CfgWnd.DialogMode = true;//ÉèÖÃ falseÎª¶ÁÈ¡
+		CfgWnd.DialogMode = true;//è®¾ç½® falseä¸ºè¯»å–
 		CfgWnd.SetServicePort(m_Port);
 		int r = CfgWnd.exec();
 		if (r != QDialog::Accepted)
 			return 0;
 		
-		//»ñÈ¡IP
+		//è·å–IP
 		m_IP = CfgWnd.m_IP;
-		//ÅĞ¶Ï¶Ë¿ÚºÏ·¨ĞÔ
+		//åˆ¤æ–­ç«¯å£åˆæ³•æ€§
 		if (!IsLegallyPort(CfgWnd.m_Port))
 			return -2;
-		//»ñÈ¡ÃèÊö
+		//è·å–æè¿°
 		m_Attribute = CfgWnd.m_Attribute;
 		return true;
 	}
 	return false;
 }
-//Ğ¶ÔØ¶¯Ì¬Á´½Ó¿â
+//å¸è½½åŠ¨æ€é“¾æ¥åº“
 bool EHT::UnloadLib()
 {
 	return	m_Lib.unload();
 }
-//»ñÈ¡°æ±¾ºÅ
+//è·å–ç‰ˆæœ¬å·
 QString EHT::GetVesionNo()
 {
 	return m_Vesion;
 }
-//»ñÈ¡ÒµÎñID
+//è·å–ä¸šåŠ¡ID
 int EHT::GetServiceID()
 {
 	return m_ServiceID;
 }
-//»ñÈ¡ÒµÎñÃû³Æ
+//è·å–ä¸šåŠ¡åç§°
 QString EHT::GetServiceName()
 {
 	return m_ServiceName;
 }
-//»ñÈ¡IPºÅ
+//è·å–IPå·
 QString EHT::GetIP()
 {
 	return m_IP;
 }
-//»ñÈ¡¶Ë¿ÚºÅ
+//è·å–ç«¯å£å·
 int EHT::GetPort()
 {
 	return m_Port;
 }
-//»ñÈ¡SocketºÅ
+//è·å–Socketå·
 unsigned int EHT::GetSocket(QString StationID)
 {
 	for (int i = 0; i < Clients.size(); i++)
@@ -106,17 +107,17 @@ unsigned int EHT::GetSocket(QString StationID)
 	return 0;
 }
 
-//»ñÈ¡ÒµÎñÃèÊö
+//è·å–ä¸šåŠ¡æè¿°
 QString EHT::GetAttribute()
 {
 	return m_Attribute;
 }
-//»ñÈ¡Êı¾İ½âÎö
+//è·å–æ•°æ®è§£æ
 Char2Json EHT::GetDataFunc()
 {
 	return m_DataFunc;
 }
-//Æô¶¯¼àÌıÊı¾İ·şÎñ
+//å¯åŠ¨ç›‘å¬æ•°æ®æœåŠ¡
 void EHT::Run(QThreadPool &ThreadPool)
 {
 	if (pIOCP == NULL)
@@ -128,92 +129,96 @@ void EHT::Run(QThreadPool &ThreadPool)
 	m_IsRun = true;
 }
 
-//½áÊø¼àÌıÊı¾İ·şÎñ
+//ç»“æŸç›‘å¬æ•°æ®æœåŠ¡
 void EHT::Stop()
 {
 	if (pIOCP == nullptr)
+	{
+		UnloadLib();
 		return;
-	//¹Ø±ÕIOCP
+	}
+	//å…³é—­IOCP
 	pIOCP->Stop();
 	UnloadLib();
 	m_IsRun = false;
 	pIOCP = nullptr;
 }
-//³õÊ¼»¯IOCP
+//åˆå§‹åŒ–IOCP
 void EHT::InitIOCP()
 {
-	//IOCP×ÓÏß³Ì
+	//IOCPå­çº¿ç¨‹
 	pIOCP = new IOCP();
-	//Éè±¸ÀëÏßÍ¨Öª
+	//è®¾å¤‡ç¦»çº¿é€šçŸ¥
 	connect(pIOCP, SIGNAL(OffLineSignal(unsigned int)), this, SLOT(OffLineSlot(unsigned int)), Qt::QueuedConnection);
-	//Éè±¸Êı¾İ´íÎóÍ¨Öª
+	//è®¾å¤‡æ•°æ®é”™è¯¯é€šçŸ¥
 	connect(pIOCP, SIGNAL(GetErrorSignal(int)), this, SLOT(GetErrorSlot(int)), Qt::QueuedConnection);
-	//Éè±¸ĞÂÊı¾İÍ¨Öª
+	//è®¾å¤‡æ–°æ•°æ®é€šçŸ¥
 	connect(pIOCP, SIGNAL(NewDataSignal(QString, QString,int, unsigned int)), this, SLOT(NewDataSlot(QString ,QString ,int, unsigned int)), Qt::QueuedConnection);
-	//Éè±¸²Ù×÷×´Ì¬Í¨Öª
+	//è®¾å¤‡æ“ä½œçŠ¶æ€é€šçŸ¥
 	connect(pIOCP, SIGNAL(OperationResultSignal(QString, int, QString)), this, SLOT(OperationResultSlot(QString, int, QString)), Qt::QueuedConnection);
 	connect(pIOCP, SIGNAL(OperationResultSignal(QString, QString, int, QString)), this, SLOT(OperationResultSlot(QString,QString, int, QString)), Qt::QueuedConnection);
 	connect(pIOCP, SIGNAL(OperationResultSignal(QString, QString, QString, QString, QString, int, QString)), this, SLOT(OperationResultSlot(QString, QString, QString, QString, QString, int, QString)),Qt::QueuedConnection);
+//è®¾å¤‡æ•°æ®å‘é€é€šçŸ¥
+	connect(pIOCP, SIGNAL(SendToActiveMQSignal(QJsonObject)),this,SLOT(SendToActiveMQSlot(QJsonObject)), Qt::QueuedConnection);
 }
-//·µ»ØÔËĞĞ×´Ì¬
+//è¿”å›è¿è¡ŒçŠ¶æ€
 bool EHT::IsRun()
 {
 	return m_IsRun;
 }
-//ÅĞ¶Ï¶Ë¿ÚºÏ·¨ĞÔ
+//åˆ¤æ–­ç«¯å£åˆæ³•æ€§
 bool EHT::IsLegallyPort(int port)
 {
-	//³õÊ¼»¯WSA    ¼ÓÔØsocket¶¯Ì¬Á´½Ó¿â
+	//åˆå§‹åŒ–WSA    åŠ è½½socketåŠ¨æ€é“¾æ¥åº“
 	WORD sockVersion = MAKEWORD(2, 2);
-	WSADATA wsaData;     // ½ÓÊÕWindows SocketµÄ½á¹¹ĞÅÏ¢
+	WSADATA wsaData;     // æ¥æ”¶Windows Socketçš„ç»“æ„ä¿¡æ¯
 	if (WSAStartup(sockVersion, &wsaData) != 0)
 		return false;
 	
 	SOCKET BindSocket;
 	BindSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
 	SOCKADDR_IN  srvAddr;
-	//»ñÈ¡±¾µØIP
+	//è·å–æœ¬åœ°IP
 	LPCSTR  ch;
 	QByteArray ba = m_IP.toLatin1();
 	ch = ba.data();
 	srvAddr.sin_addr.S_un.S_addr = inet_addr(ch);
 	srvAddr.sin_family = AF_INET;
 	srvAddr.sin_port = htons(m_Port);
-	//°ó¶¨SOCKETµ½±¾»ú
+	//ç»‘å®šSOCKETåˆ°æœ¬æœº
 	int bindResult = ::bind(BindSocket, (SOCKADDR*)&srvAddr, sizeof(SOCKADDR_IN));
 	if (SOCKET_ERROR == bindResult)
 		return false;
 	closesocket(BindSocket);
 	return true;
 }
-//ÀëÏß´¦Àí
+//ç¦»çº¿å¤„ç†
 void EHT::OffLineSlot(unsigned int CltSocket)
 {
 	for (int i = 0; i < Clients.size(); i++)
 	{
-		//ÕÒµ½ÀëÏß
+		//æ‰¾åˆ°ç¦»çº¿
 		if (Clients[i].SocketID == CltSocket)
 		{
 			QDateTime current_date_time = QDateTime::currentDateTime();
 			QString current_date = current_date_time.toString("yyyy.MM.dd hh:mm:ss");
-			LogWrite::SYSLogMsgOutPut("ÇøÕ¾ºÅ " + Clients[i].StationID + "ÒÑ¾­¶Ï¿ªÁ¬½Ó");
-			Clients[i].SocketID = 0;//SocketÖÃÁã
-			Clients[i].Online = false;//ÉèÖÃÀëÏß×´Ì¬
+			LogWrite::SYSLogMsgOutPut("åŒºç«™å· " + Clients[i].StationID + "å·²ç»æ–­å¼€è¿æ¥");
+			Clients[i].SocketID = 0;//Socketç½®é›¶
+			Clients[i].Online = false;//è®¾ç½®ç¦»çº¿çŠ¶æ€
 			emit OffLineSignal(m_ServiceName, Clients[i].StationID, current_date_time, Clients[i].LoginTime);
 			break;
 		}
 	}
-	
 }
-//ÓĞÊı¾İ´«Êä
+//æœ‰æ•°æ®ä¼ è¾“
 void EHT::NewDataSlot(QString StationID, QString IP, int Port, unsigned int CltSocket)
 {
-	//Å©Î¯Õ¾ºÅ×ª±ä
+	//å†œå§”ç«™å·è½¬å˜
 	if (m_ServiceID == NW)
 	{
 		if (SIM2Staion.contains(StationID))
 		{
-			//ÕÒµ½ÌØ¶¨µÄ¡°¼ü-Öµ¡±¶Ô
+			//æ‰¾åˆ°ç‰¹å®šçš„â€œé”®-å€¼â€å¯¹
 			QMap<QString, QString>::iterator it = SIM2Staion.find(StationID);
 			StationID = it.value();
 		}
@@ -221,53 +226,142 @@ void EHT::NewDataSlot(QString StationID, QString IP, int Port, unsigned int CltS
 	QDateTime current_date_time = QDateTime::currentDateTime();
 	for (int i = 0; i < Clients.count(); i++)
 	{
-		//´æÔÚ
+		//å­˜åœ¨
 		if (Clients[i].StationID.toUpper().compare(StationID.toUpper()) == 0)
 		{
-			Clients[i].LatestTimeOfHeartBeat = current_date_time;//¸üĞÂÊ±¼ä
-			Clients[i].SocketID = CltSocket;//¸üĞÂSocketºÅ
-			Clients[i].IP = IP;//¸üĞÂIP
-			Clients[i].Port = Port;//¸üĞÂ¶Ë¿Ú
-			Clients[i].Online = true;//ÉèÖÃÔÚÏß
-			emit OnLineSignal(m_ServiceName,StationID,Clients[i].LatestTimeOfHeartBeat,Clients[i].LoginTime);//Ë¢ĞÂUI
+			Clients[i].LatestTimeOfHeartBeat = current_date_time;//æ›´æ–°æ—¶é—´
+			Clients[i].SocketID = CltSocket;//æ›´æ–°Socketå·
+			Clients[i].IP = IP;//æ›´æ–°IP
+			Clients[i].Port = Port;//æ›´æ–°ç«¯å£
+			Clients[i].Online = true;//è®¾ç½®åœ¨çº¿
+			emit OnLineSignal(m_ServiceName,StationID,Clients[i].LatestTimeOfHeartBeat,Clients[i].LoginTime);//åˆ·æ–°UI
+			LogWrite::DataLogMsgOutPut("æ–°æ•°æ®å·²åˆ°è¾¾ï¼å°ç«™å·ä¸ºï¼š" + Clients[i].StationID);
 			return;
 		}
 	}
-	//²»´æÔÚ²åÈë
+	//ä¸å­˜åœ¨æ’å…¥
 	CLIENTINFO clientinfo{ IP, Port,CltSocket,StationID,current_date_time,true,current_date_time };
 	Clients.push_back(clientinfo);
-	LogWrite::SYSLogMsgOutPut("ĞÂÉè±¸ÒÑÁ¬½Ó£¬Ì¨Õ¾ºÅÎª£º" + clientinfo.StationID);
-	emit  OnLineSignal(m_ServiceName, StationID,clientinfo.LatestTimeOfHeartBeat,clientinfo.LoginTime);;//Ë¢ĞÂUI
+	LogWrite::SYSLogMsgOutPut("æ–°è®¾å¤‡å·²è¿æ¥ï¼Œå°ç«™å·ä¸ºï¼š" + clientinfo.StationID);
+	emit  OnLineSignal(m_ServiceName, StationID,clientinfo.LatestTimeOfHeartBeat,clientinfo.LoginTime);;//åˆ·æ–°UI
 }
-//ÖÕ¶ËÃüÁî²Ù×÷
+//ç»ˆç«¯å‘½ä»¤æ“ä½œ
 void EHT:: OperationResultSlot(QString Value, int SrvPort, QString StationID)
 {
-
+	//å‰ç«¯å‘é€æŒ‡ä»¤
+	QString OperationLog;
+	OperationLog = "ç»ˆç«¯è¿”å›å€¼ï¼š" + Value + ",ä¿¡æ¯æ¥è‡ªä¸šåŠ¡å·ï¼š"+QString::number(this->m_ServiceID)+",å°ç«™å·ï¼š"+StationID;
+	if (this->WebCommand)
+	{
+		QJsonObject json;
+		json.insert("StationID", StationID);
+		json.insert("ServiceTypeID", m_ServiceID);
+		json.insert("Command", QString::number(CurrentCommand));
+		json.insert("Count", 1);
+		json.insert("RecvValue1", Value);
+		this->WebCommand = false;
+		this->CurrentCommand = NONE;
+		//å‘é€è‡³WebæœåŠ¡å™¨
+		emit SendToWebServiceSignal(json);
+	}
+	//å†™å…¥æ•°æ®æ—¥å¿—
+	LogWrite::DataLogMsgOutPut(OperationLog);
 }
 void EHT::OperationResultSlot(QString Value1, QString Value2, int SrvPort, QString StationID)
 {
-
+	//å‰ç«¯å‘é€æŒ‡ä»¤
+	QString OperationLog;
+	OperationLog = "ç»ˆç«¯è¿”å›å€¼ï¼š" + Value1+"ï¼Œè¿”å›å€¼ï¼š"+Value2 + ",ä¿¡æ¯æ¥è‡ªä¸šåŠ¡å·ï¼š" + QString::number(this->m_ServiceID) + ",å°ç«™å·ï¼š" + StationID;
+	if (this->WebCommand)
+	{
+		QJsonObject json;
+		json.insert("StationID", StationID);
+		json.insert("ServiceTypeID", m_ServiceID);
+		json.insert("Command", QString::number(CurrentCommand));
+		json.insert("Count", 2);
+		json.insert("RecvValue1", Value1);
+		json.insert("RecvValue2", Value2);
+		this->WebCommand = false;
+		this->CurrentCommand = NONE;
+		//å‘é€è‡³WebæœåŠ¡å™¨
+		emit SendToWebServiceSignal(json);
+	}
+	//å†™å…¥æ•°æ®æ—¥å¿—
+	LogWrite::DataLogMsgOutPut(OperationLog);
 }
 
 void EHT::OperationResultSlot(QString Command, QString Value1, QString Value2, QString Value3, QString Value4, int SrvPort, QString StationID)
 {
-
+	//å‰ç«¯å‘é€æŒ‡ä»¤
+	QString OperationLog;
+	OperationLog = "ç»ˆç«¯è¿”å›å€¼ï¼š" + Value1 + "ï¼Œè¿”å›å€¼ï¼š" + Value2 + ",è¿”å›å€¼ï¼š"+Value3+"ï¼Œè¿”å›å€¼:"+Value4+",ä¿¡æ¯æ¥è‡ªä¸šåŠ¡å·ï¼š" + QString::number(this->m_ServiceID) + ",å°ç«™å·ï¼š" + StationID;
+	if (this->WebCommand)
+	{
+		QJsonObject json;
+		json.insert("StationID", StationID);
+		json.insert("ServiceTypeID", m_ServiceID);
+		json.insert("Command", QString::number(CurrentCommand));
+		json.insert("Count", 4);
+		json.insert("RecvValue1", Value1);
+		json.insert("RecvValue2", Value2);
+		json.insert("RecvValue3", Value3);
+		json.insert("RecvValue4", Value4);
+		this->WebCommand = false;
+		this->CurrentCommand = NONE;
+		//å‘é€è‡³WebæœåŠ¡å™¨
+		emit SendToWebServiceSignal(json);
+	}
+	//å†™å…¥æ•°æ®æ—¥å¿—
+	LogWrite::DataLogMsgOutPut(OperationLog);
 }
-//»ñÈ¡´íÎó
+//è·å–é”™è¯¯
 void EHT:: GetErrorSlot(int ErrorMSG)
 {
-	
+	QString strMSG;
+	QDateTime current_date_time = QDateTime::currentDateTime();
+	QString current_date = current_date_time.toString("yyyy.MM.dd hh:mm:ss");
+	switch (ErrorMSG)
+	{
+	case 1:
+		strMSG = "æ­£å¸¸";
+		break;
+	case 10300: case 10301: case 10302:
+		strMSG = "é€šä¿¡åˆå§‹åŒ–å¤±è´¥ï¼";
+		break;
+	case -2:
+		strMSG = "";
+		break;
+	case -3:
+	{
+		strMSG = "æ¶ˆæ¯ä¸­é—´ä»¶é€šä¿¡å¼‚å¸¸ï¼";
+		//	g_SimpleProducer.start("admin", "admin", "tcp://117.158.216.250:61616", 2000, "DataFromFacility", false, false);
+	}
+	break;
+	case -4:
+		strMSG = "æœåŠ¡å™¨é—´é€šä¿¡å¼‚å¸¸ï¼";
+		break;
+	case -5:
+		strMSG = "è®¾å¤‡å·²ç™»å‡ºï¼";
+		break;
+	case -10311:
+		strMSG = "ç«¯å£å·ç›‘å¬å¤±è´¥ï¼";
+		break;
+	default:
+		strMSG = QString::number(ErrorMSG);
+		break;
+	}
+	LogWrite::SYSLogMsgOutPut(strMSG);
 }
-//¶ÁÈ¡SIM¿¨ºÅÅäÖÃÎÄ¼ş£¬×ª³ÉÇøÕ¾ºÅ
+//è¯»å–SIMå¡å·é…ç½®æ–‡ä»¶ï¼Œè½¬æˆåŒºç«™å·
 void EHT::Convert2StationID()
 {
-	//¶ÁÈ¡Command.iniÂ·¾¶
+	//è¯»å–Command.iniè·¯å¾„
 	QString path = QCoreApplication::applicationDirPath() + "//SIM2STATION.ini";
-	//´ò¿ªINIÎÄ¼ş
+	//æ‰“å¼€INIæ–‡ä»¶
 	QSettings configIniRead(path, QSettings::IniFormat);
-	//ÖÕ¶ËÃüÁî¸öÊı
+	//ç»ˆç«¯å‘½ä»¤ä¸ªæ•°
 	int Count = configIniRead.value("NW/Count").toInt();
-	//±éÀúÖÕ¶ËÃüÁî
+	//éå†ç»ˆç«¯å‘½ä»¤
 	for (int i = 0; i < Count; i++)
 	{
 		QString key = "/NW/STATION" + QString::number(i);
@@ -278,7 +372,7 @@ void EHT::Convert2StationID()
 	}
 }
 
-//½ÃÕıÊ±ÖÓ
+//çŸ«æ­£æ—¶é’Ÿ
 void EHT::SetTime()
 {
 	QDateTime nowtime = QDateTime::currentDateTime();
@@ -294,18 +388,18 @@ void EHT::SetTime()
 	{
 		for (int i = 0; i < Clients.size(); i++)
 		{
-			//ÅĞ¶ÏÊÇ·ñÔÚÏß
+			//åˆ¤æ–­æ˜¯å¦åœ¨çº¿
 			if (Clients[i].Online == false)
-				continue;//ÀëÏß·µ»Ø
+				continue;//ç¦»çº¿è¿”å›
 			int chk = 0;
 			int socketID = Clients[i].SocketID;
 			int SrcAdrr = Clients[i].StationID.toInt();
 			BYTE bytes[1024];
 			bytes[0] = 0xaa;
-			bytes[1] = 0x0a;//Ö¡³¤¶È
-			bytes[2] = 0x81;//Ö¡ÃüÁî
+			bytes[1] = 0x0a;//å¸§é•¿åº¦
+			bytes[2] = 0x81;//å¸§å‘½ä»¤
 			chk += bytes[2];
-			bytes[3] = SrcAdrr & 0xff;//Ô´µØÖ·
+			bytes[3] = SrcAdrr & 0xff;//æºåœ°å€
 			chk += bytes[3];
 			bytes[4] = (SrcAdrr >> 8) & 0xff;
 			chk += bytes[4];
@@ -323,8 +417,8 @@ void EHT::SetTime()
 			chk += bytes[10];
 			bytes[11] = sec.toInt();
 			chk += bytes[11];
-			bytes[12] = chk & 0xff;//Ğ£ÑéÎ» µÚ°ËÎ»
-			bytes[13] = (chk >> 8) & 0xff;//¸ß°ËÎ»
+			bytes[12] = chk & 0xff;//æ ¡éªŒä½ ç¬¬å…«ä½
+			bytes[13] = (chk >> 8) & 0xff;//é«˜å…«ä½
 			bytes[14] = 0xff;
 			QByteArray data;
 			for (int i = 0; i < 15; i++)
@@ -335,28 +429,28 @@ void EHT::SetTime()
 			str = QString::fromUtf8(data.data(), data.length());
 			int result = ::send(socketID, (char *)bytes, 15, 0);
 			LogWrite::DataLogMsgOutPut(str);
-			LogWrite::SYSLogMsgOutPut("ÍÁÈÀË®·Ö" + Clients[i].StationID + "×Ô¶¯½ÃÕıÊ±ÖÓ." );
+			LogWrite::SYSLogMsgOutPut("åœŸå£¤æ°´åˆ†" + Clients[i].StationID + "è‡ªåŠ¨çŸ«æ­£æ—¶é’Ÿ." );
 		}
 	}
 	else
 	{
 		for (int  i= 0; i < Clients.size(); i++)
 		{
-			//ÅĞ¶ÏÊÇ·ñÔÚÏß
+			//åˆ¤æ–­æ˜¯å¦åœ¨çº¿
 			if (Clients[i].Online == false)
-				continue;//ÀëÏß·µ»Ø
+				continue;//ç¦»çº¿è¿”å›
 			int socketID = Clients[i].SocketID;
 			QString Comm = "DATETIME " + datetime + "\r\n";
 			QByteArray ba = Comm.toLatin1();
 			LPCSTR ch = ba.data();
 			int len = Comm.length();
 			int result = ::send(socketID, ch, len, 0);
-			LogWrite::SYSLogMsgOutPut("Ì¨Õ¾ºÅ£º" + Clients[i].StationID + "×Ô¶¯½ÃÕıÊ±ÖÓ." );
+			LogWrite::SYSLogMsgOutPut("å°ç«™å·ï¼š" + Clients[i].StationID + "è‡ªåŠ¨çŸ«æ­£æ—¶é’Ÿ." );
 		}
 	}
 }
 
-//×Ô¶¯¼ì²âÀëÏß
+//è‡ªåŠ¨æ£€æµ‹ç¦»çº¿
 void EHT::Disconnect()
 {
 	QDateTime currentTime = QDateTime::currentDateTime();
@@ -365,12 +459,199 @@ void EHT::Disconnect()
 	{
 		
 			int time_t = currentTime.toTime_t() - Clients[i].LatestTimeOfHeartBeat.toTime_t();
-			//´óÓÚ5·ÖÖÓ
+			//å¤§äº5åˆ†é’Ÿ
 			if (time_t >300 && (Clients[i].Online == true))
 			{
 				Clients[i].Online = false;
 				emit OffLineSignal(m_ServiceName,Clients[i].StationID,Clients[i].LatestTimeOfHeartBeat,Clients[i].LoginTime);
-				LogWrite::SYSLogMsgOutPut("Î´¼ì²âµ½ĞÄÌø°ü,ÇøÕ¾ºÅ " + Clients[i].StationID + "ÒÑÀëÏß");
+				LogWrite::SYSLogMsgOutPut("æœªæ£€æµ‹åˆ°å¿ƒè·³åŒ…,åŒºç«™å· " + Clients[i].StationID + "å·²ç¦»çº¿");
 			}
 	}
+}
+
+//ç»ˆç«¯å‘½ä»¤æ“ä½œ
+void EHT::SendCommand(OPCommand cmm, QString StationID,QString Params1,QString Params2,bool WebCommand)
+{
+	this->WebCommand = WebCommand;
+	//è·å–å½“å‰ç»ˆç«¯æŒ‡ä»¤
+	this->CurrentCommand = cmm;
+	//æ‰¾åˆ°å¯¹åº”å°ç«™å·çš„Socketå€¼
+	unsigned int SocketID = 0;
+	for (int i = 0; i <Clients.count(); i++)
+	{
+		if (Clients[i].StationID == StationID)
+		{
+			SocketID = Clients[i].SocketID;
+			break;
+		}
+	}
+	//åœŸå£¤æ°´åˆ†
+	if (m_ServiceID==TRSF)
+	{
+
+	}
+	//å‘é€ç»ˆç«¯å‘½ä»¤
+	switch (cmm)
+	{
+		//è¯»å–é‡‡é›†å™¨çš„åŸºæœ¬ä¿¡æ¯
+	case BASEINFO:
+	{
+		QString Comm = "BASEINFO\r\n";
+		if (Params1 != "NULL")
+		{
+			Comm = "BASEINFO " + Params1 + "\r\n";
+		}
+		QByteArray ba = Comm.toLatin1();
+		LPCSTR ch = ba.data();
+		int len = Comm.length();
+		::send(SocketID, ch, len, 0);
+		break;
+	}
+	//è®¾ç½®æˆ–è¯»å–è‡ªåŠ¨è§‚æµ‹ç«™çš„åŒºç«™å·
+	case ID:
+	{
+
+		QString Comm = "ID\r\n";
+		if (Params1 != "NULL")
+		{
+			Comm = "ID " + Params1 + "\r\n";
+		}
+		QByteArray ba = Comm.toLatin1();
+		LPCSTR ch = ba.data();
+		int len = Comm.length();
+		::send(SocketID, ch, len, 0);
+		break;
+	}
+	//è®¾ç½®æˆ–è¯»å–è§‚æµ‹åœºæ‹”æµ·é«˜åº¦
+	case ALT:
+	{
+		QString Comm = "ALT\r\n";
+		if (Params1 != "NULL")
+		{
+			Comm = "ALT " + Params1 + "\r\n";
+		}
+		QByteArray ba = Comm.toLatin1();
+		LPCSTR ch = ba.data();
+		int len = Comm.length();
+		::send(SocketID, ch, len, 0);
+		break;
+	}
+	//CFå¡æ¨¡å—é…ç½®
+	case CFSET:
+	{
+		QString Comm = "CFSET\r\n";
+		QByteArray ba = Comm.toLatin1();
+		LPCSTR ch = ba.data();
+		int len = Comm.length();
+		::send(SocketID, ch, len, 0);
+		break;
+	}
+	//è®¾ç½®æˆ–è¯»å–æ•°æ®é‡‡é›†æ—¶é—´èŒƒå›´
+	case CAPTIME:
+	{
+		QString Comm = "CAPTIME\r\n";
+		if (Params1 != "NULL")
+		{
+			Comm = "CAPTIME " + Params1 + " " + Params2 + "\r\n";
+		}
+		QByteArray ba = Comm.toLatin1();
+		LPCSTR ch = ba.data();
+		int len = Comm.length();
+		::send(SocketID, ch, len, 0);
+		break;
+	}
+	//è®¾ç½®æˆ–è¯»å–è‡ªåŠ¨è§‚æµ‹ç«™çš„ç»åº¦
+	case LONGITUDE:
+	{
+		QString Comm = "LONG\r\n";
+		if (Params1 != "NULL")
+		{
+			Comm = "LONG " + Params1 + "\r\n";
+		}
+		QByteArray ba = Comm.toLatin1();
+		LPCSTR ch = ba.data();
+		int len = Comm.length();
+		::send(SocketID, ch, len, 0);
+		break;
+	}
+	//è®¾ç½®æˆ–è¯»å–æ•°æ®é‡‡é›†æ—¶é—´é—´éš”
+	case CAPINTERVAL:
+	{
+		QString Comm = "CAPINTERVAL\r\n";
+		if (Params1 != "NULL")
+		{
+			Comm = "CAPINTERVAL " + Params1 + "\r\n";
+		}
+		QByteArray ba = Comm.toLatin1();
+		LPCSTR ch = ba.data();
+		int len = Comm.length();
+		::send(SocketID, ch, len, 0);
+		break;
+	}
+	//é‡æ–°å¯åŠ¨é‡‡é›†å™¨
+	case RESET:
+	{
+		QString Comm = "RESET\r\n";
+		QByteArray ba = Comm.toLatin1();
+		LPCSTR ch = ba.data();
+		int len = Comm.length();
+		::send(SocketID, ch, len, 0);
+		break;
+	}
+	//è¿œç¨‹å‡çº§å¼€å…³
+	case UPDATE:
+	{
+		QString Comm = "UPDATE\r\n";
+		QByteArray ba = Comm.toLatin1();
+		LPCSTR ch = ba.data();
+		int len = Comm.length();
+		::send(SocketID, ch, len, 0);
+		break;
+	}
+	//æ‰‹åŠ¨é‡‡é›†å½“å‰æ—¶åˆ»çš„è¦ç´ æ•°æ®
+	case SNAPSHOT:
+	{
+		QString Comm = "SNAPSHOT\r\n";
+		QByteArray ba = Comm.toLatin1();
+		LPCSTR ch = ba.data();
+		int len = Comm.length();
+		::send(SocketID, ch, len, 0);
+		break;
+	}
+	//è®¾ç½®æˆ–è¯»å–é‡‡é›†å™¨æ—¥æœŸæ—¶é—´æ“ä½œ
+	case DATETIME:
+	{
+		QString Comm = "DATETIME\r\n";
+		if (Params1 != "NULL")
+		{
+			Comm = "DATETIME " + Params1 + "\r\n";
+		}
+		QByteArray ba = Comm.toLatin1();
+		LPCSTR ch = ba.data();
+		int len = Comm.length();
+		::send(SocketID, ch, len, 0);
+		break;
+	}
+	//è®¾ç½®æˆ–è¯»å–è‡ªåŠ¨è§‚æµ‹ç«™çš„çº¬åº¦
+	case LAT:
+	{
+		QString Comm = "LAT\r\n";
+		if (Params1 != "NULL")
+		{
+			Comm = "LAT " + Params1 + "\r\n";
+		}
+		QByteArray ba = Comm.toLatin1();
+		LPCSTR ch = ba.data();
+		int len = Comm.length();
+		::send(SocketID, ch, len, 0);
+		break;
+	}
+	default:
+		break;
+	}
+}
+
+void EHT::SendToActiveMQSlot(QJsonObject Json)
+{
+
 }

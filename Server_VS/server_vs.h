@@ -8,12 +8,14 @@
 #include<QMessageBox>
 #include<QThreadPool>
 #include"LogWrite.h"
-#include<qjsonobject.h>
+#include<QJsonObject>
 #include"EHTPool.h"
 #include<qlibrary.h>
 #include"SocketServerForWeb.h"
 #include "qtimer.h"
 #include"qnetworkreply.h"
+#include<qmenu.h>
+
 //业务类型连接信息
 typedef struct
 {
@@ -46,13 +48,9 @@ class Server_VS : public QMainWindow
 public:
 	Server_VS(QWidget *parent = 0);
 	~Server_VS();
-private:
-	//初始化服务程序
-	void InitServer();
+private:;
 	//添加解析DLL
 	LRESULT AddDll();
-	//开启新的IOCP
-	void AddIOCP(Char2Json func, int port, QString IP);
 	//通过设备号和端口查询到设备索引号
 	int FindRowIndex(QString SrvName, QString StationID);
 	//通过服务器端口号查找业务编号
@@ -65,25 +63,26 @@ private:
 	void CreateServerListActions();
 	//区站号列表右键菜单
 	void CreateClientListActions();
-	//初始化消息中间件
-	LRESULT InitializeMQ();
 	//初始化终端命令Socket
-	//LRESULT InitializeCommandSocket();
+	LRESULT InitializeCommandSocket();
 	//通过业务和区站号找到对应的Socket号
 	int FindSocketID(int ServiceTypeID, int StationID, int FacilityID);
-	//判断port号的合法性
-	bool IsLegallyPort(int port);
-
+	//修改窗体
+	void ConfigWindow();
 	//添加SIM卡号
 	void Convert2StationID();
+	//窗体移动
+	void mousePressEvent(QMouseEvent *event);
+	void mouseMoveEvent(QMouseEvent *event);
+	void mouseReleaseEvent(QMouseEvent *event);
 private:
 	Ui::Server_VSClass ui;
 	//业务类型数组
 	EHTPool EHTPool;
 	//UPD线程
 	SocketServerForWeb *socket4web;
-	//IOCP线程池
-	//QThreadPool ThreadPool;
+	//线程池
+	QThreadPool pool;
 	//操作类型
 	QString strOperateType;
 	//业务列表右键菜单
@@ -126,14 +125,18 @@ private:
 	QTimer *day_timer;
 	//自动补抄
 	QTimer *hour_timer;
-
-	private slots:
+	bool m_Drag;                //判断鼠标左键是否按下
+	QPoint m_DragPosition;
+	
+private slots:
+    //最小化窗体
+    void slot_minWindow();
 	//设备离线ListCtrl控件信息
 	void OffLineListCtrl(QString SrvName, QString StationID, QDateTime LastTime, QDateTime LoginTime);
 	//刷新设备ListCtrl控件信息
 	void RefreshListCtrl(QString SrvName, QString StationID, QDateTime LastTime, QDateTime LoginTime);
 	//终端读取设备命令
-	void RequestForReadCOMM(int ServiceTypeID, int StationID, int FacilityID, int Command, QString Param1, QString Param2);
+	void RequestForReadCOMM(int ServiceTypeID, QString StationID, QString FacilityID, int Command, QString Param1, QString Param2);
 	//错误提示
 	void GetErrorMSG(int error);
 	//更新UI界面
@@ -145,12 +148,12 @@ private:
 	//终端操作返回读取值
 	void GetCommandRecvValue(QJsonObject RecvJson);
 	//添加Lib按钮事件
-	void on_RunBtn_clicked();
+	void on_AddBtn_clicked();
 	//移除业务Lib
 	void on_DeleteBtn_clicked();
 	//业务列表右键事件
 	void on_ServerList_customContextMenuRequested(const QPoint &pos);
-	//action_run事件
+	//启动业务事件
 	void Lib_Run(int ServerIndex);
 	//action_stop事件
 	void Lib_Stop(int ServerIndex);
@@ -182,6 +185,8 @@ private:
 	void OpenSYSLog();
 	//打开数据日志
 	void OpenDataLog();
+
+
 };
 
 #endif // SERVER_VS_H

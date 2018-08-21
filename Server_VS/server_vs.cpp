@@ -12,18 +12,21 @@
 #include"SYSLogDlg.h"
 #include"DataLogDlg.h"
 #include"qdockwidget.h"
+#include<qtoolbutton.h>
+#include <QMouseEvent>
+
 using namespace std;
-//消息中间件类
-SimpleProducer g_SimpleProducer;
-SimpleProducer g_SimpleProducer_ZDH;
+//消息中间件
+SimpleProducer g_SimpleProducer, g_SimpleProducer_ZDH;
 //构造函数
 Server_VS::Server_VS(QWidget *parent)
 	: QMainWindow(parent)
 {
 	ui.setupUi(this);
-	this->setFixedSize(1280, 768);
+	ConfigWindow();
+	this->setFixedSize(1280, 660);
 	strOperateType = "未知操作";
-
+	pool.setMaxThreadCount(1024);
 	//menu功能
 	connect(ui.action_SYSLog, SIGNAL(triggered()), this, SLOT(OpenSYSLog()));
 	connect(ui.action_DataLog, SIGNAL(triggered()), this, SLOT(OpenDataLog()));
@@ -43,7 +46,8 @@ Server_VS::Server_VS(QWidget *parent)
 	ui.ClientList->setEditTriggers(QAbstractItemView::NoEditTriggers);//禁止修改
 	ui.ClientList->setSelectionMode(QAbstractItemView::SingleSelection);//可以选中单个
 	ui.ClientList->horizontalHeader()->setHighlightSections(false);//禁止表头选中高亮
-	ui.ClientList->horizontalHeader()->setStyleSheet("QHeaderView::section{background:skyblue;}"); //设置表头背景色
+	ui.ClientList->horizontalHeader()->setStyleSheet("QHeaderView::section{background:rgb(77,77,77);color:white}"); //设置表头背景色
+
 	ui.ClientList->setColumnWidth(0, 200);
 	ui.ClientList->setColumnWidth(1, 200);
 	ui.ClientList->setColumnWidth(2, 200);
@@ -53,18 +57,17 @@ Server_VS::Server_VS(QWidget *parent)
 	ui.ClientList->setContextMenuPolicy(Qt::CustomContextMenu);//右键创建Menu
 	CreateClientListActions();
 
-
+	connect(ui.RemoveBtn, SIGNAL(clicked()), this, SLOT(on_DeleteBtn_clicked()));
+	connect(ui.MiniBtn, SIGNAL(clicked()), this, SLOT(slot_minWindow()));
+	connect(ui.CloseBtn, SIGNAL(clicked()), this, SLOT(close()));
 	LogWrite::SYSLogMsgOutPut("主程序已启动...");
 	//ListCtrl控件当前选择行
 	iSelectedRowOfServiceListCtrl = -1;
 	iSelectedRowOfClientListCtrl = -1;
 
 	LRESULT pResult = -1;
-	//消息中间件的初始化
-	pResult = InitializeMQ();
-
 	//web服务器Socket的初始化
-//	pResult = InitializeCommandSocket();
+	pResult = InitializeCommandSocket();
 	switch (pResult)
 	{
 	case -1:
@@ -83,11 +86,13 @@ Server_VS::Server_VS(QWidget *parent)
 //析构函数
 Server_VS::~Server_VS()
 {
+	delete socket4web;
+	socket4web = nullptr;
 }
 
-//初始化消息中间件
-LRESULT Server_VS::InitializeMQ()
+void Server_VS::ConfigWindow()
 {
+	setWindowFlags(Qt::FramelessWindowHint);
 	try
 	{
 		string brokerURI;
@@ -110,233 +115,79 @@ LRESULT Server_VS::InitializeMQ()
 		useTopics = false;
 		g_SimpleProducer.start(UserName, Password, brokerURI, numMessages, destURI, useTopics, clientAck);
 		g_SimpleProducer_ZDH.start(UserName, Password, brokerURI, numMessages, destURI_1, useTopics, clientAck);
+		return;
+	}
+	catch (const std::exception&)
+	{
+		return;
+	}
+	
+}
+
+
+void Server_VS::slot_minWindow()
+{
+	this->showMinimized();
+}
+
+void Server_VS::mousePressEvent(QMouseEvent *event)
+{
+	if (event->button() == Qt::LeftButton) {
+		m_Drag = true;
+		m_DragPosition = event->globalPos() - this->pos();
+		event->accept();
+	}
+}
+
+void Server_VS::mouseMoveEvent(QMouseEvent *event)
+{
+	if (m_Drag && (event->buttons() && Qt::LeftButton)) {
+		move(event->globalPos() - m_DragPosition);
+		event->accept();
+	}
+}
+
+void Server_VS::mouseReleaseEvent(QMouseEvent *event)
+{
+	m_Drag = false;
+}
+
+//初始化Web监听线程
+LRESULT Server_VS::InitializeCommandSocket()
+{
+	try
+	{
+		//开启WebSocket线程
+		socket4web = new SocketServerForWeb();
+		connect(socket4web, SIGNAL(GetErrorSignal(int)), this, SLOT(GetErrorMSG(int)), Qt::AutoConnection);
+		//处理web端发送过来命令类型
+		connect(socket4web, SIGNAL(NoticfyServerFacilityID(int, QString, QString, int, QString, QString)), this, SLOT(RequestForReadCOMM(int, QString, QString, int, QString, QString)), Qt::AutoConnection);
+		socket4web->m_portServer = 1030;
+		socket4web->setAutoDelete(false);
+		pool.start(socket4web);
 		return 1;
 	}
 	catch (const std::exception&)
 	{
-		return -1;
+		return -2;
 	}
 }
 
-//初始化Web监听线程
-//LRESULT Server_VS::InitializeCommandSocket()
-//{
-//	try
-//	{
-//		//开启WebSocket线程
-//		socket4web = new SocketServerForWeb();
-//		connect(socket4web, SIGNAL(GetErrorSignal(int)), this, SLOT(GetErrorMSG(int)), Qt::AutoConnection);
-//		//处理web端发送过来命令类型
-//		connect(socket4web, SIGNAL(NoticfyServerFacilityID(int, int, int, int, QString, QString)), this, SLOT(RequestForReadCOMM(int, int, int, int, QString, QString)), Qt::AutoConnection);
-//		socket4web->m_portServer = 1030;
-//		socket4web->setAutoDelete(false);
-//		pool.start(socket4web);
-//		return 1;
-//	}
-//	catch (const std::exception&)
-//	{
-//		return -2;
-//	}
-//}
-
 //读取设备参数指令
-void Server_VS::RequestForReadCOMM(int ServiceTypeID, int StationID, int FacilityID, int Command, QString Param1, QString Param2)
+void Server_VS::RequestForReadCOMM(int ServiceTypeID, QString StationID, QString FacilityID, int Command, QString Params1, QString Params2)
 {
 	//通过业务号和区站号找到对应的Socket号
-	int SocketID = FindSocketID(ServiceTypeID, StationID, FacilityID);
-	if (SocketID == -1)
-		GetCommandStatus(-1);
-	//发送终端命令
-	switch (Command)
-	{
-		//读取采集器的基本信息
-	case	BASEINFO:
-	{
-		QString Comm = "BASEINFO\r\n";
-		if (Param1 != "NULL")
-		{
-			Comm = "BASEINFO " + Param1 + "\r\n";
-		}
-		QByteArray ba = Comm.toLatin1();
-		LPCSTR ch = ba.data();
-		int len = Comm.length();
-		::send(SocketID, ch, len, 0);
-		break;
-	}
-	//设置或读取自动观测站的区站号
-	case ID:
-	{
-
-		QString Comm = "ID\r\n";
-		if (Param1 != "NULL")
-		{
-			Comm = "ID " + Param1 + "\r\n";
-		}
-		QByteArray ba = Comm.toLatin1();
-		LPCSTR ch = ba.data();
-		int len = Comm.length();
-		::send(SocketID, ch, len, 0);
-		break;
-	}
-	//设置或读取观测场拔海高度
-	case ALT:
-	{
-		QString Comm = "ALT\r\n";
-		if (Param1 != "NULL")
-		{
-			Comm = "ALT " + Param1 + "\r\n";
-		}
-		QByteArray ba = Comm.toLatin1();
-		LPCSTR ch = ba.data();
-		int len = Comm.length();
-		::send(SocketID, ch, len, 0);
-		break;
-	}
-	//CF卡模块配置
-	case CFSET:
-	{
-		QString Comm = "CFSET\r\n";
-		QByteArray ba = Comm.toLatin1();
-		LPCSTR ch = ba.data();
-		int len = Comm.length();
-		::send(SocketID, ch, len, 0);
-		break;
-	}
-	//设置或读取数据采集时间范围
-	case CAPTIME:
-	{
-		QString Comm = "CAPTIME\r\n";
-		if (Param1 != "NULL")
-		{
-			Comm = "CAPTIME " + Param1 + " " + Param2 + "\r\n";
-		}
-		QByteArray ba = Comm.toLatin1();
-		LPCSTR ch = ba.data();
-		int len = Comm.length();
-		::send(SocketID, ch, len, 0);
-		break;
-	}
-	//设置或读取自动观测站的经度
-	case LONGITUDE:
-	{
-		QString Comm = "LONG\r\n";
-		if (Param1 != "NULL")
-		{
-			Comm = "LONG " + Param1 + "\r\n";
-		}
-		QByteArray ba = Comm.toLatin1();
-		LPCSTR ch = ba.data();
-		int len = Comm.length();
-		::send(SocketID, ch, len, 0);
-		break;
-	}
-	//设置或读取数据采集时间间隔
-	case CAPINTERVAL:
-	{
-		QString Comm = "CAPINTERVAL\r\n";
-		if (Param1 != "NULL")
-		{
-			Comm = "CAPINTERVAL " + Param1 + "\r\n";
-		}
-		QByteArray ba = Comm.toLatin1();
-		LPCSTR ch = ba.data();
-		int len = Comm.length();
-		::send(SocketID, ch, len, 0);
-		break;
-	}
-	//重新启动采集器
-	case RESET:
-	{
-		QString Comm = "RESET\r\n";
-		QByteArray ba = Comm.toLatin1();
-		LPCSTR ch = ba.data();
-		int len = Comm.length();
-		::send(SocketID, ch, len, 0);
-		break;
-	}
-	//远程升级开关
-	case UPDATE:
-	{
-		QString Comm = "UPDATE\r\n";
-		QByteArray ba = Comm.toLatin1();
-		LPCSTR ch = ba.data();
-		int len = Comm.length();
-		::send(SocketID, ch, len, 0);
-		break;
-	}
-	//手动采集当前时刻的要素数据
-	case SNAPSHOT:
-	{
-		QString Comm = "SNAPSHOT\r\n";
-		QByteArray ba = Comm.toLatin1();
-		LPCSTR ch = ba.data();
-		int len = Comm.length();
-		::send(SocketID, ch, len, 0);
-		break;
-	}
-	//设置或读取采集器日期时间操作
-	case DATETIME:
-	{
-		QString Comm = "DATETIME\r\n";
-		if (Param1 != "NULL")
-		{
-			Comm = "DATETIME " + Param1 + "\r\n";
-		}
-		QByteArray ba = Comm.toLatin1();
-		LPCSTR ch = ba.data();
-		int len = Comm.length();
-		::send(SocketID, ch, len, 0);
-		break;
-	}
-	//设置或读取自动观测站的纬度
-	case LAT:
-	{
-		QString Comm = "LAT\r\n";
-		if (Param1 != "NULL")
-		{
-			Comm = "LAT " + Param1 + "\r\n";
-		}
-		QByteArray ba = Comm.toLatin1();
-		LPCSTR ch = ba.data();
-		int len = Comm.length();
-		::send(SocketID, ch, len, 0);
-		break;
-	}
-	default:
-		break;
-	}
+	if (EHTPool.GetEHT(ServiceTypeID) == NULL)
+		return;
+	//发送指令
+	EHTPool.GetEHT(ServiceTypeID)->SendCommand(OPCommand(Command), StationID, Params1, Params2, true);
+	
 }
 
 //添加Lib服务
-void Server_VS::on_RunBtn_clicked()
+void Server_VS::on_AddBtn_clicked()
 {
 	//初始化服务
-	InitServer();
-}
-
-//移除Lib
-void Server_VS::on_DeleteBtn_clicked()
-{
-	if (iSelectedRowOfServiceListCtrl < 0)
-		return;
-	QString ServiceName = ui.ServerList->item(iSelectedRowOfServiceListCtrl, 0)->text();
-	//移除EHT
-	EHTPool.Stop(ServiceName);
-	//移除设备列表
-	for (int i = 0; i < ui.ClientList->rowCount(); i++)
-	{
-		if (ui.ClientList->item(i,0)->text()== ServiceName)
-		{
-			ui.ClientList->removeRow(i);
-		}
-	}
-	//从UI列表中移除
-	ui.ServerList->removeRow(iSelectedRowOfServiceListCtrl);
-}
-
-//加载动态链接库
-void Server_VS::InitServer()
-{
 	//加载动态解析DLL
 	LRESULT pResult = AddDll();
 	switch (pResult)
@@ -351,6 +202,27 @@ void Server_VS::InitServer()
 		break;
 	}
 }
+
+//移除Lib
+void Server_VS::on_DeleteBtn_clicked()
+{
+	if (iSelectedRowOfServiceListCtrl < 0)
+		return;
+	QString ServiceName = ui.ServerList->item(iSelectedRowOfServiceListCtrl, 0)->text();
+	//移除EHT
+	EHTPool.Stop(ServiceName);
+	//移除设备列表
+	for (int i = ui.ClientList->rowCount()-1; i >-1; i--)
+	{
+		if (ui.ClientList->item(i,0)->text()== ServiceName)
+		{
+			ui.ClientList->removeRow(i);
+		}
+	}
+	//从UI列表中移除
+	ui.ServerList->removeRow(iSelectedRowOfServiceListCtrl);
+}
+
 
 //添加解析DLL
 LRESULT Server_VS::AddDll()
@@ -369,6 +241,7 @@ LRESULT Server_VS::AddDll()
 	EHT *pEHT=new EHT(this);
 	connect(pEHT, SIGNAL(OnLineSignal(QString, QString, QDateTime, QDateTime)), this, SLOT(RefreshListCtrl(QString, QString, QDateTime, QDateTime)));
 	connect(pEHT, SIGNAL(OffLineSignal(QString, QString, QDateTime, QDateTime)), this, SLOT(OffLineListCtrl(QString, QString, QDateTime, QDateTime)));
+	connect(pEHT, SIGNAL(SendToWebServiceSignal(QJsonObject)), socket4web,SLOT(SendToWebServiceSlot(QJsonObject)));
 	int size = sizeof(EHT);
 	LRESULT pResult = pEHT->LoadLib(strName);
 	if (pResult<1)
@@ -378,16 +251,6 @@ LRESULT Server_VS::AddDll()
 	return 1;
 }
 
-//判断port号的合法性
-bool Server_VS::IsLegallyPort(int port)
-{
-	//for (int i = 0; i < ClientInfo.size(); i++)
-	//{
-	//	if (ClientInfo[i].ServerPortID == port)
-	//		return false;
-	//}
-	return true;
-}
 
 //终端命令返回操作状态
 void Server_VS::GetCommandStatus(int result)
@@ -413,7 +276,6 @@ void Server_VS::GetCommandStatus(int result)
 		break;
 	}
 	LogWrite::DataLogMsgOutPut(QString("终端命令:")+strOperateType +QString(",解析终端值:") + strOperateStatus);
-	ui.StatusLabel->setText(strOperateType +":"+ strOperateStatus);
     LogWrite::LogWrite();
 }
 
@@ -435,7 +297,6 @@ void Server_VS::GetCommandRecvValue(QJsonObject RecvJson)
 			valueString += value;
 		}
 	}
-	ui.StatusLabel->setText(strOperateType+":"+valueString);
 	QJsonDocument document;
 	document.setObject(RecvJson);
 	QString strRecv(document.toJson(QJsonDocument::Compact));
@@ -480,7 +341,6 @@ void Server_VS::GetErrorMSG(int error)
 		strMSG = QString::number(error);
 		break;
 	}
-	ui.StatusLabel->setText(strMSG);
 	LogWrite::SYSLogMsgOutPut(strMSG);
 }
 
@@ -635,7 +495,10 @@ QString Server_VS::FindserviceTypeIDByPort(int SrvPort)
 //业务列表右键事件
 void Server_VS::on_ServerList_customContextMenuRequested(const QPoint &pos)
 {
-	iSelectedRowOfServiceListCtrl = ui.ServerList->itemAt(pos)->row(); //get right click pos item
+	QTableWidgetItem *SelectItem = ui.ServerList->itemAt(pos);
+	if (SelectItem == NULL)
+		return;
+	iSelectedRowOfServiceListCtrl = SelectItem->row(); //get right click pos item
 	//菜单出现的位置为当前鼠标的位置
 	pop_Menu_Service.exec(QCursor::pos());
 
@@ -658,7 +521,10 @@ void Server_VS::CreateServerListActions()
 //区站号列表右键事件
 void Server_VS::on_ClientList_customContextMenuRequested(const QPoint &pos)
 {
-	iSelectedRowOfClientListCtrl = ui.ClientList->itemAt(pos)->row(); //get right click pos item
+	QTableWidgetItem *SelectItem = ui.ClientList->itemAt(pos);
+	if (SelectItem == NULL)
+		return;
+	iSelectedRowOfClientListCtrl = SelectItem->row(); //get right click pos item
 	//菜单出现的位置为当前鼠标的位置
 	pop_Menu_Client.exec(QCursor::pos());
 }
@@ -679,36 +545,6 @@ void Server_VS::Lib_Run(int ServerIndex)
 		return;
 	int Row = SelectedItem->row();
 	EHTPool.Run(ui.ServerList->item(Row, 0)->text());
-	/*for (int i = 0; i <EHTList.size(); i++)
-	{
-		QString ServiceName = EHTList[i]->GetServiceName();
-		if (EHTList[i]->GetServiceName() == SelectedItem->text())
-			EHTList[i]->Run(ThreadPool);
-	}*/
-
-//
-//	//找到业务数组中对应服务名称
-//	for (int i = 0; i < ClientInfo.size(); i++)
-//	{
-//		if (ClientInfo[i].ServerName == selecteditem->text())
-//		{
-//			iSelectIndexOfService = i;
-//		}
-//	}
-//	//找到Lib路径，解析Lib
-//	QLibrary lib(ClientInfo[iSelectIndexOfService].Path);
-//	if (lib.load())
-//	{
-//		Char2Json func_Char2Json = (Char2Json)(lib.resolve("Char2Json"));
-//		if (func_Char2Json == NULL)
-//		{
-//			QMessageBox::warning(NULL, "错误", "Lib拆包函数加载错误!");
-//			return;
-//		}
-//		//启动一个IOCP来监听设备
-//		AddIOCP(func_Char2Json, ClientInfo[iSelectIndexOfService].ServerPortID, ClientInfo[iSelectIndexOfService].IP);
-//		//lib.unload();
-//	}
 }
 //停止Lib服务
 void Server_VS::Lib_Stop(int ServerIndex)

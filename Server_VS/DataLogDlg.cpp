@@ -6,9 +6,11 @@ DataLogDlg::DataLogDlg(QWidget *parent)
 	ui.setupUi(this);
 	setFixedSize(623, 470);
 	setWindowFlags(Qt::WindowCloseButtonHint);
-	readTxtThread = new ReadSYSLogTXT("DataLog");
-	connect(readTxtThread, SIGNAL(SendToUI(QStringList)), this, SLOT(GetLogTxt(QStringList)));
-	pool.start(readTxtThread);
+	//读取线程
+	ReadSYSLogTXT *readTxtThread= new ReadSYSLogTXT("DataLog");
+	connect(readTxtThread, SIGNAL(SendToUI(QStringList)), this, SLOT(GetLogTxt(QStringList)), Qt::BlockingQueuedConnection);
+	connect(readTxtThread, &QThread::finished, this, &QObject::deleteLater);
+	readTxtThread->start();
 	//设置显示列表控件
 	ui.DataListTable->setColumnCount(1);
 	ui.DataListTable->setHorizontalHeaderLabels(QStringList() << QString::fromLocal8Bit("日志详情"));
@@ -27,6 +29,8 @@ DataLogDlg::DataLogDlg(QWidget *parent)
 
 DataLogDlg::~DataLogDlg()
 {
+	delete readTxtThread;
+	readTxtThread = NULL;
 }
 
 void DataLogDlg::ShowToolTip(QModelIndex index)
@@ -127,5 +131,5 @@ void DataLogDlg::on_PageToEndBtn_clicked()
 
 void DataLogDlg::closeEvent(QCloseEvent *e)
 {
-	readTxtThread->SetFlagOver();
+	emit SetFlagOverSignal();
 }

@@ -161,6 +161,15 @@
     <ClCompile Include="EHTPool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_MyButton.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_MyButton.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="MyButton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="server_vs.ui">
@@ -221,6 +230,9 @@
       <Filter>Header Files</Filter>
     </CustomBuild>
     <CustomBuild Include="EHTPool.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="MyButton.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
   </ItemGroup>
