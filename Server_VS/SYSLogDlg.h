@@ -1,5 +1,4 @@
 ﻿#pragma once
-
 #include <QDialog>
 #include "ui_SYSLogDlg.h"
 #include<qthreadpool.h>
@@ -7,12 +6,14 @@
 #include"ReadSYSLogTXT.h"
 #include<QLabel>
 #include<QTimer>
+#include<QMouseEvent>
 class SYSLogDlg : public QDialog
 {
 	Q_OBJECT
 
 public:
 	SYSLogDlg(QWidget *parent = Q_NULLPTR);
+	SYSLogDlg(QString LogName,QWidget *parent = Q_NULLPTR);
 	~SYSLogDlg();
 
 private:
@@ -41,6 +42,12 @@ private:
 	virtual void closeEvent(QCloseEvent *e);
 	void StartAnimation();
 	void StopAnimation();
+	//窗体移动
+	virtual void mousePressEvent(QMouseEvent *event);
+	virtual void mouseMoveEvent(QMouseEvent *event);
+	virtual void mouseReleaseEvent(QMouseEvent *event);
+	bool m_Drag;                //判断鼠标左键是否按下
+	QPoint m_DragPosition;
 private slots:
 	void GetLogTxt(QStringList strlist);
     void on_PageDownBtn_clicked();
@@ -49,6 +56,8 @@ private slots:
     void on_PageToEndBtn_clicked();
 	void ShowToolTip(QModelIndex index);
 	void updatePixmap();
+	void slot_minWindow();
 signals:
+	
 	void SetFlagOverSignal();
 };

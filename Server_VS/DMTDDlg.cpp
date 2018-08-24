@@ -18,7 +18,6 @@ DMTDDlg::DMTDDlg(QWidget *parent)
 	ui.DoingBar->setWindowTitle(QString::fromLocal8Bit("上传要素数据"));
 	count = 0;
 	isRun = false;
-	InitActiveMQ();
 }
 
 DMTDDlg::~DMTDDlg()
@@ -26,37 +25,6 @@ DMTDDlg::~DMTDDlg()
 
 }
 
-void DMTDDlg::InitActiveMQ()
-{
-	try
-	{
-		string brokerURI;
-		string destURI;
-		string destURI_1;
-		string UserName;
-		string Password;
-		bool useTopics;
-		bool clientAck;
-
-		activemq::library::ActiveMQCPP::initializeLibrary();
-		UserName = "admin";
-		Password = "admin";
-		brokerURI = "tcp://117.158.216.250:61616";
-
-		unsigned int numMessages = 2000;
-		destURI = "DataFromFacility";
-		destURI_1 = "ZDH";
-		clientAck = false;
-		useTopics = false;
-		m_SimpleProducer.start(UserName, Password, brokerURI, numMessages, destURI, useTopics, clientAck);
-		m_SimpleProducer_ZDH.start(UserName, Password, brokerURI, numMessages, destURI_1, useTopics, clientAck);
-		return ;
-	}
-	catch (const std::exception&)
-	{
-		return ;
-	}
-}
 //浏览文件夹按钮事件
 void DMTDDlg::on_BrowsingBtn_clicked()
 {
@@ -242,8 +210,8 @@ LRESULT DMTDDlg::ImpData()
 		QByteArray byteArray = document.toJson(QJsonDocument::Compact);
 		LPCSTR dataChar;
 		dataChar = byteArray.data();
-		pResult= m_SimpleProducer.send(dataChar, strlen(dataChar));
-		pResult=m_SimpleProducer_ZDH.send(dataChar, strlen(dataChar));
+		pResult= g_SimpleProducer.send(dataChar, strlen(dataChar));
+		pResult=g_SimpleProducer_ZDH.send(dataChar, strlen(dataChar));
 		if (pResult<0)
 		{
 			QMessageBox::warning(NULL, "错误", "消息中间件发生错误");

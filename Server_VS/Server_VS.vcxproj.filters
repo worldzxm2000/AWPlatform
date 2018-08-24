@@ -125,15 +125,6 @@
     <ClCompile Include="ReadSYSLogTXT.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GeneratedFiles\Debug\moc_DataLogDlg.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Release\moc_DataLogDlg.cpp">
-      <Filter>Generated Files\Release</Filter>
-    </ClCompile>
-    <ClCompile Include="DataLogDlg.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GeneratedFiles\Debug\moc_Server_VS.cpp">
       <Filter>Generated Files\Debug</Filter>
     </ClCompile>
@@ -168,6 +159,42 @@
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
     <ClCompile Include="MyButton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_MyDockWidgetTitle.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_MyDockWidgetTitle.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="MyDockWidgetTitle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_MyDockWidget.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_MyDockWidget.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="MyDockWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_MyDockWidgetTabButton.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_MyDockWidgetTabButton.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="MyDockWidgetTabButton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_MyDockWidgetTabBar.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_MyDockWidgetTabBar.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="MyDockWidgetTabBar.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -217,12 +244,6 @@
     <CustomBuild Include="ReadSYSLogTXT.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
-    <CustomBuild Include="DataLogDlg.h">
-      <Filter>Header Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="DataLogDlg.ui">
-      <Filter>Form Files</Filter>
-    </CustomBuild>
     <CustomBuild Include="Server_VS.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
@@ -233,6 +254,18 @@
       <Filter>Header Files</Filter>
     </CustomBuild>
     <CustomBuild Include="MyButton.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="MyDockWidgetTitle.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="MyDockWidget.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="MyDockWidgetTabButton.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="MyDockWidgetTabBar.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
   </ItemGroup>
@@ -256,9 +289,6 @@
       <Filter>Generated Files</Filter>
     </ClInclude>
     <ClInclude Include="GeneratedFiles\ui_SYSLogDlg.h">
-      <Filter>Generated Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GeneratedFiles\ui_DataLogDlg.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">

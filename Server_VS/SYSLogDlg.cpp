@@ -6,7 +6,7 @@ SYSLogDlg::SYSLogDlg(QWidget *parent)
 	: QDialog(parent)
 {
 	ui.setupUi(this);
-	setWindowFlags(Qt::WindowCloseButtonHint);
+	setWindowFlags(Qt::WindowCloseButtonHint|Qt::FramelessWindowHint);
 	setFixedSize(623, 470);
 
 	m_pLoadingLabel = new QLabel(this);
@@ -33,16 +33,96 @@ SYSLogDlg::SYSLogDlg(QWidget *parent)
 	ui.DataListTable->setEditTriggers(QAbstractItemView::NoEditTriggers);//禁止修改
 	ui.DataListTable->setSelectionMode(QAbstractItemView::SingleSelection);//可以选中单个
 	ui.DataListTable->horizontalHeader()->setHighlightSections(false);//禁止表头选中高亮
-	ui.DataListTable->horizontalHeader()->setStyleSheet("QHeaderView::section{background:skyblue;}"); //设置表头背景色
+	ui.DataListTable->horizontalHeader()->setStyleSheet("QHeaderView::section{background:rgb(77,77,77);}"); //设置表头背景色
 	ui.DataListTable->horizontalHeader()->setStretchLastSection(true);//列宽
 	ui.DataListTable->setMouseTracking(true);//tip提示
 	connect(ui.DataListTable, SIGNAL(entered(QModelIndex)), this, SLOT(ShowToolTip(QModelIndex)));
+	connect(ui.MiniBtn, SIGNAL(clicked()), this, SLOT(slot_minWindow()));
+	connect(ui.CloseBtn, SIGNAL(clicked()), this, SLOT(close()));
+	currentPage = 0;
+	TotalPage = 0;
 }
 
+SYSLogDlg::SYSLogDlg( QString LogName,QWidget *parent)
+{
+	ui.setupUi(this);
+	setWindowFlags(Qt::WindowCloseButtonHint | Qt::FramelessWindowHint);
+	setFixedSize(623, 470);
+	if (LogName=="SYSLog")
+	{
+		ui.NameLabel->setText(QString::fromLocal8Bit( "运行日志"));
+	}
+	else
+	{
+		ui.NameLabel->setText(QString::fromLocal8Bit("终端日志"));
+
+	}
+	
+	m_pLoadingLabel = new QLabel(this);
+	m_pLoadingLabel->setGeometry(this->width() / 2 -80, this->height() / 2 - 150, 200, 200);
+	m_pTimer = new QTimer(this);
+
+	// 设定超时时间100毫秒
+	m_pTimer->setInterval(100);
+	connect(m_pTimer, SIGNAL(timeout()), this, SLOT(updatePixmap()));
+	StartAnimation();
+
+	//读取线程
+	readTxtThread = new ReadSYSLogTXT(LogName);
+	connect(readTxtThread, SIGNAL(SendToUI(QStringList)), this, SLOT(GetLogTxt(QStringList)), Qt::BlockingQueuedConnection);
+	connect(readTxtThread, SIGNAL(finished()), readTxtThread, SLOT(deleteLater()));
+	connect(this, SIGNAL(SetFlagOverSignal()), readTxtThread, SLOT(EndThread()));
+	readTxtThread->start();
+	//pool.start(readTxtThread);
+	//设置显示列表控件
+	ui.DataListTable->setColumnCount(1);
+	ui.DataListTable->setHorizontalHeaderLabels(QStringList() << QString::fromLocal8Bit("日志详情"));
+	ui.DataListTable->verticalHeader()->setHidden(true);
+	ui.DataListTable->setSelectionBehavior(QAbstractItemView::SelectRows);//整行选中的方式
+	ui.DataListTable->setEditTriggers(QAbstractItemView::NoEditTriggers);//禁止修改
+	ui.DataListTable->setSelectionMode(QAbstractItemView::SingleSelection);//可以选中单个
+	ui.DataListTable->horizontalHeader()->setHighlightSections(false);//禁止表头选中高亮
+	ui.DataListTable->horizontalHeader()->setStyleSheet("QHeaderView::section{background:rgb(77,77,77);}"); //设置表头背景色
+	ui.DataListTable->horizontalHeader()->setStretchLastSection(true);//列宽
+	ui.DataListTable->setMouseTracking(true);//tip提示
+	connect(ui.DataListTable, SIGNAL(entered(QModelIndex)), this, SLOT(ShowToolTip(QModelIndex)));
+	connect(ui.MiniBtn, SIGNAL(clicked()), this, SLOT(slot_minWindow()));
+	connect(ui.CloseBtn, SIGNAL(clicked()), this, SLOT(close()));
+	currentPage = 0;
+	TotalPage = 0;
+}
 SYSLogDlg::~SYSLogDlg()
 {
 }
 
+
+
+void SYSLogDlg::slot_minWindow()
+{
+	this->showMinimized();
+}
+
+void SYSLogDlg::mousePressEvent(QMouseEvent *event)
+{
+	if (event->button() == Qt::LeftButton) {
+		m_Drag = true;
+		m_DragPosition = event->globalPos() - this->pos();
+		event->accept();
+	}
+}
+
+void SYSLogDlg::mouseMoveEvent(QMouseEvent *event)
+{
+	if (m_Drag && (event->buttons() && Qt::LeftButton)) {
+		move(event->globalPos() - m_DragPosition);
+		event->accept();
+	}
+}
+
+void SYSLogDlg::mouseReleaseEvent(QMouseEvent *event)
+{
+	m_Drag = false;
+}
 // 启动定时器
 void SYSLogDlg::StartAnimation()
 {
@@ -64,7 +144,7 @@ void SYSLogDlg::updatePixmap()
 	if (m_nIndex > 8)
 		m_nIndex = 1;
 
-	QPixmap pixmap(QString("F:\\Server_VS\\Image\\png\\Loading%1.png").arg(m_nIndex));
+	QPixmap pixmap(QString("..//Image//png//Loading%1.png").arg(m_nIndex));
 	m_pLoadingLabel->setPixmap(pixmap);
 }
 void SYSLogDlg::ShowToolTip(QModelIndex index)

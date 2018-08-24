@@ -47,11 +47,13 @@ typedef struct
 //业务列表
 enum ServiceID
 {
-	NW=01,//农委
-	JTQX =02,//交通气象
-	NTXQH=03,//农田小气候
-	TRSF =04,//土壤水分
-	HKQX = 05//航空气象
+	NW = 01,//农委
+	JTQX = 02,//交通气象
+	NTXQH = 03,//农田小气候
+	TRSF = 04,//土壤水分
+	HKQX = 05,//航空气象
+	TRSF_NM = 9,//土壤水分内蒙
+	TRSF_XJ=10//土壤水分新疆
 };
 
 //错误返回值

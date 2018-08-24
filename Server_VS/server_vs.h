@@ -10,12 +10,17 @@
 #include"LogWrite.h"
 #include<QJsonObject>
 #include"EHTPool.h"
-#include<qlibrary.h>
+#include<QLibrary>
 #include"SocketServerForWeb.h"
-#include "qtimer.h"
-#include"qnetworkreply.h"
-#include<qmenu.h>
-
+#include <QTimer>
+#include<QMenu>
+#include <QMouseEvent>
+#include<QListView>
+#include<QStringListModel>
+#include<assert.h>
+#include"MyDockWidget.h"
+#include"MyDockWidgetTabBar.h"
+#include"MyDockWidgetTabButton.h"
 //业务类型连接信息
 typedef struct
 {
@@ -40,7 +45,25 @@ typedef struct
 	//业务下连接socket的IP号和端口号
 	vector<CLIENTINFO> clients;
 } Facility, *LPFacility;
+inline Qt::Orientation areaToOrientation(Qt::DockWidgetArea area)
+{
+	assert((area == Qt::LeftDockWidgetArea) || (area == Qt::RightDockWidgetArea) ||
+		(area == Qt::TopDockWidgetArea) || (area == Qt::BottomDockWidgetArea));
 
+	switch (area)
+	{
+	case Qt::LeftDockWidgetArea:
+	case Qt::RightDockWidgetArea:
+		return Qt::Vertical;
+	case Qt::TopDockWidgetArea:
+	case Qt::BottomDockWidgetArea:
+		return Qt::Horizontal;
+	default:
+		return Qt::Orientation(0);
+	}
+}
+class MyDockWidget;
+class MyDockWidgetTabBar;
 class Server_VS : public QMainWindow
 {
 	Q_OBJECT
@@ -77,6 +100,15 @@ private:;
 	void mouseReleaseEvent(QMouseEvent *event);
 private:
 	Ui::Server_VSClass ui;
+	MyDockWidget* m_dockWidget;
+
+	/*! List of all created dockwidgets
+	*/
+	std::list<MyDockWidget*> m_dockWidgets;
+
+	/*! List of 4 dock tabbars
+	*/
+	std::map<Qt::DockWidgetArea, MyDockWidgetTabBar*> m_dockWidgetBar;
 	//业务类型数组
 	EHTPool EHTPool;
 	//UPD线程
@@ -127,7 +159,12 @@ private:
 	QTimer *hour_timer;
 	bool m_Drag;                //判断鼠标左键是否按下
 	QPoint m_DragPosition;
-	
+	//报警信息List
+	QStringList WarningInfoList;
+	//报警信息模版
+	QStringListModel* slModel;
+	//报警信息显示
+	QListView* strView;
 private slots:
     //最小化窗体
     void slot_minWindow();
@@ -161,31 +198,58 @@ private slots:
 	void Lib_Attri();
 	//区站号列表右键事件
 	void on_ClientList_customContextMenuRequested(const QPoint &pos);
-	//获取即时采集数据
-	void GetFeature();
-	//获取参数设置
-	void GetConfig();
 	//发送终端命令
 	void SendCOMM();
 	//心跳处理
 	void HeartBeat(QString IP, int Port, int SrvPort, int CltSocket, QString StationID, QString  ServiceTypeID);
 	//获取终端命令名称
 	void GetCommName(QString CommName);
-	//自动对时
-	void SetTimeCorrection();
-	//自动补抄数据
-	void CheckDataCorrection();
 	//补抄数据功能
 	void Func_DMTD();
 	//业务列表点击
 	void on_ServerList_itemClicked(QTableWidgetItem *item);
-	//离线处理
-	void  OffLine(int SrvPort, int CltSocket);
 	//打开系统日志
 	void OpenSYSLog();
 	//打开数据日志
 	void OpenDataLog();
+	//显示DockdWidget
+	void ShowWarningDockWidget();
+	//报警信息
+	void  WarningInfo(QString WarningInfo);
+//Docking配置
+	public:
+		void addDockWidget(Qt::DockWidgetArea area, MyDockWidget* dockWidget);
+		void addDockWidget(Qt::DockWidgetArea area, MyDockWidget* dockWidget, Qt::Orientation orientation);
+		void removeDockWidget(MyDockWidget* dockWidget);
 
+private:
+	void hideDockWidget(MyDockWidget* dockWidget);
+
+	QRect getDockWidgetsAreaRect();
+
+	void adjustDockWidget(MyDockWidget* dockWidget);
+	MyDockWidgetTabBar* getDockWidgetBar(Qt::DockWidgetArea area);
+	std::list<MyDockWidget*> getDockWidgetListAtArea(Qt::DockWidgetArea area);
+	void createDockWidgetBar(Qt::DockWidgetArea area);
+
+	void showDockWidget(MyDockWidget* dockWidget);
+
+	// Turn on the AutoHide option 
+	void dockWidgetPinned(MyDockWidget* dockWidget);
+
+	// Turn off the AutoHide option 
+	void dockWidgetUnpinned(MyDockWidget* dockWidget);
+
+	// DockWidget has been docked
+	void dockWidgetDocked(MyDockWidget* dockWidget);
+	//Close Widget
+	void dockWidgetClose(MyDockWidget* dockWidget);
+	// DockWidget has been undocked
+	void dockWidgetUndocked(MyDockWidget* dockWidget);
+
+	void menuWindows_triggered(QAction* action);
+	protected:
+		virtual bool event(QEvent* event) override;
 
 };
 

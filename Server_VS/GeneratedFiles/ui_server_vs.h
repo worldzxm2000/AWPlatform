@@ -1,4 +1,4 @@
-/********************************************************************************
+ï»¿/********************************************************************************
 ** Form generated from reading UI file 'server_vs.ui'
 **
 ** Created by: Qt User Interface Compiler version 5.10.1
@@ -23,6 +23,7 @@
 #include <QtWidgets/QWidget>
 #include "SrvTableWidget.h"
 #include "MyButton.h"
+#include"MyDockWidget.h"
 QT_BEGIN_NAMESPACE
 
 class Ui_Server_VSClass
@@ -37,6 +38,7 @@ public:
 	QGroupBox *groupBox_2;
 	QGroupBox *groupBox_3;
 	QGroupBox *groupBox_4;
+	QGroupBox *groupBox_5;
 	SrvTableWidget *ServerList;
 
 	QTableWidget *ClientList;
@@ -55,9 +57,9 @@ public:
 	MyButton *RemoveBtn;
 
 
-	//QScrollArea *ScrollArea_RunBtn;
-	//QWidget *ScrollAreaWidgetContents_RunBtn;
-	//MyButton *RunBtn;
+	QScrollArea *ScrollArea_UpLoadBtn;
+	QWidget *ScrollAreaWidgetContents_UpLoadBtn;
+	MyButton *UpLoadBtn;
 
 
 	//QScrollArea *ScrollArea_PauseBtn;
@@ -68,6 +70,10 @@ public:
 	QWidget *ScrollAreaWidgetContents_LogBtn;
 	MyButton *LogBtn;
 
+	QScrollArea *ScrollArea_TerminalBtn;
+	QWidget *ScrollAreaWidgetContents_TerminalBtn;
+	MyButton *TerminalBtn;
+
 	QScrollArea *ScrollArea_CloseBtn;
 	QWidget *ScrollAreaWidgetContents_CloseBtn;
 	MyButton *CloseBtn;
@@ -75,6 +81,13 @@ public:
 	QScrollArea *ScrollArea_MiniBtn;
 	QWidget *ScrollAreaWidgetContents_MiniBtn;
 	MyButton *MiniBtn;
+
+	QScrollArea *ScrollArea_WarningBtn;
+	QWidget *ScrollAreaWidgetContents_WarningBtn;
+	MyButton *WarningBtn;
+
+	MyDockWidget* WarningDockWidget;
+
 	void setupUi(QMainWindow *Server_VSClass)
 	{
 		if (Server_VSClass->objectName().isEmpty())
@@ -85,7 +98,7 @@ public:
 		font.setPointSize(10);
 		QIcon icon("../Image/Weather.ico");
 		Server_VSClass->setWindowIcon(icon);
-		Server_VSClass->setWindowIconText("ÆøÏó×¨ÒµÆ½Ì¨");
+		Server_VSClass->setWindowIconText("æ°”è±¡ä¸“ä¸šå¹³å°");
 		Server_VSClass->setFont(font);
 		Server_VSClass->setWindowOpacity(1);
 		actionDMTM = new QAction(Server_VSClass);
@@ -96,8 +109,12 @@ public:
 		action_SYSLog->setObjectName(QStringLiteral("action_SYSLog"));
 		action_DataLog = new QAction(Server_VSClass);
 		action_DataLog->setObjectName(QStringLiteral("action_DataLog"));
+
 		centralWidget = new QWidget(Server_VSClass);
 		centralWidget->setObjectName(QStringLiteral("centralWidget"));
+	//	centralWidget->setGeometry(QRect(0,200 , 1280, 420));
+
+	
 		Server_VSClass->setStyleSheet(QString("QMainWindow{ background:rgb(100,100,100);color:white }"));
 		//centralWidget->setStyleSheet(QString("QWidget{color:white}"));
 		groupBox = new QGroupBox(centralWidget);
@@ -124,7 +141,7 @@ public:
 		ImageLabel = new QLabel(centralWidget);
 		ImageLabel->setObjectName(QStringLiteral("ImageLabel"));
 		ImageLabel->setGeometry(QRect(5, 2, 31, 31));
-		ImageLabel->setPixmap(QPixmap(QString::fromUtf8("../Image/png/7.png")));
+		ImageLabel->setPixmap(QPixmap(QString::fromUtf8("../Image/png/weather.png")));
 		NameLabel = new QLabel(centralWidget);
 		NameLabel->setObjectName(QStringLiteral("NameLabel"));
 		NameLabel->setGeometry(QRect(40, 5, 200, 20));
@@ -134,21 +151,21 @@ public:
 		font_NameLabel.setPointSize(10);
 		NameLabel->setFont(font_NameLabel);
 
-		//ÒµÎñ¹ÜÀí
+		//ä¸šåŠ¡ç®¡ç†
 		groupBox_3 = new QGroupBox(centralWidget);
 		groupBox_3->setObjectName(QStringLiteral("groupBox_3"));
 		groupBox_3->setGeometry(QRect(5, 38, 185, 70));
 		groupBox_3->setStyleSheet(QString("QGroupBox{color:white}"));
 		groupBox_3->setFont(font);
 
-		//ÏµÍ³ÔËÐÐ
+		//ç³»ç»Ÿè¿è¡Œ
 		groupBox_4 = new QGroupBox(centralWidget);
 		groupBox_4->setObjectName(QStringLiteral("groupBox_4"));
 		groupBox_4->setGeometry(QRect(195, 38, 185, 70));
 		groupBox_4->setStyleSheet(QString("QGroupBox{color:white}"));
 		groupBox_4->setFont(font);
 
-		//Ìí¼Ó°´Å¥
+		//æ·»åŠ æŒ‰é’®
 		ScrollArea_AddBtn = new QScrollArea(groupBox_3);
 		ScrollArea_AddBtn->setObjectName(QStringLiteral("ScrollArea_AddBtn"));
 		ScrollArea_AddBtn->setGeometry(QRect(5, 20, 40, 40));
@@ -162,7 +179,7 @@ public:
 		AddBtn->setObjectName(QStringLiteral("AddBtn"));
 		AddBtn->setGeometry(QRect(2, 2, 32, 32));
 
-		//ÒÆ³ý°´Å¥
+		//ç§»é™¤æŒ‰é’®
 		ScrollArea_RemoveBtn = new QScrollArea(groupBox_3);
 		ScrollArea_RemoveBtn->setObjectName(QStringLiteral("ScrollArea_RemoveBtn"));
 		ScrollArea_RemoveBtn->setGeometry(QRect(50, 20, 40, 40));
@@ -176,21 +193,21 @@ public:
 		RemoveBtn->setObjectName(QStringLiteral("RemoveBtn"));
 		RemoveBtn->setGeometry(QRect(2, 2, 32, 32));
 
-		////Æô¶¯°´Å¥
-		//ScrollArea_RunBtn = new QScrollArea(groupBox_3);
-		//ScrollArea_RunBtn->setObjectName(QStringLiteral("ScrollArea_RunBtn"));
-		//ScrollArea_RunBtn->setGeometry(QRect(95, 20, 40, 40));
-		//ScrollArea_RunBtn->setWidgetResizable(true);
-		//ScrollAreaWidgetContents_RunBtn = new QWidget();
-		//ScrollAreaWidgetContents_RunBtn->setObjectName(QStringLiteral("ScrollAreaWidgetContents_RunBtn"));
-		//ScrollAreaWidgetContents_RunBtn->setGeometry(QRect(0, 0, 40, 40));
-		//ScrollAreaWidgetContents_RunBtn->setStyleSheet(QString("QWidget{ background:black }"));
-		//ScrollArea_RunBtn->setWidget(ScrollAreaWidgetContents_RunBtn);
-		//RunBtn = new MyButton("../Image/png/Run.png", 1, ScrollAreaWidgetContents_RunBtn);
-		//RunBtn->setObjectName(QStringLiteral("RunBtn"));
-		//RunBtn->setGeometry(QRect(2, 2, 32, 32));
+		//å¯åŠ¨æŒ‰é’®
+		ScrollArea_UpLoadBtn = new QScrollArea(groupBox_3);
+		ScrollArea_UpLoadBtn->setObjectName(QStringLiteral("ScrollArea_UpLoadBtn"));
+		ScrollArea_UpLoadBtn->setGeometry(QRect(95, 20, 40, 40));
+		ScrollArea_UpLoadBtn->setWidgetResizable(true);
+		ScrollAreaWidgetContents_UpLoadBtn = new QWidget();
+		ScrollAreaWidgetContents_UpLoadBtn->setObjectName(QStringLiteral("ScrollAreaWidgetContents_UpLoadBtn"));
+		ScrollAreaWidgetContents_UpLoadBtn->setGeometry(QRect(0, 0, 40, 40));
+		ScrollAreaWidgetContents_UpLoadBtn->setStyleSheet(QString("QWidget{ background:rgb(100,100,100) }"));
+		ScrollArea_UpLoadBtn->setWidget(ScrollAreaWidgetContents_UpLoadBtn);
+		UpLoadBtn = new MyButton("../Image/png/UpLoad.png", 1, ScrollAreaWidgetContents_UpLoadBtn);
+		UpLoadBtn->setObjectName(QStringLiteral("UpLoadBtn"));
+		UpLoadBtn->setGeometry(QRect(2, 2, 32, 32));
 
-		////ÔÝÍ£°´Å¥
+		////æš‚åœæŒ‰é’®
 		//ScrollArea_PauseBtn = new QScrollArea(groupBox_3);
 		//ScrollArea_PauseBtn->setObjectName(QStringLiteral("ScrollArea_PauseBtn"));
 		//ScrollArea_PauseBtn->setGeometry(QRect(140, 20, 40, 40));
@@ -204,7 +221,7 @@ public:
 		//PauseBtn->setObjectName(QStringLiteral("PauseBtn"));
 		//PauseBtn->setGeometry(QRect(2, 2, 32, 32));
 
-		//ÈÕÖ¾ÏÔÊ¾
+		//æ—¥å¿—æ˜¾ç¤º
 		ScrollArea_LogBtn = new QScrollArea(groupBox_4);
 		ScrollArea_LogBtn->setObjectName(QStringLiteral("ScrollArea_LogBtn"));
 		ScrollArea_LogBtn->setGeometry(QRect(5, 20, 40, 40));
@@ -218,11 +235,30 @@ public:
 		LogBtn->setObjectName(QStringLiteral("LogBtn"));
 		LogBtn->setGeometry(QRect(2, 2, 32, 32));
 
+		//ç»ˆç«¯æ˜¾ç¤º
+		ScrollArea_TerminalBtn = new QScrollArea(groupBox_4);
+		ScrollArea_TerminalBtn->setObjectName(QStringLiteral("ScrollArea_TerminalBtn"));
+		ScrollArea_TerminalBtn->setGeometry(QRect(45, 20, 40, 40));
+		ScrollArea_TerminalBtn->setWidgetResizable(true);
+		ScrollAreaWidgetContents_TerminalBtn = new QWidget();
+		ScrollAreaWidgetContents_TerminalBtn->setObjectName(QStringLiteral("ScrollAreaWidgetContents_TerminalBtn"));
+		ScrollAreaWidgetContents_TerminalBtn->setGeometry(QRect(0, 0, 40, 40));
+		ScrollAreaWidgetContents_TerminalBtn->setStyleSheet(QString("QWidget{ background:rgb(100,100,100) }"));
+		ScrollArea_TerminalBtn->setWidget(ScrollAreaWidgetContents_TerminalBtn);
+		TerminalBtn = new MyButton("../Image/png/Terminal.png", 1, ScrollAreaWidgetContents_TerminalBtn);
+		TerminalBtn->setObjectName(QStringLiteral("TerminalBtn"));
+		TerminalBtn->setGeometry(QRect(2, 2, 32, 32));
 
-		//¹Ø±Õ´°Ìå
-		ScrollArea_CloseBtn = new QScrollArea(centralWidget);
+		groupBox_5 = new QGroupBox(centralWidget);
+		groupBox_5->setObjectName(QStringLiteral("groupBox_5"));
+		groupBox_5->setGeometry(QRect(1200, 2, 75, 26));
+		groupBox_5->setStyleSheet(QString("QGroupBox{color:white}"));
+		groupBox_5->setFont(font);
+
+		//å…³é—­çª—ä½“
+		ScrollArea_CloseBtn = new QScrollArea(groupBox_5);
 		ScrollArea_CloseBtn->setObjectName(QStringLiteral("ScrollArea_CloseBtn"));
-		ScrollArea_CloseBtn->setGeometry(QRect(1258, 2, 20, 20));
+		ScrollArea_CloseBtn->setGeometry(QRect(52, 2, 20, 20));
 		ScrollArea_CloseBtn->setWidgetResizable(true);
 		ScrollAreaWidgetContents_CloseBtn = new QWidget();
 		ScrollAreaWidgetContents_CloseBtn->setObjectName(QStringLiteral("ScrollAreaWidgetContents_CloseBtn"));
@@ -231,12 +267,12 @@ public:
 		ScrollArea_CloseBtn->setWidget(ScrollAreaWidgetContents_CloseBtn);
 		CloseBtn = new MyButton("../Image/png/Close.png", 1, ScrollAreaWidgetContents_CloseBtn);
 		CloseBtn->setObjectName(QStringLiteral("CloseBtn"));
-		CloseBtn->setGeometry(QRect(2, 2, 16, 16));
+		CloseBtn->setGeometry(QRect(1, 1, 16, 16));
 
-		//×îÐ¡»¯´°Ìå
-		ScrollArea_MiniBtn = new QScrollArea(centralWidget);
+		//æœ€å°åŒ–çª—ä½“
+		ScrollArea_MiniBtn = new QScrollArea(groupBox_5);
 		ScrollArea_MiniBtn->setObjectName(QStringLiteral("ScrollArea_MiniBtn"));
-		ScrollArea_MiniBtn->setGeometry(QRect(1236, 2, 20, 20));
+		ScrollArea_MiniBtn->setGeometry(QRect(27, 2, 20, 20));
 		ScrollArea_MiniBtn->setWidgetResizable(true);
 		ScrollAreaWidgetContents_MiniBtn = new QWidget();
 		ScrollAreaWidgetContents_MiniBtn->setObjectName(QStringLiteral("ScrollAreaWidgetContents_MiniBtn"));
@@ -245,7 +281,27 @@ public:
 		ScrollArea_MiniBtn->setWidget(ScrollAreaWidgetContents_MiniBtn);
 		MiniBtn = new MyButton("../Image/png/Mini.png", 1, ScrollAreaWidgetContents_MiniBtn);
 		MiniBtn->setObjectName(QStringLiteral("MiniBtn"));
-		MiniBtn->setGeometry(QRect(2, 2, 16, 16));
+		MiniBtn->setGeometry(QRect(1, 1, 16, 16));
+
+		//æŠ¥è­¦çª—ä½“
+		ScrollArea_WarningBtn = new QScrollArea(groupBox_5);
+		ScrollArea_WarningBtn->setObjectName(QStringLiteral("ScrollArea_WarningBtn"));
+		ScrollArea_WarningBtn->setGeometry(QRect(2, 2, 20, 20));
+		ScrollArea_WarningBtn->setWidgetResizable(true);
+		ScrollAreaWidgetContents_WarningBtn = new QWidget();
+		ScrollAreaWidgetContents_WarningBtn->setObjectName(QStringLiteral("ScrollAreaWidgetContents_WarningBtn"));
+		ScrollAreaWidgetContents_WarningBtn->setGeometry(QRect(0, 0, 20, 20));
+		ScrollAreaWidgetContents_WarningBtn->setStyleSheet(QString("QWidget{ background:rgb(100,100,100) }"));
+		ScrollArea_WarningBtn->setWidget(ScrollAreaWidgetContents_WarningBtn);
+		WarningBtn = new MyButton("../Image/png/flag.png", 1, ScrollAreaWidgetContents_WarningBtn);
+		WarningBtn->setObjectName(QStringLiteral("WarningBtn"));
+		WarningBtn->setGeometry(QRect(1, 1, 16, 16));
+	
+		//åœé çª—ä½“
+		WarningDockWidget = new MyDockWidget(QString("æŠ¥è­¦ä¿¡æ¯"));
+		WarningDockWidget->setGeometry(1100, 40, 40, 600);
+		WarningDockWidget->setStyleSheet("QWidget{background:rgb(100,100,100);color:white}QToolTip { color: white; background-color:rgb(77,77,77); border: none;}");
+		
 		Server_VSClass->setCentralWidget(centralWidget);
 		retranslateUi(Server_VSClass);
 
@@ -264,17 +320,19 @@ public:
 		action_DataLog->setText(QApplication::translate("Server_VSClass", "\346\225\260\346\215\256\346\227\245\345\277\227", nullptr));
 		groupBox->setTitle(QApplication::translate("Server_VSClass", "\344\270\232\345\212\241\345\210\227\350\241\250", nullptr));
 		groupBox_2->setTitle(QApplication::translate("Server_VSClass", "\350\256\276\345\244\207\345\210\227\350\241\250", nullptr));
-		groupBox_3->setTitle("ÒµÎñ¹ÜÀí");
-		groupBox_4->setTitle("ÏµÍ³×´Ì¬");
+		groupBox_3->setTitle("ä¸šåŠ¡ç®¡ç†");
+		groupBox_4->setTitle("ç³»ç»ŸçŠ¶æ€");
 		ImageLabel->setText(QString());
 		NameLabel->setText(QApplication::translate("Server_VSClass", "\346\260\224\350\261\241\344\270\223\344\270\232\345\271\263\345\217\260", nullptr));
-		AddBtn->setToolTipName("Ìí¼ÓÐÂÒµÎñ");
-		RemoveBtn->setToolTipName("ÒÆ³ýÒµÎñ");
-	/*	RunBtn->setToolTipName("ÔËÐÐ");
-		PauseBtn->setToolTipName("ÔÝÍ£");*/
-		LogBtn->setToolTipName("²é¿´ÈÕÖ¾");
-		CloseBtn->setToolTipName("¹Ø±Õ");
-		MiniBtn->setToolTipName("×îÐ¡»¯");
+		AddBtn->setToolTipName("æ·»åŠ æ–°ä¸šåŠ¡");
+		RemoveBtn->setToolTipName("ç§»é™¤ä¸šåŠ¡");
+	/*	RunBtn->setToolTipName("è¿è¡Œ");
+		PauseBtn->setToolTipName("æš‚åœ");*/
+		TerminalBtn->setToolTipName("æŸ¥çœ‹ç»ˆç«¯å‘½ä»¤");
+		LogBtn->setToolTipName("æŸ¥çœ‹æ—¥å¿—");
+		CloseBtn->setToolTipName("å…³é—­");
+		MiniBtn->setToolTipName("æœ€å°åŒ–");
+		WarningBtn->setToolTipName("æŠ¥è­¦é€šçŸ¥");
 		// label->setText(QApplication::translate("Server_VSClass", "\346\226\260\345\242\236\344\270\232\345\212\241", nullptr));
 	} // retranslateUi
 

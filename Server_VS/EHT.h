@@ -99,8 +99,6 @@ private slots:
 	void OperationResultSlot(QString Value, int SrvPort, QString StationID);
 	void OperationResultSlot(QString Value1, QString Value2, int SrvPort, QString StationID);
 	void OperationResultSlot(QString Command, QString Value1, QString Value2, QString Value3, QString Value4, int SrvPort, QString StationID);
-	//发送消息中间件
-	void SendToActiveMQSlot(QJsonObject Json);
 signals:
 	 //UI登录时间
 	 void LoginTimeSignal(int SrvPort, QString Station);

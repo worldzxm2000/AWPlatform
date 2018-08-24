@@ -13,7 +13,7 @@ EHT::EHT(QWidget *parent)
 	WebCommand = false;
 	SetTimeTimer = new QTimer(parent);
 	connect(SetTimeTimer, SIGNAL(timeout()), this, SLOT(SetTime()));
-	SetTimeTimer->start(1000 * 60 * 60*24);
+	SetTimeTimer->start(1000 * 10 );
 
 	OffLineTimer = new QTimer(parent);
 	connect(OffLineTimer, SIGNAL(timeout()), this, SLOT(Disconnect()));
@@ -250,7 +250,7 @@ void EHT:: OperationResultSlot(QString Value, int SrvPort, QString StationID)
 {
 	//前端发送指令
 	QString OperationLog;
-	OperationLog = "终端返回值：" + Value + ",信息来自业务号："+QString::number(this->m_ServiceID)+",台站号："+StationID;
+	OperationLog = QString::fromLocal8Bit("终端返回值：") + Value + QString::fromLocal8Bit(",信息来自业务号：")+QString::number(this->m_ServiceID)+ QString::fromLocal8Bit(",台站号：")+StationID;
 	if (this->WebCommand)
 	{
 		QJsonObject json;
@@ -271,7 +271,7 @@ void EHT::OperationResultSlot(QString Value1, QString Value2, int SrvPort, QStri
 {
 	//前端发送指令
 	QString OperationLog;
-	OperationLog = "终端返回值：" + Value1+"，返回值："+Value2 + ",信息来自业务号：" + QString::number(this->m_ServiceID) + ",台站号：" + StationID;
+	OperationLog = QString::fromLocal8Bit("终端返回值：") + Value1+ QString::fromLocal8Bit("，返回值：")+Value2 + QString::fromLocal8Bit(",信息来自业务号：") + QString::number(this->m_ServiceID) + QString::fromLocal8Bit(",台站号：") + StationID;
 	if (this->WebCommand)
 	{
 		QJsonObject json;
@@ -294,7 +294,7 @@ void EHT::OperationResultSlot(QString Command, QString Value1, QString Value2, Q
 {
 	//前端发送指令
 	QString OperationLog;
-	OperationLog = "终端返回值：" + Value1 + "，返回值：" + Value2 + ",返回值："+Value3+"，返回值:"+Value4+",信息来自业务号：" + QString::number(this->m_ServiceID) + ",台站号：" + StationID;
+	OperationLog = QString::fromLocal8Bit("终端返回值：") + Value1 + QString::fromLocal8Bit("，返回值：") + Value2 + QString::fromLocal8Bit(",返回值：")+Value3+ QString::fromLocal8Bit("，返回值:")+Value4+ QString::fromLocal8Bit(",信息来自业务号：") + QString::number(this->m_ServiceID) + QString::fromLocal8Bit(",台站号：") + StationID;
 	if (this->WebCommand)
 	{
 		QJsonObject json;
@@ -332,11 +332,8 @@ void EHT:: GetErrorSlot(int ErrorMSG)
 		strMSG = "";
 		break;
 	case -3:
-	{
 		strMSG = "消息中间件通信异常！";
-		//	g_SimpleProducer.start("admin", "admin", "tcp://117.158.216.250:61616", 2000, "DataFromFacility", false, false);
-	}
-	break;
+		break;
 	case -4:
 		strMSG = "服务器间通信异常！";
 		break;
@@ -384,7 +381,9 @@ void EHT::SetTime()
 	hour = nowtime.toString("hh");
 	min = nowtime.toString("mm");
 	sec = nowtime.toString("ss");
-	if (m_ServiceID == TRSF)
+	switch (m_ServiceID)
+	{
+	case TRSF: case TRSF_NM: case TRSF_XJ:
 	{
 		for (int i = 0; i < Clients.size(); i++)
 		{
@@ -394,7 +393,7 @@ void EHT::SetTime()
 			int chk = 0;
 			int socketID = Clients[i].SocketID;
 			int SrcAdrr = Clients[i].StationID.toInt();
-			BYTE bytes[1024];
+			BYTE bytes[1024] = { 0 };
 			bytes[0] = 0xaa;
 			bytes[1] = 0x0a;//帧长度
 			bytes[2] = 0x81;//帧命令
@@ -417,24 +416,17 @@ void EHT::SetTime()
 			chk += bytes[10];
 			bytes[11] = sec.toInt();
 			chk += bytes[11];
-			bytes[12] = chk & 0xff;//校验位 第八位
+			bytes[12] = chk & 0xff;//校验位 低八位
 			bytes[13] = (chk >> 8) & 0xff;//高八位
 			bytes[14] = 0xff;
-			QByteArray data;
-			for (int i = 0; i < 15; i++)
-			{
-				data.append(bytes[i]);
-			}
-			QString str;
-			str = QString::fromUtf8(data.data(), data.length());
 			int result = ::send(socketID, (char *)bytes, 15, 0);
-			LogWrite::DataLogMsgOutPut(str);
-			LogWrite::SYSLogMsgOutPut("土壤水分" + Clients[i].StationID + "自动矫正时钟." );
+			LogWrite::SYSLogMsgOutPut("土壤水分" + Clients[i].StationID + "自动矫正时钟.");
 		}
+		break;
 	}
-	else
+	default:
 	{
-		for (int  i= 0; i < Clients.size(); i++)
+		for (int i = 0; i < Clients.size(); i++)
 		{
 			//判断是否在线
 			if (Clients[i].Online == false)
@@ -445,8 +437,11 @@ void EHT::SetTime()
 			LPCSTR ch = ba.data();
 			int len = Comm.length();
 			int result = ::send(socketID, ch, len, 0);
-			LogWrite::SYSLogMsgOutPut("台站号：" + Clients[i].StationID + "自动矫正时钟." );
+			LogWrite::SYSLogMsgOutPut("台站号：" + Clients[i].StationID + "自动矫正时钟.");
 		}
+		break;
+	}
+	
 	}
 }
 
@@ -649,9 +644,4 @@ void EHT::SendCommand(OPCommand cmm, QString StationID,QString Params1,QString P
 	default:
 		break;
 	}
-}
-
-void EHT::SendToActiveMQSlot(QJsonObject Json)
-{
-
 }

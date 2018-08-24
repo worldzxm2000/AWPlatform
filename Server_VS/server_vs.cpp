@@ -1,19 +1,15 @@
 ﻿#include "server_vs.h"
 #include<QJsonDocument>
-#include<qfiledialog.h>
+#include<QFileDialog>
 #include"ConfigWnd.h"
 #include<QtNetwork>
 #include<QSettings>
 #include <iphlpapi.h>
 #include"CommandDlg.h"
-#include"qdebug.h"
-#include"qtcpsocket.h"
 #include"DMTDDlg.h"
 #include"SYSLogDlg.h"
 #include"DataLogDlg.h"
-#include"qdockwidget.h"
-#include<qtoolbutton.h>
-#include <QMouseEvent>
+#include<QDockWidget>
 
 using namespace std;
 //消息中间件
@@ -21,12 +17,27 @@ SimpleProducer g_SimpleProducer, g_SimpleProducer_ZDH;
 //构造函数
 Server_VS::Server_VS(QWidget *parent)
 	: QMainWindow(parent)
+	, m_dockWidget(nullptr)
+
 {
 	ui.setupUi(this);
 	ConfigWindow();
 	this->setFixedSize(1280, 660);
 	strOperateType = "未知操作";
 	pool.setMaxThreadCount(1024);
+	this->addDockWidget(Qt::RightDockWidgetArea,ui.WarningDockWidget);
+
+	slModel = new QStringListModel();
+	slModel->setStringList(WarningInfoList);
+	strView = new QListView();
+	strView->setModel(slModel);
+	ui.WarningDockWidget->setWidget(strView);
+	addToolBarBreak();
+
+	createDockWidgetBar(Qt::LeftDockWidgetArea);
+	createDockWidgetBar(Qt::RightDockWidgetArea);
+	createDockWidgetBar(Qt::TopDockWidgetArea);
+	createDockWidgetBar(Qt::BottomDockWidgetArea);
 	//menu功能
 	connect(ui.action_SYSLog, SIGNAL(triggered()), this, SLOT(OpenSYSLog()));
 	connect(ui.action_DataLog, SIGNAL(triggered()), this, SLOT(OpenDataLog()));
@@ -58,8 +69,12 @@ Server_VS::Server_VS(QWidget *parent)
 	CreateClientListActions();
 
 	connect(ui.RemoveBtn, SIGNAL(clicked()), this, SLOT(on_DeleteBtn_clicked()));
+	connect(ui.LogBtn, SIGNAL(clicked()), this, SLOT(OpenSYSLog()));
 	connect(ui.MiniBtn, SIGNAL(clicked()), this, SLOT(slot_minWindow()));
 	connect(ui.CloseBtn, SIGNAL(clicked()), this, SLOT(close()));
+	connect(ui.TerminalBtn, SIGNAL(clicked()), this, SLOT(OpenDataLog()));
+	connect(ui.UpLoadBtn,SIGNAL(clicked()),this,SLOT(Func_DMTD()));
+	connect(ui.WarningBtn, SIGNAL(clicked()), this, SLOT(ShowWarningDockWidget()));
 	LogWrite::SYSLogMsgOutPut("主程序已启动...");
 	//ListCtrl控件当前选择行
 	iSelectedRowOfServiceListCtrl = -1;
@@ -110,7 +125,7 @@ void Server_VS::ConfigWindow()
 
 		unsigned int numMessages = 2000;
 		destURI = "DataFromFacility";
-		destURI_1 = "ZDH";
+		destURI_1 = "lly12";
 		clientAck = false;
 		useTopics = false;
 		g_SimpleProducer.start(UserName, Password, brokerURI, numMessages, destURI, useTopics, clientAck);
@@ -123,7 +138,6 @@ void Server_VS::ConfigWindow()
 	}
 	
 }
-
 
 void Server_VS::slot_minWindow()
 {
@@ -223,7 +237,6 @@ void Server_VS::on_DeleteBtn_clicked()
 	ui.ServerList->removeRow(iSelectedRowOfServiceListCtrl);
 }
 
-
 //添加解析DLL
 LRESULT Server_VS::AddDll()
 {
@@ -250,7 +263,6 @@ LRESULT Server_VS::AddDll()
 	EHTPool.Start(pEHT);
 	return 1;
 }
-
 
 //终端命令返回操作状态
 void Server_VS::GetCommandStatus(int result)
@@ -361,6 +373,7 @@ void Server_VS::RefreshListCtrl(QString SrvName, QString StationID, QDateTime La
 	ui.ClientList->setItem(RowIndex, 4, new QTableWidgetItem(LastTime.toString("yyyy-MM-dd hh:mm:ss")));
 }
 
+//离线设备ListCtrl控件
 void Server_VS::OffLineListCtrl(QString SrvName, QString StationID, QDateTime LastTime, QDateTime LoginTime)
 {
 	int RowIndex = FindRowIndex(SrvName, StationID);
@@ -633,11 +646,10 @@ void Server_VS::Convert2StationID()
 	}
 }
 
-
-
 //补抄数据
 void Server_VS::Func_DMTD()
 {
+	
 	//未选中业务服务
 	if (iSelectedRowOfServiceListCtrl < 0)
 		return;
@@ -652,15 +664,23 @@ void Server_VS::Func_DMTD()
 //打开系统运行日志
 void Server_VS::OpenSYSLog()
 {
-	SYSLogDlg syslogdlg;
+	SYSLogDlg syslogdlg("SYSLog");
 	syslogdlg.exec();
 }
 
 //查看数据运行日志
 void Server_VS::OpenDataLog()
 {
-	DataLogDlg datalogdlg;
+	SYSLogDlg datalogdlg("DataLog");
 	datalogdlg.exec();
+}
+
+//打开报警停靠窗口
+void Server_VS:: ShowWarningDockWidget()
+{
+	slModel->setStringList(WarningInfoList);
+	ui.WarningDockWidget->show();
+	ui.groupBox_5->setGeometry(QRect(940, 2, 75, 26));
 }
 
 //查看业务属性
@@ -691,152 +711,10 @@ void Server_VS::SendCOMM()
 	commdlg.exec();
 }
 
-//获取即时采集数据
-void Server_VS::GetFeature()
-{
-	//int severtype = -1;
-	//int SocketID = -1;
-	//for (int i = 0; i < ClientInfo.size(); i++)
-	//{
-	//	if (ClientInfo[i].ServerName == ServiceTypeItem->text())
-	//	{
-	//		severtype = ClientInfo[i].ServiceID;
-	//		for (int j = 0; j < ClientInfo[i].clients.size(); j++)
-	//		{
-	//			SocketID = ClientInfo[i].clients[j].SocketID;
-	//		}
-	//	}
-	//}
-	/*switch (severtype)
-	{
-	case HKQX:
-	{
-		QString Comm = "SNAPSHOT\r\n";
-		QByteArray ba = Comm.toLatin1();
-		LPCSTR ch = ba.data();
-		int len = Comm.length();
-		::send(SocketID, ch, len, 0);
-		break;
-	}
-	default:
-		break;
-	}*/
-}
-
-//获取参数设置
-void Server_VS::GetConfig()
-{
-
-}
-
 //获取终端命令名称
 void Server_VS::GetCommName(QString CommName)
 {
 	strOperateType = CommName;
-}
-
-//自动校正时钟
-void Server_VS::SetTimeCorrection()
-{
-	LogWrite::SYSLogMsgOutPut("自动矫正时钟开始");
-	//获取网络时间
-	QTcpSocket *socket = new QTcpSocket();
-	socket->connectToHost("time-a-g.nist.gov", 13);
-	QString datetime;
-	if (socket->waitForConnected())
-	{
-		if (socket->waitForReadyRead())
-		{
-			QString str(socket->readAll());
-			str = str.trimmed();
-			str = str.section(" ", 1, 2);
-			datetime = "20" + str;
-		}
-	}
-	socket->close();
-	delete socket;
-	socket = NULL;
-	QDateTime current_datetime = QDateTime::fromString(datetime,"yyyy-MM-dd hh:mm:ss");
-	uint diff_time= current_datetime.toTime_t();
-	diff_time += 28800;//北京时间 需要加上8小时
-	QDateTime nowtime = QDateTime::fromTime_t(diff_time);
-	datetime=nowtime.toString("yyyy.MM.dd hh:mm:ss"); 
-	QString year, month, day, hour, min, sec;
-	year = nowtime.toString("yy");
-	month = nowtime.toString("MM");
-	day = nowtime.toString("dd");
-	hour = nowtime.toString("hh");
-	min = nowtime.toString("mm");
-	sec = nowtime.toString("ss");
-
-	//校正设备时钟
-	for (int i = 0; i < ClientInfo.size(); i++)
-	{
-		switch (ClientInfo[i].ServiceID)
-		{
-		case NW:case HKQX:case NTXQH:case JTQX:
-		{
-			for (int j = 0; j < ClientInfo[i].clients.size(); j++)
-			{
-				int socketID = ClientInfo[i].clients[j].SocketID;
-				QString Comm = "DATETIME " + datetime + "\r\n";
-				QByteArray ba = Comm.toLatin1();
-				LPCSTR ch = ba.data();
-				int len = Comm.length();
-				int result=::send(socketID, ch, len, 0);
-				LogWrite::SYSLogMsgOutPut("台站号："+ClientInfo[i].clients[j].StationID+"自动矫正时钟:"+QString::number(result));
-			}
-			continue;
-		}
-		case TRSF:
-		{
-			for (int j = 0; j < ClientInfo[i].clients.size(); j++)
-			{
-				int chk = 0;
-				int socketID = ClientInfo[i].clients[j].SocketID;
-				int SrcAdrr = ClientInfo[i].clients[j].StationID.toInt();
-				BYTE bytes[1024];
-				bytes[0] = 0xaa;
-				bytes[1] = 0x0a;//帧长度
-				bytes[2] = 0x81;//帧命令
-				chk += bytes[2];
-				bytes[3] = SrcAdrr & 0xff;//源地址 低八位
-				chk += bytes[3];
-				bytes[4] = (SrcAdrr >> 8) & 0xff; //高八位
-				chk += bytes[4];
-				bytes[5] = 0x14;//20
-				chk += bytes[5];
-				bytes[6] = year.toInt();
-				chk += bytes[6];
-				bytes[7] = month.toInt();
-				chk += bytes[7];
-				bytes[8] = day.toInt();
-				chk += bytes[8];
-				bytes[9] = hour.toInt();
-				chk += bytes[9];
-				bytes[10] = min.toInt();
-				chk += bytes[10];
-				bytes[11] = sec.toInt();
-				chk += bytes[11];
-				bytes[12] = chk & 0xff;//校验位 低八位
-				bytes[13] = (chk>>8) & 0xff;//高八位
-				bytes[14] = 0xff;
-				int result=::send(socketID, (char *)bytes, 15, 0);
-				LogWrite::SYSLogMsgOutPut("土壤水分"+ ClientInfo[i].clients[j].StationID +"自动矫正时钟:" + QString::number(result));
-			}
-			continue;
-		}
-		default:
-			break;
-		}
-	}
-	LogWrite::SYSLogMsgOutPut("自动矫正时钟结束");
-}
-
-//自动补抄
-void Server_VS::CheckDataCorrection()
-{
-
 }
 
 //业务列表点击
@@ -845,37 +723,400 @@ void Server_VS::on_ServerList_itemClicked(QTableWidgetItem *item)
 	iSelectedRowOfServiceListCtrl = item->row();
 }
 
-//离线处理
-void Server_VS::OffLine(int SrvPort, int CltSocket)
+//报警信息
+void  Server_VS::WarningInfo(QString WarningInfo)
 {
-	QString StationID;
-	for (int i = 0; i < ClientInfo.size(); i++)
-	{
-		if (ClientInfo[i].ServerPortID == SrvPort)
-		{
-			for (int j = 0; j < ClientInfo[i].clients.size(); j++)
-			{
-				//找到离线
-				if (ClientInfo[i].clients[j].SocketID == CltSocket)
-				{
-					StationID = ClientInfo[i].clients[j].StationID;
-					ClientInfo[i].clients[j].SocketID = 0;
-					ClientInfo[i].clients[j].Online = false;
-					break;
-				}
-			}
-			break;
-		}
-	}
-		//找到设备对应的UI行
-		int RowIndex = -1;
-		RowIndex = FindRowIndex("", StationID);
-		//未找到
-		if (RowIndex < 0)
-			return;
-		QDateTime current_date_time = QDateTime::currentDateTime();
-		QString current_date = current_date_time.toString("yyyy.MM.dd hh:mm:ss");
-		ui.ClientList->setItem(RowIndex, 2, new QTableWidgetItem(current_date));
-		ui.ClientList->setItem(RowIndex, 5, new QTableWidgetItem("离线"));
-		LogWrite::SYSLogMsgOutPut("区站号 " + StationID + "已经断开连接");
+	WarningInfoList.append(WarningInfo);
 }
+
+//Docking配置方法
+static
+Qt::ToolBarArea dockAreaToToolBarArea(Qt::DockWidgetArea area)
+{
+	switch (area)
+	{
+	case Qt::LeftDockWidgetArea: return Qt::LeftToolBarArea;
+	case Qt::RightDockWidgetArea: return Qt::RightToolBarArea;
+	case Qt::TopDockWidgetArea: return Qt::TopToolBarArea;
+	case Qt::BottomDockWidgetArea: return Qt::BottomToolBarArea;
+	default:
+		return Qt::ToolBarArea(0);
+	}
+}
+
+void Server_VS::createDockWidgetBar(Qt::DockWidgetArea area)
+{
+	if (m_dockWidgetBar.find(area) != std::end(m_dockWidgetBar)) {
+		return;
+	}
+
+	MyDockWidgetTabBar* dockWidgetBar = new MyDockWidgetTabBar(area);
+	m_dockWidgetBar[area] = dockWidgetBar;
+	connect(dockWidgetBar, &MyDockWidgetTabBar::signal_dockWidgetButton_clicked, this, &Server_VS::showDockWidget);
+
+	addToolBar(dockAreaToToolBarArea(area), dockWidgetBar);
+}
+
+void Server_VS::dockWidgetUnpinned(MyDockWidget* dockWidget)
+{
+	if (dockWidget == nullptr) {
+		return;
+	}
+
+	MyDockWidgetTabBar* dockWidgetBar = getDockWidgetBar(dockWidget->getArea());
+	if (dockWidgetBar == nullptr) {
+		return;
+	}
+
+	QList<QDockWidget*> dockWidgetList = tabifiedDockWidgets(dockWidget);
+	dockWidgetList.push_back(dockWidget);
+
+	std::for_each(std::begin(dockWidgetList), std::end(dockWidgetList), [&](QDockWidget* qDockWidget)
+	{
+		MyDockWidget* dockWidget = static_cast<MyDockWidget*>(qDockWidget);
+
+		dockWidget->setState(DockWidgetState::Hidden);
+
+		if (!dockWidget->isHidden())
+		{
+			dockWidgetBar->addDockWidget(dockWidget);
+
+			dockWidget->setTabifiedDocks(dockWidgetList);
+
+			QMainWindow::removeDockWidget(dockWidget);
+		}
+	});
+
+	if (dockWidget->getArea() == Qt::LeftDockWidgetArea)
+	{
+		getDockWidgetBar(Qt::TopDockWidgetArea)->insertSpacing();
+		getDockWidgetBar(Qt::BottomDockWidgetArea)->insertSpacing();
+	}
+	if (dockWidget->getArea() == Qt::RightDockWidgetArea)
+	{
+		getDockWidgetBar(Qt::TopDockWidgetArea)->insertSpacing();
+		getDockWidgetBar(Qt::BottomDockWidgetArea)->insertSpacing();
+		ui.groupBox_5->setGeometry(QRect(1175, 2, 75, 26));
+	}
+}
+
+void Server_VS::dockWidgetPinned(MyDockWidget* dockWidget)
+{
+	if (dockWidget == nullptr) {
+		return;
+	}
+
+	MyDockWidgetTabBar* dockWidgetBar = getDockWidgetBar(dockWidget->getArea());
+	if (dockWidgetBar == nullptr) {
+		return;
+	}
+
+	m_dockWidget = nullptr;
+
+	std::vector<MyDockWidget*> dockWidgetList = dockWidget->getTabifiedDocks();
+	dockWidgetList.push_back(dockWidget);
+
+	MyDockWidget* prevDockWidget = nullptr;
+
+	std::for_each(std::begin(dockWidgetList), std::end(dockWidgetList), [&](MyDockWidget* dockWidget)
+	{
+		if (dockWidgetBar->removeDockWidget(dockWidget))
+		{
+			if (prevDockWidget == nullptr) {
+				QMainWindow::addDockWidget(dockWidget->getArea(), dockWidget);
+			}
+			else {
+				tabifyDockWidget(prevDockWidget, dockWidget);
+			}
+
+			prevDockWidget = dockWidget;
+
+			dockWidget->setState(DockWidgetState::Docked);
+
+			dockWidget->show();
+		}
+	});
+
+	dockWidget->raise();
+
+	if ((dockWidget->getArea() == Qt::LeftDockWidgetArea) &&
+		dockWidgetBar->isHidden())
+	{
+		getDockWidgetBar(Qt::TopDockWidgetArea)->removeSpacing();
+		getDockWidgetBar(Qt::BottomDockWidgetArea)->removeSpacing();
+	}
+	if((dockWidget->getArea() == Qt::RightDockWidgetArea) &&
+		dockWidgetBar->isHidden())
+	{
+		ui.groupBox_5->setGeometry(QRect(935, 2, 75, 26));
+	}
+	
+}
+
+void Server_VS::showDockWidget(MyDockWidget* dockWidget)
+{
+	if (dockWidget == nullptr) {
+		return;
+	}
+
+	if (dockWidget->isHidden())
+	{
+		hideDockWidget(m_dockWidget);
+
+		if (dockWidget->isFloating())
+		{
+			QMainWindow::addDockWidget(dockWidget->getArea(), dockWidget);
+			dockWidget->setFloating(false);
+
+			QMainWindow::removeDockWidget(dockWidget);
+		}
+
+		adjustDockWidget(dockWidget);
+
+		dockWidget->show();
+		dockWidget->raise();
+
+		dockWidget->setFocus();
+
+		m_dockWidget = dockWidget;
+		ui.groupBox_5->setGeometry(QRect(915, 2, 75, 26));
+	}
+	else
+	{
+		hideDockWidget(dockWidget);
+		ui.groupBox_5->setGeometry(QRect(1170, 2, 75, 26));
+	}
+}
+
+bool Server_VS::event(QEvent* event)
+{
+	if (event->type() == QEvent::Resize)
+	{
+		hideDockWidget(m_dockWidget);
+	}
+
+	// Make sure the rest of events are handled
+	return QMainWindow::event(event);
+}
+
+void Server_VS::adjustDockWidget(MyDockWidget* dockWidget)
+{
+	if (dockWidget == nullptr) {
+		return;
+	}
+
+	QRect rect = getDockWidgetsAreaRect();
+	switch (dockWidget->getArea())
+	{
+	case Qt::LeftDockWidgetArea: {
+		dockWidget->setGeometry(rect.left(), rect.top(), dockWidget->width(), rect.height());
+	}
+								 break;
+
+	case Qt::TopDockWidgetArea: {
+		dockWidget->setGeometry(rect.left(), rect.top(), rect.width(), dockWidget->height());
+	}
+								break;
+
+	case Qt::RightDockWidgetArea: {
+		ui.groupBox_5->setGeometry(QRect(915, 2, 75, 26));
+		dockWidget->setGeometry(rect.left() + rect.width() - dockWidget->width(), rect.top(), dockWidget->width(), rect.height());
+	}
+								  break;
+
+	case Qt::BottomDockWidgetArea: {
+		dockWidget->setGeometry(rect.left(), rect.top() + rect.height() - dockWidget->height(), rect.width(), dockWidget->height());
+	}
+								   break;
+	}
+}
+
+MyDockWidgetTabBar* Server_VS::getDockWidgetBar(Qt::DockWidgetArea area)
+{
+	assert(m_dockWidgetBar.find(area) != std::end(m_dockWidgetBar));
+
+	auto it = m_dockWidgetBar.find(area);
+	if (it != std::end(m_dockWidgetBar)) {
+		return it->second;
+	}
+
+	return nullptr;
+}
+
+void Server_VS::addDockWidget(Qt::DockWidgetArea area, MyDockWidget* dockWidget)
+{
+	addDockWidget(area, dockWidget, Qt::Vertical);
+}
+
+void Server_VS::addDockWidget(Qt::DockWidgetArea area, MyDockWidget* dockWidget, Qt::Orientation orientation)
+{
+	if (dockWidget == nullptr) {
+		return;
+	}
+
+	connect(dockWidget, &MyDockWidget::signal_pinned, this, &Server_VS::dockWidgetPinned);
+	connect(dockWidget, &MyDockWidget::signal_unpinned, this, &Server_VS::dockWidgetUnpinned);
+	connect(dockWidget, &MyDockWidget::signal_docked, this, &Server_VS::dockWidgetDocked);
+	connect(dockWidget, &MyDockWidget::signal_undocked, this, &Server_VS::dockWidgetUndocked);
+	connect(dockWidget, &MyDockWidget::signal_close, this, &Server_VS::dockWidgetClose);
+	m_dockWidgets.push_back(dockWidget);
+
+	QMainWindow::addDockWidget(area, dockWidget, orientation);
+
+	QString title = dockWidget->windowTitle();
+	if (title.isEmpty()) {
+		title = QObject::tr("Noname");
+	}
+}
+
+void Server_VS::removeDockWidget(MyDockWidget* dockWidget)
+{
+	if (dockWidget == nullptr) {
+		return;
+	}
+
+	auto it = std::find(m_dockWidgets.begin(), m_dockWidgets.end(), dockWidget);
+	if (it == m_dockWidgets.end()) {
+		return;
+	}
+
+	m_dockWidgets.erase(it);
+
+	if (dockWidget->isMinimized()) {
+		dockWidgetPinned(dockWidget);
+	}
+
+	QMainWindow::removeDockWidget(dockWidget);
+
+	dockWidget->setParent(nullptr);
+}
+
+void Server_VS::dockWidgetDocked(MyDockWidget* dockWidget)
+{
+	if (dockWidget == nullptr) {
+		return;
+	}
+}
+
+void Server_VS::dockWidgetClose(MyDockWidget* dockWidget)
+{
+    ui.groupBox_5->setGeometry(QRect(1200, 2, 75, 26));
+}
+
+void Server_VS::dockWidgetUndocked(MyDockWidget* dockWidget)
+{
+	hideDockWidget(m_dockWidget);
+
+	MyDockWidgetTabBar* dockWidgetBar = getDockWidgetBar(dockWidget->getArea());
+	if (dockWidgetBar == nullptr) {
+		return;
+	}
+
+	dockWidget->clearTabifiedDocks();
+
+	if (dockWidgetBar->removeDockWidget(dockWidget))
+	{
+		if (!dockWidget->isFloating()) {
+			QMainWindow::addDockWidget(dockWidget->getArea(), dockWidget);
+		}
+
+		if ((dockWidget->getArea() == Qt::LeftDockWidgetArea) &&
+			dockWidgetBar->isHidden())
+		{
+			getDockWidgetBar(Qt::TopDockWidgetArea)->removeSpacing();
+			getDockWidgetBar(Qt::BottomDockWidgetArea)->removeSpacing();
+		}
+
+		dockWidget->show();
+	}
+}
+
+std::list<MyDockWidget*> Server_VS::getDockWidgetListAtArea(Qt::DockWidgetArea area)
+{
+	std::list<MyDockWidget*> dockWidgetList;
+	std::copy_if(std::begin(m_dockWidgets), std::end(m_dockWidgets), std::back_inserter(dockWidgetList), [area](const MyDockWidget* dockWidget) {
+		return (dockWidget->getArea() == area) && (dockWidget->isDocked());
+	});
+
+	return dockWidgetList;
+}
+
+QRect Server_VS::getDockWidgetsAreaRect()
+{
+	int left = centralWidget()->x();
+	std::list<MyDockWidget*> leftAreaDockWidgets = getDockWidgetListAtArea(Qt::LeftDockWidgetArea);
+	std::for_each(std::begin(leftAreaDockWidgets), std::end(leftAreaDockWidgets), [&left](const MyDockWidget* dockWidget)
+	{
+		if ((dockWidget->x() >= 0) && (dockWidget->width() > 0)) {
+			left = std::min(left, dockWidget->x());
+		}
+	});
+
+	int top = centralWidget()->y();
+	std::list<MyDockWidget*> topAreaDockWidgets = getDockWidgetListAtArea(Qt::TopDockWidgetArea);
+	std::for_each(std::begin(topAreaDockWidgets), std::end(topAreaDockWidgets), [&top](const MyDockWidget* dockWidget)
+	{
+		if ((dockWidget->y() >= 0) && (dockWidget->height() > 0)) {
+			top = std::min(top, dockWidget->y());
+		}
+	});
+
+	int right = centralWidget()->x() + centralWidget()->width();
+	std::list<MyDockWidget*> rightAreaDockWidgets = getDockWidgetListAtArea(Qt::RightDockWidgetArea);
+	std::for_each(std::begin(rightAreaDockWidgets), std::end(rightAreaDockWidgets), [&right](const MyDockWidget* dockWidget)
+	{
+		if ((dockWidget->x() >= 0) && (dockWidget->width() > 0)) {
+			right = std::max(right, dockWidget->x() + dockWidget->width());
+		}
+	});
+
+	int bottom = centralWidget()->y() + centralWidget()->height();
+	std::list<MyDockWidget*> bottomAreaDockWidgets = getDockWidgetListAtArea(Qt::BottomDockWidgetArea);
+	std::for_each(std::begin(bottomAreaDockWidgets), std::end(bottomAreaDockWidgets), [&bottom](const MyDockWidget* dockWidget)
+	{
+		if ((dockWidget->y() >= 0) && (dockWidget->height() > 0)) {
+			bottom = std::max(bottom, dockWidget->y() + dockWidget->height());
+		}
+	});
+
+	return QRect(left, top, right - left, bottom - top);
+}
+
+void Server_VS::hideDockWidget(MyDockWidget* dockWidget)
+{
+	if ((dockWidget == nullptr) || (dockWidget->isHidden())) {
+		return;
+	}
+
+	m_dockWidget = nullptr;
+
+	dockWidget->hide();
+}
+
+void Server_VS::menuWindows_triggered(QAction* action)
+{
+	auto it = std::find_if(m_dockWidgets.begin(), m_dockWidgets.end(), [&](MyDockWidget* dockWidget) {
+		return (dockWidget->getMenuAction() == action);
+	});
+	if (it == m_dockWidgets.end()) {
+		return;
+	}
+
+	MyDockWidget* dockWidget = *it;
+	if (dockWidget->isHidden())
+	{
+		hideDockWidget(m_dockWidget);
+
+		dockWidget->show();
+		dockWidget->raise();
+
+		// dockWidget->setState(DockWidgetState::Docked);
+	}
+	else if (dockWidget->isMinimized())
+	{
+		showDockWidget(dockWidget);
+	}
+
+	dockWidget->setFocus();
+}
+
