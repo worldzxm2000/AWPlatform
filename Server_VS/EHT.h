@@ -108,4 +108,6 @@ signals:
 	 void OffLineSignal(QString SrvName, QString StationID, QDateTime LastTime, QDateTime LoginTime);
 	 //Web服务器发送
 	 void SendToWebServiceSignal(QJsonObject Json);
+	 //UI显示终端返回值
+	 void SendWarningInfoToUI(QString Result);
 };

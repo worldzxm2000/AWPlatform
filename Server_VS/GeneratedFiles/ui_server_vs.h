@@ -62,9 +62,9 @@ public:
 	MyButton *UpLoadBtn;
 
 
-	//QScrollArea *ScrollArea_PauseBtn;
-	//QWidget *ScrollAreaWidgetContents_PauseBtn;
-	//MyButton *PauseBtn;
+	QScrollArea *ScrollArea_ControlBtn;
+	QWidget *ScrollAreaWidgetContents_ControlBtn;
+	MyButton *ControlBtn;
 
 	QScrollArea *ScrollArea_LogBtn;
 	QWidget *ScrollAreaWidgetContents_LogBtn;
@@ -119,23 +119,23 @@ public:
 		//centralWidget->setStyleSheet(QString("QWidget{color:white}"));
 		groupBox = new QGroupBox(centralWidget);
 		groupBox->setObjectName(QStringLiteral("groupBox"));
-		groupBox->setGeometry(QRect(5, 120, 241, 531));
+		groupBox->setGeometry(QRect(5, 120, 241, 530));
 		groupBox->setStyleSheet(QString("QGroupBox{color:white}"));
 
 		groupBox->setFont(font);
 		ServerList = new SrvTableWidget(groupBox);
 		ServerList->setObjectName(QStringLiteral("ServerList"));
-		ServerList->setGeometry(QRect(10, 30, 221, 491));
+		ServerList->setGeometry(QRect(10, 20, 221, 500));
 		ServerList->setStyleSheet(QStringLiteral("QTableWidget{background:rgb(100,100,100);color:white;selection-background-color:rgb(50,50,50)}"));
 		//ServerList->setStyleSheet(QStringLiteral("QTableWidget::item{ selection-background-color: red}"));
 		groupBox_2 = new QGroupBox(centralWidget);
 		groupBox_2->setObjectName(QStringLiteral("groupBox_2"));
-		groupBox_2->setGeometry(QRect(250, 120, 1011, 531));
+		groupBox_2->setGeometry(QRect(250, 120, 1011, 530));
 		groupBox_2->setFont(font);
 		groupBox_2->setStyleSheet(QString("QGroupBox{color:white}"));
 		ClientList = new QTableWidget(groupBox_2);
 		ClientList->setObjectName(QStringLiteral("ClientList"));
-		ClientList->setGeometry(QRect(10, 30, 991, 481));
+		ClientList->setGeometry(QRect(10, 20, 991, 500));
 		ClientList->setStyleSheet(QStringLiteral("QTableWidget{background:rgb(100,100,100);color:white;}"));
 
 		ImageLabel = new QLabel(centralWidget);
@@ -193,7 +193,7 @@ public:
 		RemoveBtn->setObjectName(QStringLiteral("RemoveBtn"));
 		RemoveBtn->setGeometry(QRect(2, 2, 32, 32));
 
-		//启动按钮
+		//补抄按钮
 		ScrollArea_UpLoadBtn = new QScrollArea(groupBox_3);
 		ScrollArea_UpLoadBtn->setObjectName(QStringLiteral("ScrollArea_UpLoadBtn"));
 		ScrollArea_UpLoadBtn->setGeometry(QRect(95, 20, 40, 40));
@@ -207,19 +207,19 @@ public:
 		UpLoadBtn->setObjectName(QStringLiteral("UpLoadBtn"));
 		UpLoadBtn->setGeometry(QRect(2, 2, 32, 32));
 
-		////暂停按钮
-		//ScrollArea_PauseBtn = new QScrollArea(groupBox_3);
-		//ScrollArea_PauseBtn->setObjectName(QStringLiteral("ScrollArea_PauseBtn"));
-		//ScrollArea_PauseBtn->setGeometry(QRect(140, 20, 40, 40));
-		//ScrollArea_PauseBtn->setWidgetResizable(true);
-		//ScrollAreaWidgetContents_PauseBtn = new QWidget();
-		//ScrollAreaWidgetContents_PauseBtn->setObjectName(QStringLiteral("ScrollAreaWidgetContents_PauseBtn"));
-		//ScrollAreaWidgetContents_PauseBtn->setGeometry(QRect(0, 0, 40, 40));
-		//ScrollAreaWidgetContents_PauseBtn->setStyleSheet(QString("QWidget{ background:black }"));
-		//ScrollArea_PauseBtn->setWidget(ScrollAreaWidgetContents_PauseBtn);
-		//PauseBtn = new MyButton("../Image/png/Pause.png", 1, ScrollAreaWidgetContents_PauseBtn);
-		//PauseBtn->setObjectName(QStringLiteral("PauseBtn"));
-		//PauseBtn->setGeometry(QRect(2, 2, 32, 32));
+		//控制按钮
+		ScrollArea_ControlBtn = new QScrollArea(groupBox_4);
+		ScrollArea_ControlBtn->setObjectName(QStringLiteral("ScrollArea_ControlBtn"));
+		ScrollArea_ControlBtn->setGeometry(QRect(90, 20, 40, 40));
+		ScrollArea_ControlBtn->setWidgetResizable(true);
+		ScrollAreaWidgetContents_ControlBtn = new QWidget();
+		ScrollAreaWidgetContents_ControlBtn->setObjectName(QStringLiteral("ScrollAreaWidgetContents_ControlBtn"));
+		ScrollAreaWidgetContents_ControlBtn->setGeometry(QRect(0, 0, 40, 40));
+		ScrollAreaWidgetContents_ControlBtn->setStyleSheet(QString("QWidget{ background:rgb(100,100,100) }"));
+		ScrollArea_ControlBtn->setWidget(ScrollAreaWidgetContents_ControlBtn);
+		ControlBtn = new MyButton("../Image/png/Control.png", 1, ScrollAreaWidgetContents_ControlBtn);
+		ControlBtn->setObjectName(QStringLiteral("PauseBtn"));
+		ControlBtn->setGeometry(QRect(2, 2, 32, 32));
 
 		//日志显示
 		ScrollArea_LogBtn = new QScrollArea(groupBox_4);
@@ -326,9 +326,10 @@ public:
 		NameLabel->setText(QApplication::translate("Server_VSClass", "\346\260\224\350\261\241\344\270\223\344\270\232\345\271\263\345\217\260", nullptr));
 		AddBtn->setToolTipName("添加新业务");
 		RemoveBtn->setToolTipName("移除业务");
-	/*	RunBtn->setToolTipName("运行");
-		PauseBtn->setToolTipName("暂停");*/
-		TerminalBtn->setToolTipName("查看终端命令");
+		UpLoadBtn->setToolTipName("补抄数据");
+	
+		ControlBtn->setToolTipName("控制设备");
+		TerminalBtn->setToolTipName("查看终端返回值");
 		LogBtn->setToolTipName("查看日志");
 		CloseBtn->setToolTipName("关闭");
 		MiniBtn->setToolTipName("最小化");

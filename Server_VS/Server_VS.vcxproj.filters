@@ -197,6 +197,15 @@
     <ClCompile Include="MyDockWidgetTabBar.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_ControlDlg.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_ControlDlg.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="ControlDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="server_vs.ui">
@@ -268,6 +277,12 @@
     <CustomBuild Include="MyDockWidgetTabBar.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
+    <CustomBuild Include="ControlDlg.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="ControlDlg.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GeneratedFiles\ui_server_vs.h">
@@ -293,6 +308,9 @@
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_ControlDlg.h">
+      <Filter>Generated Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

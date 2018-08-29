@@ -1,0 +1,265 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ControlDlg</class>
+ <widget class="QWidget" name="ControlDlg">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>398</width>
+    <height>400</height>
+   </rect>
+  </property>
+  <property name="font">
+   <font>
+    <family>微软雅黑</family>
+    <pointsize>10</pointsize>
+   </font>
+  </property>
+  <property name="windowTitle">
+   <string>控制设备</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../Image/png/control.png</normaloff>../Image/png/control.png</iconset>
+  </property>
+  <property name="statusTip">
+   <string>命令控制</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
+  <widget class="QGroupBox" name="groupBox_4">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>391</width>
+     <height>391</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string/>
+   </property>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>5</x>
+      <y>2</y>
+      <width>32</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>../Image/png/control.png</pixmap>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_4">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>8</y>
+      <width>50</width>
+      <height>15</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>8</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>设备控制</string>
+    </property>
+   </widget>
+   <widget class="QGroupBox" name="groupBox">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>40</y>
+      <width>361</width>
+      <height>331</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string/>
+    </property>
+    <widget class="QLabel" name="NameLabel">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>12</y>
+       <width>250</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>当前选择站点：</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="StationIDLabel">
+     <property name="geometry">
+      <rect>
+       <x>180</x>
+       <y>12</y>
+       <width>81</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string></string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="SrvNameLabel">
+     <property name="geometry">
+      <rect>
+       <x>300</x>
+       <y>12</y>
+       <width>190</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>类型：</string>
+     </property>
+    </widget>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>50</y>
+       <width>141</width>
+       <height>271</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>读取命令</string>
+     </property>
+     <widget class="QWidget" name="verticalLayoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>20</y>
+        <width>88</width>
+        <height>241</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QPushButton" name="R_BASEINFO_Btn">
+         <property name="text">
+          <string>读取基本信息</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="R_DATETIME_Btn">
+         <property name="text">
+          <string>读取时钟</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="R_LONG_Btn">
+         <property name="text">
+          <string>读取经度</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="R_LAT_Btn">
+         <property name="text">
+          <string>读取纬度</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="R_ALT_Btn">
+         <property name="text">
+          <string>读取海拔高度</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="R_SNAPSHOT_Btn">
+         <property name="text">
+          <string>读取数据</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+    <widget class="QGroupBox" name="groupBox_3">
+     <property name="geometry">
+      <rect>
+       <x>180</x>
+       <y>50</y>
+       <width>151</width>
+       <height>271</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>设置命令</string>
+     </property>
+     <widget class="QWidget" name="verticalLayoutWidget_3">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>50</y>
+        <width>88</width>
+        <height>211</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="QPushButton" name="W_DATETIME_Btn">
+         <property name="text">
+          <string>设置时钟</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="W_LONG_Btn">
+         <property name="text">
+          <string>设置经度</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="W_LAT_Btn">
+         <property name="text">
+          <string>设置纬度</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="W_ALT_Btn">
+         <property name="text">
+          <string>设置海拔高度</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QLineEdit" name="ParamsEdit">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>20</y>
+        <width>121</width>
+        <height>20</height>
+       </rect>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+  </widget>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources/>
+ <connections/>
+</ui>

@@ -11,9 +11,9 @@
 #include"DataLogDlg.h"
 #include<QDockWidget>
 
-using namespace std;
 //消息中间件
 SimpleProducer g_SimpleProducer, g_SimpleProducer_ZDH;
+
 //构造函数
 Server_VS::Server_VS(QWidget *parent)
 	: QMainWindow(parent)
@@ -22,11 +22,12 @@ Server_VS::Server_VS(QWidget *parent)
 {
 	ui.setupUi(this);
 	ConfigWindow();
-	this->setFixedSize(1280, 660);
+	setFixedSize(1280, 660);
 	strOperateType = "未知操作";
 	pool.setMaxThreadCount(1024);
-	this->addDockWidget(Qt::RightDockWidgetArea,ui.WarningDockWidget);
+	addDockWidget(Qt::RightDockWidgetArea,ui.WarningDockWidget);
 
+	controlDlg = new ControlDlg;
 	slModel = new QStringListModel();
 	slModel->setStringList(WarningInfoList);
 	strView = new QListView();
@@ -75,7 +76,10 @@ Server_VS::Server_VS(QWidget *parent)
 	connect(ui.TerminalBtn, SIGNAL(clicked()), this, SLOT(OpenDataLog()));
 	connect(ui.UpLoadBtn,SIGNAL(clicked()),this,SLOT(Func_DMTD()));
 	connect(ui.WarningBtn, SIGNAL(clicked()), this, SLOT(ShowWarningDockWidget()));
+	connect(ui.ControlBtn, SIGNAL(clicked()), this, SLOT(OpenControlDlg()));
+	//connect(ui.ClientList, SIGNAL(itemClicked(QTableWidgetItem *)), this, SLOT(on_ClientList_itemClicked(QTableWidgetItem *)));
 	LogWrite::SYSLogMsgOutPut("主程序已启动...");
+	LogWrite::DataLogMsgOutPut("终端接收已启动...");
 	//ListCtrl控件当前选择行
 	iSelectedRowOfServiceListCtrl = -1;
 	iSelectedRowOfClientListCtrl = -1;
@@ -173,7 +177,7 @@ LRESULT Server_VS::InitializeCommandSocket()
 	{
 		//开启WebSocket线程
 		socket4web = new SocketServerForWeb();
-		connect(socket4web, SIGNAL(GetErrorSignal(int)), this, SLOT(GetErrorMSG(int)), Qt::AutoConnection);
+		connect(socket4web, SIGNAL(ErrorMSGSignal(int)), this, SLOT(GetErrorMSG(int)), Qt::AutoConnection);
 		//处理web端发送过来命令类型
 		connect(socket4web, SIGNAL(NoticfyServerFacilityID(int, QString, QString, int, QString, QString)), this, SLOT(RequestForReadCOMM(int, QString, QString, int, QString, QString)), Qt::AutoConnection);
 		socket4web->m_portServer = 1030;
@@ -252,9 +256,14 @@ LRESULT Server_VS::AddDll()
 	strName = fileDialog.selectedFiles()[0];
 	//创建
 	EHT *pEHT=new EHT(this);
+	//数据或心跳通知
 	connect(pEHT, SIGNAL(OnLineSignal(QString, QString, QDateTime, QDateTime)), this, SLOT(RefreshListCtrl(QString, QString, QDateTime, QDateTime)));
+	//离线通知
 	connect(pEHT, SIGNAL(OffLineSignal(QString, QString, QDateTime, QDateTime)), this, SLOT(OffLineListCtrl(QString, QString, QDateTime, QDateTime)));
+	//Web端发送指令通知
 	connect(pEHT, SIGNAL(SendToWebServiceSignal(QJsonObject)), socket4web,SLOT(SendToWebServiceSlot(QJsonObject)));
+	//终端返回命令通知
+	connect(pEHT, SIGNAL(SendWarningInfoToUI(QString)), this, SLOT(GetWarningInfon(QString)));
 	int size = sizeof(EHT);
 	LRESULT pResult = pEHT->LoadLib(strName);
 	if (pResult<1)
@@ -264,96 +273,39 @@ LRESULT Server_VS::AddDll()
 	return 1;
 }
 
-//终端命令返回操作状态
-void Server_VS::GetCommandStatus(int result)
+//获取报警信息
+void Server_VS::GetWarningInfon(QString Result)
 {
-	//操作状态
-	QString strOperateStatus("未知值");
-	switch (result)
-	{
-		//无效操作
-	case -1:
-		strOperateStatus = "无效操作!";
-		break;
-		//操作失败
-	case 0:
-		strOperateStatus = "操作失败!";
-		break;
-		//操作成功
-	case 1:
-		strOperateStatus = "操作成功!";
-		break;
-	default:
-		strOperateStatus =QString::number(result);
-		break;
-	}
-	LogWrite::DataLogMsgOutPut(QString("终端命令:")+strOperateType +QString(",解析终端值:") + strOperateStatus);
-    LogWrite::LogWrite();
-}
+	QDateTime currentTime = QDateTime::currentDateTime();
+	QString current_date = currentTime.toString("yyyy.MM.dd hh:mm:ss");
+	WarningInfoList.append(current_date);
+	WarningInfoList.append(Result);
 
-//终端命令返回读取值
-void Server_VS::GetCommandRecvValue(QJsonObject RecvJson)
-{
-	QJsonObject::Iterator it;
-	QString keyString = "";
-	QString valueString = "";
-	for (it = RecvJson.begin(); it != RecvJson.end(); it++)
-	{
-		keyString = it.key();
-		if (keyString == "RecvValue1" || keyString == "RecvValue2" || keyString == "RecvValue3" || keyString == "RecvValue4")
-		{
-			QString value = it.value().toString();
-			if (value == "N")
-				continue;
-			valueString += " ";
-			valueString += value;
-		}
-	}
-	QJsonDocument document;
-	document.setObject(RecvJson);
-	QString strRecv(document.toJson(QJsonDocument::Compact));
-	LogWrite::DataLogMsgOutPut(QString("解析终端值:")+strRecv);
-	//socket4web->Send2WebServerJson(RecvJson);
 }
 
 //获得错误信息
 void Server_VS::GetErrorMSG(int error)
 {
 	QString strMSG;
-	QDateTime current_date_time = QDateTime::currentDateTime();
-	QString current_date = current_date_time.toString("yyyy.MM.dd hh:mm:ss");
 	switch (error)
 	{
-	case 1:
-		strMSG = "正常";
-		break;
 	case -1:
-		strMSG = "通信初始化失败！";
-		break;
-	case -2:
-		strMSG = "";
-		break;
-	case -3:
-	{
-		strMSG = "消息中间件通信异常！";
-	//	g_SimpleProducer.start("admin", "admin", "tcp://117.158.216.250:61616", 2000, "DataFromFacility", false, false);
-	}
+		strMSG = "Web发送命令错误!";
 		break;
 	case -4:
 		strMSG = "服务器间通信异常！";
 		break;
 	case -5:
-		strMSG = "设备已登出！";
+		strMSG = "发送Web服务器失败！";
 		break;
 	case -10311:
 		strMSG = "端口号监听失败！";
-		QMessageBox::warning(NULL, "警告", strMSG);
 		break;
 	default:
 		strMSG = QString::number(error);
 		break;
 	}
-	LogWrite::SYSLogMsgOutPut(strMSG);
+	GetWarningInfon(strMSG);
 }
 
 //刷新设备ListCtrl控件
@@ -383,77 +335,6 @@ void Server_VS::OffLineListCtrl(QString SrvName, QString StationID, QDateTime La
 
 }
 
-//设备发送数据  "业务类型"<< "设备号" << "时间" << "上传数量"<<"设备状态"<<"连接"<<"IP"<<"Socket"
-void Server_VS::UpdateUI(QString StationID, QString ObserveTime, int Count, bool Connected, QString IP, int Port,int Socket,int SrvPort)
-{
-	//判断是否第一次连接
-	bool bIsExited = false;
-	bIsExited = AddClient(IP, Port, SrvPort, Socket, StationID);
-	//已存在
-	QString stServiceTypeID = FindserviceTypeIDByPort(SrvPort);
-	if (bIsExited)
-	{
-		//找到设备对应的UI行
-		int RowIndex = -1;
-		RowIndex=FindRowIndex(stServiceTypeID, StationID);
-		//未找到
-		if (RowIndex < 0)
-			return;
-		ui.ClientList->setItem(RowIndex, 3, new QTableWidgetItem(QString::number(Count, 10)));
-		ui.ClientList->setItem(RowIndex, 5, new QTableWidgetItem("在线"));
-		ui.ClientList->setItem(RowIndex, 6, new QTableWidgetItem(IP));
-		ui.ClientList->setItem(RowIndex, 7, new QTableWidgetItem(QString::number(Port, 10)));
-		ui.ClientList->setItem(RowIndex, 8, new QTableWidgetItem(QString::number(Socket)));
-	}
-	//第一次连接
-	else
-	{
-		//更新UI
-		int RowIndex = ui.ClientList->rowCount();
-		ui.ClientList->insertRow(RowIndex);
-		ui.ClientList->setItem(RowIndex, 0, new QTableWidgetItem(stServiceTypeID));
-		ui.ClientList->setItem(RowIndex, 1, new QTableWidgetItem(StationID));
-		ui.ClientList->setItem(RowIndex, 2, new QTableWidgetItem(ObserveTime));
-		ui.ClientList->setItem(RowIndex, 3, new QTableWidgetItem(QString::number(Count, 10)));
-		ui.ClientList->setItem(RowIndex, 5, new QTableWidgetItem("在线"));
-		ui.ClientList->setItem(RowIndex, 6, new QTableWidgetItem(IP));
-		ui.ClientList->setItem(RowIndex, 7, new QTableWidgetItem(QString::number(Port, 10)));
-		ui.ClientList->setItem(RowIndex, 8, new QTableWidgetItem(QString::number(Socket)));
-	}
-	LogWrite::DataLogMsgOutPut(stServiceTypeID+"有新的数据,台站号为:"+StationID+QString(",Socket号为:")+QString::number(Socket));
-}
-
-//添加到设备数组
-bool Server_VS::AddClient(QString ip, int port, int serverpot, SOCKET socketID,QString StationID)
-{
-	bool bIsExist = false;
-	int index = -1;
-	for (int i = 0; i < ClientInfo.size(); i++)
-	{
-		if (ClientInfo[i].ServerPortID == serverpot)
-		{
-			index = i;
-			for (int j = 0; j < ClientInfo[i].clients.size(); j++)
-			{
-				if (ClientInfo[i].clients[j].StationID == StationID)
-				{
-					QDateTime current_date_time = QDateTime::currentDateTime();
-					ClientInfo[i].clients[j].LatestTimeOfHeartBeat = current_date_time;
-					ClientInfo[i].clients[j].SocketID = socketID;
-					ClientInfo[i].clients[j].Online = true;
-					bIsExist = true;
-				}
-			}
-			if (bIsExist)
-				return bIsExist;
-			QDateTime current_date_time = QDateTime::currentDateTime();
-			CLIENTINFO clientinfo{ ip, port,socketID,StationID,current_date_time,true };
-			ClientInfo[index].clients.push_back(clientinfo);
-		}
-	}
-	return bIsExist;
-}
-
 //通过设备ip和端口查询到设备索引号
 int Server_VS::FindRowIndex(QString SrvName, QString StationID)
 {
@@ -466,43 +347,6 @@ int Server_VS::FindRowIndex(QString SrvName, QString StationID)
 			return row;
 	}
 	return -1;
-}
-
-
-//通过业务号和区站号找到Socket号
-int Server_VS::FindSocketID(int ServiceTypeID, int StationID, int FacilityID)
-{
-	//判断区站号是否连接，未连接返回-1
-	int CountOfServiceType = ClientInfo.size();
-	if (CountOfServiceType < 0)
-		return -1;
-	for (int i = 0; i < CountOfServiceType; i++)
-	{
-		if (ClientInfo[i].ServiceID == ServiceTypeID)
-		{
-			int CountOfStations = ClientInfo[i].clients.size();
-			for (int j = 0; j < CountOfStations; j++)
-			{
-				if (ClientInfo[i].clients[j].StationID == StationID)
-					return ClientInfo[i].clients[j].SocketID;
-			}
-		}
-	}
-	return -1;
-}
-
-//通过连接端口找到业务类型
-QString Server_VS::FindserviceTypeIDByPort(int SrvPort)
-{
-	QString serviceTypeID;
-	for (int i = 0; i < ClientInfo.size(); i++)
-	{
-		if (ClientInfo[i].ServerPortID == SrvPort)
-		{
-			return ClientInfo[i].ServerName;
-		}
-	}
-	return NULL;
 }
 
 //业务列表右键事件
@@ -569,63 +413,6 @@ void Server_VS::Lib_Stop(int ServerIndex)
 	EHTPool.Pause(ui.ServerList->item(Row, 0)->text());
 }
 
-//心跳处理
-void Server_VS::HeartBeat(QString IP,int Port,int SrvPort, int CltSocket,QString StationID,QString ServiceTypeID)
-{
-	bool bIsExited = false;
-	QString serviceTypeID = FindserviceTypeIDByPort(SrvPort);
-	//农委
-	if (serviceTypeID == "农委气象业务")
-	{
-		if (SIM2Staion.contains(StationID))
-		{
-			//找到特定的“键-值”对
-			QMap<QString, QString>::iterator it = SIM2Staion.find(StationID);
-			StationID = it.value();
-		}
-	}
-	bIsExited = AddClient(IP, Port, SrvPort, CltSocket, StationID);
-	if (bIsExited)
-	{
-		//找到设备对应的UI行
-		int RowIndex = -1;
-		RowIndex= FindRowIndex(ServiceTypeID, StationID);
-		//未找到
-		if (RowIndex < 0)
-			return;
-		
-		ui.ClientList->setItem(RowIndex, 0, new QTableWidgetItem(serviceTypeID));
-		QDateTime current_date_time = QDateTime::currentDateTime();
-		QString current_date = current_date_time.toString("yyyy.MM.dd hh:mm:ss");
-		ui.ClientList->setItem(RowIndex, 1, new QTableWidgetItem(StationID));
-		ui.ClientList->setItem(RowIndex, 2, new QTableWidgetItem(current_date));
-		//ui.ClientList->setItem(RowCount, 4, new QTableWidgetItem("未知"));
-		ui.ClientList->setItem(RowIndex, 5, new QTableWidgetItem("在线"));
-		ui.ClientList->setItem(RowIndex, 6, new QTableWidgetItem(IP));
-		ui.ClientList->setItem(RowIndex, 7, new QTableWidgetItem(QString::number(Port, 10)));
-		ui.ClientList->setItem(RowIndex, 8, new QTableWidgetItem(QString::number(CltSocket)));
-	}
-	//新的连接
-	else
-	{
-		//更新UI
-		int RowCount = ui.ClientList->rowCount();
-		ui.ClientList->insertRow(RowCount);
-		QString serviceTypeID = FindserviceTypeIDByPort(SrvPort);
-		ui.ClientList->setItem(RowCount, 0, new QTableWidgetItem(serviceTypeID));
-		QDateTime current_date_time = QDateTime::currentDateTime();
-		QString current_date = current_date_time.toString("yyyy.MM.dd hh:mm:ss");
-		ui.ClientList->setItem(RowCount, 1, new QTableWidgetItem(StationID));
-		ui.ClientList->setItem(RowCount, 2, new QTableWidgetItem(current_date));
-		ui.ClientList->setItem(RowCount, 3, new QTableWidgetItem("0"));
-		//ui.ClientList->setItem(RowCount, 4, new QTableWidgetItem("未知"));
-		ui.ClientList->setItem(RowCount, 5, new QTableWidgetItem("在线"));
-		ui.ClientList->setItem(RowCount, 6, new QTableWidgetItem(IP));
-		ui.ClientList->setItem(RowCount, 7, new QTableWidgetItem(QString::number(Port, 10)));
-		ui.ClientList->setItem(RowCount, 8, new QTableWidgetItem(QString::number(CltSocket)));
-	}
-}
-
 //读取SIM卡号配置文件，转成区站号
 void Server_VS::Convert2StationID()
 {
@@ -675,6 +462,21 @@ void Server_VS::OpenDataLog()
 	datalogdlg.exec();
 }
 
+//命令控制窗体
+void Server_VS::OpenControlDlg()
+{
+	if (iSelectedRowOfClientListCtrl > -1)
+	{
+		QString ServiceName = ui.ClientList->item(iSelectedRowOfClientListCtrl, 0)->text();
+		QString StationID = ui.ClientList->item(iSelectedRowOfClientListCtrl, 1)->text();
+		int ServiceID = EHTPool.GetEHT(ServiceName)->GetServiceID();
+		controlDlg->pEHT = &EHTPool;
+		controlDlg->ServiceName = ServiceName;
+		controlDlg->StationID = StationID;
+		controlDlg->ServiceID = ServiceID;
+	}
+	controlDlg->show();
+}
 //打开报警停靠窗口
 void Server_VS:: ShowWarningDockWidget()
 {
@@ -723,10 +525,10 @@ void Server_VS::on_ServerList_itemClicked(QTableWidgetItem *item)
 	iSelectedRowOfServiceListCtrl = item->row();
 }
 
-//报警信息
-void  Server_VS::WarningInfo(QString WarningInfo)
+//设备列表点击
+void Server_VS::on_ClientList_itemClicked(QTableWidgetItem *item)
 {
-	WarningInfoList.append(WarningInfo);
+	iSelectedRowOfClientListCtrl = item->row();
 }
 
 //Docking配置方法

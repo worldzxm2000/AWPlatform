@@ -18,15 +18,19 @@ HEADERS += ./resource.h \
     ./ConfigWnd.h \
     ./CommandDlg.h \
     ./DMTDDlg.h \
-    ./DataLogDlg.h \
     ./EHT.h \
     ./EHTPool.h \
+    ./ControlDlg.h \
     ./ReadSYSLogTXT.h \
     ./MyButton.h \
+    ./MyDockWidgetTitle.h \
+    ./MyDockWidget.h \
+    ./MyDockWidgetTabButton.h \
+    ./MyDockWidgetTabBar.h \
     ./LogWrite.h
 SOURCES += ./CommandDlg.cpp \
     ./ConfigWnd.cpp \
-    ./DataLogDlg.cpp \
+    ./ControlDlg.cpp \
     ./DMTDDlg.cpp \
     ./EHT.cpp \
     ./EHTPool.cpp \
@@ -34,6 +38,10 @@ SOURCES += ./CommandDlg.cpp \
     ./LogWrite.cpp \
     ./main.cpp \
     ./MyButton.cpp \
+    ./MyDockWidget.cpp \
+    ./MyDockWidgetTabBar.cpp \
+    ./MyDockWidgetTabButton.cpp \
+    ./MyDockWidgetTitle.cpp \
     ./ReadSYSLogTXT.cpp \
     ./Server_VS.cpp \
     ./SimpleProducer.cpp \
@@ -45,5 +53,5 @@ FORMS += ./server_vs.ui \
     ./CommandDlg.ui \
     ./DMTDDlg.ui \
     ./SYSLogDlg.ui \
-    ./DataLogDlg.ui
+    ./ControlDlg.ui
 RESOURCES += server_vs.qrc

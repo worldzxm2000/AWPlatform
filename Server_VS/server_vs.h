@@ -21,6 +21,7 @@
 #include"MyDockWidget.h"
 #include"MyDockWidgetTabBar.h"
 #include"MyDockWidgetTabButton.h"
+#include"ControlDlg.h"
 //业务类型连接信息
 typedef struct
 {
@@ -76,20 +77,20 @@ private:;
 	LRESULT AddDll();
 	//通过设备号和端口查询到设备索引号
 	int FindRowIndex(QString SrvName, QString StationID);
-	//通过服务器端口号查找业务编号
-	QString FindserviceTypeIDByPort(int servicePort);
+	////通过服务器端口号查找业务编号
+	//QString FindserviceTypeIDByPort(int servicePort);
 	//通过服务器类型查找业务编号
 	//QString FindserviceTypeIDByServiceID(int serviceID);
-	//添加台站号
-	bool AddClient(QString IP, int Port, int SrvPort, SOCKET SocketID, QString StationID);
+	////添加台站号
+	//bool AddClient(QString IP, int Port, int SrvPort, SOCKET SocketID, QString StationID);
 	//业务列表右键菜单
 	void CreateServerListActions();
 	//区站号列表右键菜单
 	void CreateClientListActions();
 	//初始化终端命令Socket
 	LRESULT InitializeCommandSocket();
-	//通过业务和区站号找到对应的Socket号
-	int FindSocketID(int ServiceTypeID, int StationID, int FacilityID);
+	////通过业务和区站号找到对应的Socket号
+	//int FindSocketID(int ServiceTypeID, int StationID, int FacilityID);
 	//修改窗体
 	void ConfigWindow();
 	//添加SIM卡号
@@ -165,6 +166,8 @@ private:
 	QStringListModel* slModel;
 	//报警信息显示
 	QListView* strView;
+	//控制窗体
+	ControlDlg *controlDlg;
 private slots:
     //最小化窗体
     void slot_minWindow();
@@ -176,14 +179,10 @@ private slots:
 	void RequestForReadCOMM(int ServiceTypeID, QString StationID, QString FacilityID, int Command, QString Param1, QString Param2);
 	//错误提示
 	void GetErrorMSG(int error);
-	//更新UI界面
-	void UpdateUI(QString stationID, QString observeTime, int count, bool connected, QString ip, int port, int socket, int SrvPort);
-	//新客户端连接
-	//void AddNewClient(QString clientIp, int clientPort, int serverPort, int socketNo);
-	//终端操作返回信息
-	void GetCommandStatus(int result);
-	//终端操作返回读取值
-	void GetCommandRecvValue(QJsonObject RecvJson);
+	////更新UI界面
+	//void UpdateUI(QString stationID, QString observeTime, int count, bool connected, QString ip, int port, int socket, int SrvPort);
+	//报警信息通知
+	void GetWarningInfon(QString Result);
 	//添加Lib按钮事件
 	void on_AddBtn_clicked();
 	//移除业务Lib
@@ -200,22 +199,24 @@ private slots:
 	void on_ClientList_customContextMenuRequested(const QPoint &pos);
 	//发送终端命令
 	void SendCOMM();
-	//心跳处理
-	void HeartBeat(QString IP, int Port, int SrvPort, int CltSocket, QString StationID, QString  ServiceTypeID);
+	////心跳处理
+	//void HeartBeat(QString IP, int Port, int SrvPort, int CltSocket, QString StationID, QString  ServiceTypeID);
 	//获取终端命令名称
 	void GetCommName(QString CommName);
 	//补抄数据功能
 	void Func_DMTD();
 	//业务列表点击
 	void on_ServerList_itemClicked(QTableWidgetItem *item);
+	//设备列表点击
+	void on_ClientList_itemClicked(QTableWidgetItem *item);
 	//打开系统日志
 	void OpenSYSLog();
 	//打开数据日志
 	void OpenDataLog();
 	//显示DockdWidget
 	void ShowWarningDockWidget();
-	//报警信息
-	void  WarningInfo(QString WarningInfo);
+	//终端控制dlg
+	void OpenControlDlg();
 //Docking配置
 	public:
 		void addDockWidget(Qt::DockWidgetArea area, MyDockWidget* dockWidget);

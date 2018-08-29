@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>Server_VSClass</class>
  <widget class="QMainWindow" name="Server_VSClass">
@@ -162,6 +162,5 @@
   <slot>on_RunBtn_clicked()</slot>
   <slot>On_SetTimeBtn_Clicked()</slot>
   <slot>on_clientList_customContextMenuRequested(QPoint)</slot>
-  <slot>qwe()</slot>
  </slots>
 </ui>

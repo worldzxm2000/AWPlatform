@@ -32,8 +32,21 @@ void SocketServerForWeb::run()
 	//设置服务器地址
 	RecvAddr.sin_family = AF_INET;
 	RecvAddr.sin_port = htons(m_portServer);
-	RecvAddr.sin_addr.s_addr = INADDR_ANY;
-		//inet_addr("172.18.2.160");
+	char name[155];
+	char *ip;
+	PHOSTENT hostinfo;
+	if (WSAStartup(MAKEWORD(2, 0), &wsaData) == 0)
+	{
+		if (gethostname(name, sizeof(name)) == 0)
+		{
+			if ((hostinfo = gethostbyname(name)) != NULL)
+			{
+				//这些就是获得IP的函数
+				ip = inet_ntoa(*(struct in_addr *)*hostinfo->h_addr_list);
+			}
+		}
+	}
+	RecvAddr.sin_addr.s_addr =inet_addr(ip);
 	int a = bind(m_SrvSocket, (SOCKADDR*)&RecvAddr, len);
 	while (1)
 	{
@@ -50,7 +63,7 @@ void SocketServerForWeb::run()
 			else
 			{
 				//发送错误信息
-				GetErrorSignal(error);
+				emit ErrorMSGSignal(error);
 				continue;
 			}
 		}
@@ -68,7 +81,9 @@ void SocketServerForWeb::SendToWebServiceSlot(QJsonObject RecvValue)
 	LPCSTR dataChar;
 	dataChar = byteArray.data();
 	int len = sizeof(SOCKADDR);
-	sendto(m_SrvSocket, dataChar, strlen(dataChar),0,(SOCKADDR*)&from, len);
+	int result =sendto(m_SrvSocket, dataChar, strlen(dataChar),0,(SOCKADDR*)&from, len);
+	if (result < 0)
+		emit ErrorMSGSignal(-5);
 }
 //解析数据
 void SocketServerForWeb::ResolveData(LPCSTR buff,int len)
@@ -81,18 +96,20 @@ void SocketServerForWeb::ResolveData(LPCSTR buff,int len)
 	//帧头或者帧尾不正确
 	if (!(header== "BG" && tailer== "ED"))
 	{
-		GetErrorSignal(-4);
 		return;
 	}
-	bool ok;
+	if (strlist.count()<14)
+	{
+		emit ErrorMSGSignal(-1);
+	}
 	//业务编号
-	int ServiceTypeID = strlist.at(2).toInt(&ok,10);
+	int ServiceTypeID = strlist.at(2).toInt();
 	//区站号
 	QString StationID = strlist.at(4);
 	//设备号
 	QString FacilityID = strlist.at(6);
 	//命令号
-	int CommandID = strlist.at(8).toInt(&ok, 10);
+	int CommandID = strlist.at(8).toInt();
 	//参数1
 	QString Param1 = strlist.at(10);
 	//参数2

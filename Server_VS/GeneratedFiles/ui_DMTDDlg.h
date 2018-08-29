@@ -41,6 +41,7 @@ public:
         QIcon icon;
         icon.addFile(QStringLiteral("../Image/upload.ico"), QSize(), QIcon::Normal, QIcon::Off);
         DMTDDlg->setWindowIcon(icon);
+        DMTDDlg->setStyleSheet(QStringLiteral(""));
         BrowsingBtn = new QPushButton(DMTDDlg);
         BrowsingBtn->setObjectName(QStringLiteral("BrowsingBtn"));
         BrowsingBtn->setGeometry(QRect(430, 40, 75, 21));

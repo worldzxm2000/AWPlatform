@@ -17,6 +17,9 @@
    <iconset>
     <normaloff>../Image/upload.ico</normaloff>../Image/upload.ico</iconset>
   </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
   <widget class="QPushButton" name="BrowsingBtn">
    <property name="geometry">
     <rect>

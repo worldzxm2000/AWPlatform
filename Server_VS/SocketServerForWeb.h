@@ -38,7 +38,7 @@ public:
 	void SendToWebServiceSlot(QJsonObject RecvValue);
 signals:
 	//通知UI错误信息
-	void GetErrorSignal(int Error);
+	void ErrorMSGSignal(int Error);
 	//通知UI读取设备参数指令
 	void NoticfyServerFacilityID(int, QString, QString,int,QString,QString);
 };

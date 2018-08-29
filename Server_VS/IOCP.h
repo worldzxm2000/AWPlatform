@@ -52,7 +52,7 @@ private:
 signals:
 	void WebCommandSignal();
 	//发送错误信息
-	void GetErrorSignal(int errorMSG);
+	void ErrorMSGSignal(int errorMSG);
 	//数据通知(观测数据或者心跳数据)
 	void NewDataSignal(QString StationID,QString IP,int Port, unsigned int Socket);
 	//新设备连接信号

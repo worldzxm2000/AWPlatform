@@ -50,13 +50,13 @@ void IOCP::run()
 	WSADATA wsaData;     // 接收Windows Socket的结构信息
 	if (WSAStartup(sockVersion, &wsaData) != 0)
 	{
-		GetErrorSignal(10300);
+		ErrorMSGSignal(10300);
 	}
 	m_CompletionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
 
 	if (NULL == m_CompletionPort)
 	{
-		GetErrorSignal(10301);
+		ErrorMSGSignal(10301);
 	}
 
 	PARAMS pparam;
@@ -86,7 +86,7 @@ void IOCP::run()
 	if (SOCKET_ERROR == bindResult)
 	{
 		//Stop();
-		GetErrorSignal(10302);
+		ErrorMSGSignal(10302);
 		return;
 	}
 	// 将SOCKET设置为监听模式
@@ -94,7 +94,7 @@ void IOCP::run()
 	if (SOCKET_ERROR == listenResult)
 	{
 		//Stop();
-		GetErrorSignal(10303);
+		ErrorMSGSignal(10303);
 		return;
 	}
 
@@ -128,8 +128,6 @@ void IOCP::run()
 
 		//客户端socket添加入客户端数组，通知主程序
 		Sockets.push_back(acceptSocket);
-		LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit( "新的连接已建立，业务端口号为：") + QString::number(m_Port)+ QString::fromLocal8Bit("，连接IP：")+PerHandleData->ClientIP+ QString::fromLocal8Bit(",连接端口为：")+QString::number(PerHandleData->Port));
-
 		DWORD RecvBytes = 0;
 		DWORD Flags = 0;
 		WSARecv(PerHandleData->Socket, &(PerIoData->databuff), 1, &RecvBytes, &Flags, &(PerIoData->overlapped), NULL);
@@ -220,14 +218,14 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 		//单次接收的数据
 		QString RecvStr = QString(QLatin1String(perIOData->buffer,len));
 		//去除多余符号
-		RecvStr = RecvStr.simplified();
+		RecvStr = RecvStr.trimmed();
 		PerHandleData->Frame += RecvStr;
 		LRESULT pResult = -1;
-		//数据内存判断，如果数据内存大于4M说明有错误数据 需要清空内存，否则会造成内存溢
-		if (PerHandleData->Frame.length() > 4096)
+		//数据内存判断，如果数据内存大于40M说明有错误数据 需要清空内存，否则会造成内存溢
+		if (PerHandleData->Frame.length() > 40960)
 		{
 			PerHandleData->Frame.clear();
-			LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit("台站号") + PerHandleData->StationID + QString::fromLocal8Bit("缓存溢出"));
+			emit ErrorMSGSignal(10305);
 			return;
 		}
 		///**************************解析动态链接库***********************************
@@ -235,7 +233,8 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 		//判断接收情况
 		switch (pResult)
 		{
-		case 1://1：表示观测数据
+		//1：解析成功
+		case 1:
 		{
 			//接收到数据个数
 			int Count = JsonObj.find("DataLength").value().toInt();
@@ -259,9 +258,9 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 					//发送至消息中间件
 					//发送至消息中间件
 					if (g_SimpleProducer.send(dataChar, strlen(dataChar)) < 0)
-						GetErrorSignal(10304);
+						ErrorMSGSignal(10304);
 					if (g_SimpleProducer_ZDH.send(dataChar, strlen(dataChar)) < 0)
-						GetErrorSignal(10304);
+						ErrorMSGSignal(10304);
 					//获取区站号
 					PerHandleData->StationID = data_json.find("StationID").value().toString();
 					//通知EHT,新的数据
@@ -270,7 +269,7 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 						PerHandleData->ClientIP,
 						PerHandleData->Port,
 						PerHandleData->Socket);
-					continue;
+					 break;
 				}
 				case 2://操作数据
 				{
@@ -323,7 +322,7 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 			break;
 		}
 		default://-1：表示未知数据
-			LogWrite::DataLogMsgOutPut(QString::fromLocal8Bit("台站号")+PerHandleData->StationID+QString::fromLocal8Bit("意外的接收字节:")+ PerHandleData->Frame);
+			LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit("台站号")+PerHandleData->StationID+QString::fromLocal8Bit("意外的接收字节:")+ PerHandleData->Frame);
 			break;
 		}
 	}
