@@ -129,7 +129,7 @@ void Server_VS::ConfigWindow()
 
 		unsigned int numMessages = 2000;
 		destURI = "DataFromFacility";
-		destURI_1 = "lly12";
+		destURI_1 = "ZDH";
 		clientAck = false;
 		useTopics = false;
 		g_SimpleProducer.start(UserName, Password, brokerURI, numMessages, destURI, useTopics, clientAck);
