@@ -24,6 +24,7 @@ Server_VS::Server_VS(QWidget *parent)
 	ConfigWindow();
 	setFixedSize(1280, 660);
 	strOperateType = "未知操作";
+	ui.OnLineCountLabel->setText("当前在线设备个数：0");
 	pool.setMaxThreadCount(1024);
 	addDockWidget(Qt::RightDockWidgetArea,ui.WarningDockWidget);
 
@@ -68,10 +69,18 @@ Server_VS::Server_VS(QWidget *parent)
 	ui.ClientList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	ui.ClientList->setContextMenuPolicy(Qt::CustomContextMenu);//右键创建Menu
 	CreateClientListActions();
-
+	ui.AddBtn->setToolTipName("添加新业务");
+	ui.RemoveBtn->setToolTipName("移除业务");
+	ui.UpLoadBtn->setToolTipName("补抄数据");
+	ui.ControlBtn->setToolTipName("控制设备");
+	ui.TerminalBtn->setToolTipName("查看终端返回值");
+	ui.LogBtn->setToolTipName("查看日志");
+	ui.CloseBtn->setToolTipName("关闭");
+	ui.MinBtn->setToolTipName("最小化");
+	ui.WarningBtn->setToolTipName("报警通知");
 	connect(ui.RemoveBtn, SIGNAL(clicked()), this, SLOT(on_DeleteBtn_clicked()));
 	connect(ui.LogBtn, SIGNAL(clicked()), this, SLOT(OpenSYSLog()));
-	connect(ui.MiniBtn, SIGNAL(clicked()), this, SLOT(slot_minWindow()));
+	connect(ui.MinBtn, SIGNAL(clicked()), this, SLOT(slot_minWindow()));
 	connect(ui.CloseBtn, SIGNAL(clicked()), this, SLOT(close()));
 	connect(ui.TerminalBtn, SIGNAL(clicked()), this, SLOT(OpenDataLog()));
 	connect(ui.UpLoadBtn,SIGNAL(clicked()),this,SLOT(Func_DMTD()));
@@ -90,10 +99,10 @@ Server_VS::Server_VS(QWidget *parent)
 	switch (pResult)
 	{
 	case -1:
-		QMessageBox::warning(NULL, "警告", "消息中间件服务初始化失败！");
+		QMessageBox::warning(this, "警告", "消息中间件服务初始化失败！");
 		return;
 	case -2:
-		QMessageBox::warning(NULL, "警告", "Web服务器初始化失败!");
+		QMessageBox::warning(this, "警告", "Web服务器初始化失败!");
 		return;
 	default:
 		LogWrite::SYSLogMsgOutPut("消息中间件已启动...");
@@ -129,7 +138,7 @@ void Server_VS::ConfigWindow()
 
 		unsigned int numMessages = 2000;
 		destURI = "DataFromFacility";
-		destURI_1 = "lly12";
+		destURI_1 = "ZDH";
 		clientAck = false;
 		useTopics = false;
 		g_SimpleProducer.start(UserName, Password, brokerURI, numMessages, destURI, useTopics, clientAck);
@@ -289,17 +298,20 @@ void Server_VS::GetErrorMSG(int error)
 	QString strMSG;
 	switch (error)
 	{
+	case 10036:
+		strMSG = QString("Web监听端口异常");
+		break;
 	case -1:
-		strMSG = "Web发送命令错误!";
+		strMSG = QString("Web发送命令错误!");
 		break;
 	case -4:
-		strMSG = "服务器间通信异常！";
+		strMSG = QString("服务器间通信异常！");
 		break;
 	case -5:
-		strMSG = "发送Web服务器失败！";
+		strMSG = QString("发送Web服务器失败！");
 		break;
 	case -10311:
-		strMSG = "端口号监听失败！";
+		strMSG = QString("端口号监听失败！");
 		break;
 	default:
 		strMSG = QString::number(error);
@@ -523,6 +535,11 @@ void Server_VS::GetCommName(QString CommName)
 void Server_VS::on_ServerList_itemClicked(QTableWidgetItem *item)
 {
 	iSelectedRowOfServiceListCtrl = item->row();
+	if (iSelectedRowOfServiceListCtrl < 0)
+		return;
+	QString ServiceName = ui.ServerList->item(iSelectedRowOfServiceListCtrl, 0)->text();
+	int Count=EHTPool.GetEHT(ServiceName)->GetOnlineCount();
+	ui.OnLineCountLabel->setText("当前在线设备个数: "+ QString::number(Count));
 }
 
 //设备列表点击

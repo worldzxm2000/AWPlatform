@@ -9,6 +9,7 @@
 MyButton::MyButton(QString FileName, int xnum, QWidget *parent,
 	int ynum, QString bkGrnd) :QPushButton(parent)
 {
+	setStyleSheet("QToolTip { color: white; background-color:rgb(77,77,77); border: none;}");
 	m_ToolTipName =QString::fromLocal8Bit("未知");
 	m_Parent = parent;
 	QPixmap pixmap(FileName);

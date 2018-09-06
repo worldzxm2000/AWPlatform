@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
 ** Form generated from reading UI file 'SYSLogDlg.ui'
 **
 ** Created by: Qt User Interface Compiler version 5.10.1
@@ -14,13 +14,14 @@
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QDialog>
+#include <QtWidgets/QGroupBox>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QPushButton>
+#include <QtWidgets/QScrollArea>
 #include <QtWidgets/QTableWidget>
 #include <QtWidgets/QWidget>
-#include <QtWidgets/QScrollArea>
 #include"MyButton.h"
 QT_BEGIN_NAMESPACE
 
@@ -38,13 +39,14 @@ public:
     QTableWidget *DataListTable;
     QLabel *ImageLabel;
     QLabel *NameLabel;
-	QScrollArea *ScrollArea_CloseBtn;
-	QWidget *ScrollAreaWidgetContents_CloseBtn;
+    QGroupBox *groupBox_6;
+    QScrollArea *ScrollArea_MinBtn;
+    QWidget *ScrollAreaWidgetContents_MinBtn;
+	MyButton *MinBtn;
+    QScrollArea *ScrollArea_CloseBtn;
+    QWidget *ScrollAreaWidgetContents_CloseBtn;
 	MyButton *CloseBtn;
 
-	QScrollArea *ScrollArea_MiniBtn;
-	QWidget *ScrollAreaWidgetContents_MiniBtn;
-	MyButton *MiniBtn;
     void setupUi(QDialog *SYSLogDlg)
     {
         if (SYSLogDlg->objectName().isEmpty())
@@ -56,8 +58,6 @@ public:
         font.setFamily(QString::fromUtf8("\345\276\256\350\275\257\351\233\205\351\273\221"));
         font.setPointSize(10);
         SYSLogDlg->setFont(font);
-		QIcon icon("../Image/setup.ico");
-		SYSLogDlg->setWindowIcon(icon);
         SYSLogDlg->setStyleSheet(QStringLiteral("background:rgb(77, 77, 77);color:white"));
         horizontalLayoutWidget = new QWidget(SYSLogDlg);
         horizontalLayoutWidget->setObjectName(QStringLiteral("horizontalLayoutWidget"));
@@ -99,44 +99,43 @@ public:
 
         DataListTable = new QTableWidget(SYSLogDlg);
         DataListTable->setObjectName(QStringLiteral("DataListTable"));
-        DataListTable->setGeometry(QRect(10, 40, 601, 371));
+        DataListTable->setGeometry(QRect(10, 40, 601, 381));
 		ImageLabel = new QLabel(SYSLogDlg);
 		ImageLabel->setObjectName(QStringLiteral("ImageLabel"));
 		ImageLabel->setGeometry(QRect(5, 2, 31, 31));
 		ImageLabel->setPixmap(QPixmap(QString::fromUtf8("../Image/png/logicon.png")));
 		NameLabel = new QLabel(SYSLogDlg);
 		NameLabel->setObjectName(QStringLiteral("NameLabel"));
-		NameLabel->setGeometry(QRect(40, 5, 200, 20));
+		NameLabel->setGeometry(QRect(40, 8, 200, 20));
 		NameLabel->setStyleSheet(QString("QLabel{color:white}"));
-		NameLabel->setText(QString::fromLocal8Bit("系统日志"));
-
-		//关闭窗体
-		ScrollArea_CloseBtn = new QScrollArea(SYSLogDlg);
-		ScrollArea_CloseBtn->setObjectName(QStringLiteral("ScrollArea_CloseBtn"));
-		ScrollArea_CloseBtn->setGeometry(QRect(600, 2, 20, 20));
-		ScrollArea_CloseBtn->setWidgetResizable(true);
-		ScrollAreaWidgetContents_CloseBtn = new QWidget();
-		ScrollAreaWidgetContents_CloseBtn->setObjectName(QStringLiteral("ScrollAreaWidgetContents_CloseBtn"));
-		ScrollAreaWidgetContents_CloseBtn->setGeometry(QRect(0, 0, 20, 20));
-		ScrollAreaWidgetContents_CloseBtn->setStyleSheet(QString("QWidget{ background:rgb(100,100,100) }"));
-		ScrollArea_CloseBtn->setWidget(ScrollAreaWidgetContents_CloseBtn);
+		NameLabel->setText(QString::fromLocal8Bit("ϵͳ��־"));
+        groupBox_6 = new QGroupBox(SYSLogDlg);
+        groupBox_6->setObjectName(QStringLiteral("groupBox_6"));
+        groupBox_6->setGeometry(QRect(570, 2, 46, 26));
+        ScrollArea_MinBtn = new QScrollArea(groupBox_6);
+        ScrollArea_MinBtn->setObjectName(QStringLiteral("ScrollArea_MinBtn"));
+        ScrollArea_MinBtn->setGeometry(QRect(2, 3, 20, 20));
+        ScrollArea_MinBtn->setWidgetResizable(true);
+        ScrollAreaWidgetContents_MinBtn = new QWidget();
+        ScrollAreaWidgetContents_MinBtn->setObjectName(QStringLiteral("ScrollAreaWidgetContents_MinBtn"));
+        ScrollAreaWidgetContents_MinBtn->setGeometry(QRect(0, 0, 18, 18));
+		MinBtn = new MyButton("../Image/png/Mini.png", 1, ScrollAreaWidgetContents_MinBtn);
+        MinBtn->setObjectName(QStringLiteral("MinBtn"));
+        MinBtn->setGeometry(QRect(1, 1, 16, 16));
+        ScrollArea_MinBtn->setWidget(ScrollAreaWidgetContents_MinBtn);
+        ScrollArea_CloseBtn = new QScrollArea(groupBox_6);
+        ScrollArea_CloseBtn->setObjectName(QStringLiteral("ScrollArea_CloseBtn"));
+        ScrollArea_CloseBtn->setGeometry(QRect(24, 3, 20, 20));
+        ScrollArea_CloseBtn->setWidgetResizable(true);
+        ScrollAreaWidgetContents_CloseBtn = new QWidget();
+        ScrollAreaWidgetContents_CloseBtn->setObjectName(QStringLiteral("ScrollAreaWidgetContents_CloseBtn"));
+        ScrollAreaWidgetContents_CloseBtn->setGeometry(QRect(0, 0, 18, 18));
+  
 		CloseBtn = new MyButton("../Image/png/Close.png", 1, ScrollAreaWidgetContents_CloseBtn);
 		CloseBtn->setObjectName(QStringLiteral("CloseBtn"));
-		CloseBtn->setGeometry(QRect(2, 2, 16, 16));
+        CloseBtn->setGeometry(QRect(1, 1, 16, 16));
+        ScrollArea_CloseBtn->setWidget(ScrollAreaWidgetContents_CloseBtn);
 
-		//最小化窗体
-		ScrollArea_MiniBtn = new QScrollArea(SYSLogDlg);
-		ScrollArea_MiniBtn->setObjectName(QStringLiteral("ScrollArea_MiniBtn"));
-		ScrollArea_MiniBtn->setGeometry(QRect(575, 2, 20, 20));
-		ScrollArea_MiniBtn->setWidgetResizable(true);
-		ScrollAreaWidgetContents_MiniBtn = new QWidget();
-		ScrollAreaWidgetContents_MiniBtn->setObjectName(QStringLiteral("ScrollAreaWidgetContents_MiniBtn"));
-		ScrollAreaWidgetContents_MiniBtn->setGeometry(QRect(0, 0, 20, 20));
-		ScrollAreaWidgetContents_MiniBtn->setStyleSheet(QString("QWidget{ background:rgb(100,100,100) }"));
-		ScrollArea_MiniBtn->setWidget(ScrollAreaWidgetContents_MiniBtn);
-		MiniBtn = new MyButton("../Image/png/Mini.png", 1, ScrollAreaWidgetContents_MiniBtn);
-		MiniBtn->setObjectName(QStringLiteral("MiniBtn"));
-		MiniBtn->setGeometry(QRect(2, 2, 16, 16));
         retranslateUi(SYSLogDlg);
 
         QMetaObject::connectSlotsByName(SYSLogDlg);
@@ -151,6 +150,11 @@ public:
         PageDownBtn->setText(QApplication::translate("SYSLogDlg", "\345\211\215\344\270\200\351\241\265", nullptr));
         PageUpBtn->setText(QApplication::translate("SYSLogDlg", "\345\220\216\344\270\200\351\241\265", nullptr));
         PageToEndBtn->setText(QApplication::translate("SYSLogDlg", "\346\234\253\351\241\265", nullptr));
+      
+        NameLabel->setText(QApplication::translate("SYSLogDlg", "\347\263\273\347\273\237\346\227\245\345\277\227", nullptr));
+        groupBox_6->setTitle(QString());
+        MinBtn->setText(QApplication::translate("SYSLogDlg", "PushButton", nullptr));
+        CloseBtn->setText(QApplication::translate("SYSLogDlg", "PushButton", nullptr));
     } // retranslateUi
 
 };

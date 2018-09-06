@@ -49,6 +49,8 @@ public:
 	OPCommand CurrentCommand;
 	//锁住操作变量，判断是否是Web发送的请求
 	bool WebCommand;
+	//获取在线设备个数
+	int GetOnlineCount();
 private:
 	//初始化IOCP
 	void InitIOCP();

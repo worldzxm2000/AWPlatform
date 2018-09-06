@@ -7,6 +7,7 @@
 #include<qthread.h>
 #include<qjsondocument.h>
 #include<qdir.h>
+#include <mswsock.h> 
 using namespace std;
 
 IOCP::IOCP()
@@ -98,6 +99,12 @@ void IOCP::run()
 		return;
 	}
 
+	//LPFN_ACCEPTEX
+
+
+
+
+	//accept
 	while (1)
 	{
 		LPPER_HANDLE_DATA PerHandleData = new PER_HANDLE_DATA;;
@@ -105,10 +112,15 @@ void IOCP::run()
 		int RemoteLen = sizeof(saRemote);
 		//接收客户端连接
 		SOCKET acceptSocket;
+
+		//WSAID_ACCEPTEX
 		acceptSocket = accept(m_SrvSocket, (SOCKADDR*)&saRemote, &RemoteLen);
 		if (SOCKET_ERROR == (signed)acceptSocket)
+		{
 			// 接收客户端失败
+			ErrorMSGSignal(10311);
 			break;
+		}
 	
 		//客户端socket与IOCP关联
 		PerHandleData->Socket = acceptSocket;//Sccket号
@@ -255,7 +267,6 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 					QByteArray byteArray = document.toJson(QJsonDocument::Compact);
 					LPCSTR dataChar;
 					dataChar = byteArray.data();
-					//发送至消息中间件
 					//发送至消息中间件
 					if (g_SimpleProducer.send(dataChar, strlen(dataChar)) < 0)
 						ErrorMSGSignal(10304);

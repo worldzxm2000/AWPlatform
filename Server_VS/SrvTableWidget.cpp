@@ -1,7 +1,6 @@
 ﻿#include "SrvTableWidget.h"
 #include<QHeaderview>
 #include<QMessageBox>
-#include <QLabel>
 #include<QDateTimeEdit.h>
 #include<QComboBox.h>
 #include<QSpinBox>
@@ -9,7 +8,7 @@ SrvTableWidget::SrvTableWidget(QWidget *parent)
 	:QTableWidget(parent)
 {
 	setColumnCount(3);
-	StatusBtn = nullptr;
+	setStyleSheet(QStringLiteral("QTableWidget{background:rgb(100,100,100);color:white;selection-background-color:rgb(50,50,50);selection-color:white;gridline-color:white }"));
 	int row = 0;
 	QStringList headerlist;
 	headerlist.append(QString::fromLocal8Bit("业务类型"));
@@ -45,8 +44,8 @@ void SrvTableWidget::AddRow(QString header1="header", QString header2="header")
 	QTableWidgetItem *thirdTableWidgetItem = new QTableWidgetItem(header2);
 	setItem(rowIndex, 2, thirdTableWidgetItem);
 
-	StatusBtn = new QPushButton(this);
-	StatusBtn->setStyleSheet("QPushButton{background:rgb(77,77,77);color:white;}");
+	QPushButton *StatusBtn = new QPushButton(this);
+	//StatusBtn->setStyleSheet("QPushButton{background:rgb(77,77,77);color:white;}QPushButton:hover{border:2px solid rgb(71,186,204);color:rgb(71,186,204);background:transparent;}QPushButton:pressed{border:2px solid white;color:white;background - color:rgb(71,186,204);}QPushButton:!enabled{border:2px solid rgb(130,130,130);color:rgb(130,130,130);}QPushButton:focus{border:2px solid black;color:black;background - color:white;");
 	connect(StatusBtn, SIGNAL(clicked()), this, SLOT(On_Run_Btn()));
 	StatusBtn->setText(QString::fromLocal8Bit("停止"));
 	setCellWidget(rowIndex, 1, StatusBtn);
@@ -70,19 +69,4 @@ void SrvTableWidget::On_Run_Btn()
 		NoticfyServerStop(row);
 		senderObj->setText(QString::fromLocal8Bit("运行"));
 	}
-}
-
-void SrvTableWidget::focusOutEvent(QFocusEvent *event)
-{
-	if (StatusBtn == NULL)
-		return;
-	StatusBtn->setStyleSheet("QPushButton{background:rgb(77,77,77);color:white;}");
-	clearSelection();
-}
-
-void SrvTableWidget::focusInEvent(QFocusEvent *event)
-{
-	if (StatusBtn == NULL)
-		return;
-	StatusBtn->setStyleSheet("QPushButton{background:rgb(50,50,50);color:white;}");
 }

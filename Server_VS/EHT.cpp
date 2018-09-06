@@ -60,6 +60,8 @@ LRESULT EHT::LoadLib(QString Lib_Path)
 		//判断端口合法性
 		if (!IsLegallyPort(CfgWnd.m_Port))
 			return -2;
+		//获取IP
+		m_Port = CfgWnd.m_Port;
 		//获取描述
 		m_Attribute = CfgWnd.m_Attribute;
 		return true;
@@ -184,7 +186,7 @@ bool EHT::IsLegallyPort(int port)
 	ch = ba.data();
 	srvAddr.sin_addr.S_un.S_addr = inet_addr(ch);
 	srvAddr.sin_family = AF_INET;
-	srvAddr.sin_port = htons(m_Port);
+	srvAddr.sin_port = htons(port);
 	//绑定SOCKET到本机
 	int bindResult = ::bind(BindSocket, (SOCKADDR*)&srvAddr, sizeof(SOCKADDR_IN));
 	if (SOCKET_ERROR == bindResult)
@@ -328,25 +330,28 @@ void EHT:: GetErrorSlot(int ErrorMSG)
 	switch (ErrorMSG)
 	{
 	case 1:
-		strMSG = "正常";
+		strMSG = QString::fromLocal8Bit("正常");
 		break;
 	case 10300: case 10301: case 10302:
-		strMSG = "通信初始化失败！";
+		strMSG = QString::fromLocal8Bit("通信初始化失败！");
 		break;
 	case 10304:
-		strMSG = "消息中间件通信异常！";
+		strMSG = QString::fromLocal8Bit("消息中间件通信异常！");
 		break;
 	case 10305:
-		strMSG = "接收内存溢出";
+		strMSG = QString::fromLocal8Bit("接收内存溢出");
+		break;
+	case 10036:
+		strMSG = QString::fromLocal8Bit("Web监听端口异常");
 		break;
 	case -4:
-		strMSG = "服务器间通信异常！";
+		strMSG = QString::fromLocal8Bit("服务器间通信异常！");
 		break;
 	case -5:
-		strMSG = "设备已登出！";
+		strMSG = QString::fromLocal8Bit("设备已登出！");
 		break;
 	case -10311:
-		strMSG = "端口号监听失败！";
+		strMSG = QString::fromLocal8Bit("端口号监听失败！");
 		break;
 	default:
 		strMSG = QString::number(ErrorMSG);
@@ -649,4 +654,16 @@ void EHT::SendCommand(OPCommand cmm, QString StationID,QString Params1,QString P
 		break;
 	}
 	
+}
+
+//统计在线个数
+int EHT::GetOnlineCount()
+{
+	int count = 0;
+	for (int  i = 0; i < Clients.count(); i++)
+	{
+		if (Clients[i].Online)
+			count++;
+	}
+	return count;
 }

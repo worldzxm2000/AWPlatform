@@ -48,6 +48,7 @@ void SocketServerForWeb::run()
 	}
 	RecvAddr.sin_addr.s_addr =inet_addr(ip);
 	int a = bind(m_SrvSocket, (SOCKADDR*)&RecvAddr, len);
+	int errorcount = 0;
 	while (1)
 	{
 		char buff[LENGTH] = {0};
@@ -63,7 +64,13 @@ void SocketServerForWeb::run()
 			else
 			{
 				//∑¢ÀÕ¥ÌŒÛ–≈œ¢
-				emit ErrorMSGSignal(error);
+			
+				errorcount++;
+				if (errorcount == 5)
+				{
+					emit ErrorMSGSignal(10036);
+					break;
+				}
 				continue;
 			}
 		}

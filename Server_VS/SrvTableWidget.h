@@ -17,9 +17,7 @@ public:
 	void NoticfyServerRun(int ServerIndex);
 	void NoticfyServerStop(int ServerIndex);
 private:
-	virtual void focusOutEvent(QFocusEvent *event);
-	virtual void focusInEvent(QFocusEvent *evnet);
-	QPushButton *StatusBtn;
+
 private slots:
 	void On_Run_Btn();
 };

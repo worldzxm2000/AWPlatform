@@ -316,4 +316,7 @@
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\Image\Weather.ico" />
+  </ItemGroup>
 </Project>

@@ -37,7 +37,7 @@ SYSLogDlg::SYSLogDlg(QWidget *parent)
 	ui.DataListTable->horizontalHeader()->setStretchLastSection(true);//列宽
 	ui.DataListTable->setMouseTracking(true);//tip提示
 	connect(ui.DataListTable, SIGNAL(entered(QModelIndex)), this, SLOT(ShowToolTip(QModelIndex)));
-	connect(ui.MiniBtn, SIGNAL(clicked()), this, SLOT(slot_minWindow()));
+	connect(ui.MinBtn, SIGNAL(clicked()), this, SLOT(slot_minWindow()));
 	connect(ui.CloseBtn, SIGNAL(clicked()), this, SLOT(close()));
 	currentPage = 0;
 	TotalPage = 0;
@@ -48,6 +48,8 @@ SYSLogDlg::SYSLogDlg( QString LogName,QWidget *parent)
 	ui.setupUi(this);
 	setWindowFlags(Qt::WindowCloseButtonHint | Qt::FramelessWindowHint);
 	setFixedSize(623, 470);
+	ui.CloseBtn->setToolTipName(QString::fromLocal8Bit("关闭"));
+	ui.MinBtn->setToolTipName(QString::fromLocal8Bit("最小化"));
 	if (LogName=="SYSLog")
 	{
 		ui.NameLabel->setText(QString::fromLocal8Bit( "运行日志"));
@@ -86,7 +88,7 @@ SYSLogDlg::SYSLogDlg( QString LogName,QWidget *parent)
 	ui.DataListTable->horizontalHeader()->setStretchLastSection(true);//列宽
 	ui.DataListTable->setMouseTracking(true);//tip提示
 	connect(ui.DataListTable, SIGNAL(entered(QModelIndex)), this, SLOT(ShowToolTip(QModelIndex)));
-	connect(ui.MiniBtn, SIGNAL(clicked()), this, SLOT(slot_minWindow()));
+	connect(ui.MinBtn, SIGNAL(clicked()), this, SLOT(slot_minWindow()));
 	connect(ui.CloseBtn, SIGNAL(clicked()), this, SLOT(close()));
 	currentPage = 0;
 	TotalPage = 0;

@@ -29,3 +29,4 @@ OBJECTS_DIR += debug
 UI_DIR += ./GeneratedFiles
 RCC_DIR += ./GeneratedFiles
 include(Server_VS.pri)
+RC_FILE = myapp.rc
