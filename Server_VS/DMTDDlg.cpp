@@ -39,6 +39,7 @@ void DMTDDlg::LoadTxtThreadFinish()
 	loadTxtThread->isRun = false;
 	ui.DoingBar->setRange(0, totalCount);
 	ui.NumberLabel->setText(QString::fromLocal8Bit("共计:")+QString::number(totalCount));
+	
 }
 
 //导入线程结束
@@ -46,6 +47,7 @@ void DMTDDlg::ImpDataThreadFinish()
 {
 	ui.ImpBtn->setEnabled(true);
 	QMessageBox::about(NULL, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("上传完毕!"));
+
 }
 
 //刷新数据个数
@@ -105,5 +107,7 @@ void DMTDDlg::on_ImpBtn_clicked()
 void DMTDDlg::closeEvent(QCloseEvent *event)
 {
     loadTxtThread->isRun = false;
+	loadTxtThread->deleteLater();
+	impDataThread->deleteLater();
 	WaitForSingleObject(this, 3000);//等待线程结束
 }

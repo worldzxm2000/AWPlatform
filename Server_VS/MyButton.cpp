@@ -34,6 +34,32 @@ MyButton::MyButton(QString FileName, int xnum, QWidget *parent,
 	curIndex = 0;
 }
 
+void MyButton::SetImage(QString FileName, int xnum,
+	int ynum, QString bkGrnd)
+{
+	setStyleSheet("QToolTip { color: white; background-color:rgb(77,77,77); border: none;}");
+	QPixmap pixmap(FileName);
+
+	for (int cnt = 0; cnt < xnum; ++cnt)
+	{
+		for (int y = 0; y < ynum; ++y)
+		{
+			pixmatpList.push_back(pixmap.copy(cnt * (pixmap.width() / xnum),
+				y * (pixmap.height() / ynum),
+				pixmap.width() / xnum,
+				pixmap.height() / ynum));
+		}
+	}
+
+	if (bkGrnd != NULL)
+		background = new QPixmap(bkGrnd);
+	else
+		background = NULL;
+
+	setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+	curIndex = 0;
+	update();
+}
 MyButton::MyButton(QVector<QString> &list, QWidget *parent,
 	QString bkGrnd) :QPushButton(parent)
 {

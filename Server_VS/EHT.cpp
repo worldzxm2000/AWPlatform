@@ -11,7 +11,7 @@ EHT::EHT(QWidget *parent)
 	//读取SIM卡号配置文件，转成区站号
 	Convert2StationID();
 	m_IsRun = false;
-	b_IsRunMQ = true;
+	b_IsRunMQ = false;
 	WebCommand = false;
 	SetTimeTimer = new QTimer(parent);
 	connect(SetTimeTimer, SIGNAL(timeout()), this, SLOT(SetTime()));
@@ -684,24 +684,33 @@ void EHT::RealTimeDataSlot(QString data)
 
 void EHT::ReConnectActiveMq()
 {
-	//开启重连状态
-	if (!b_IsReconnect)
-	{
-		b_IsRunMQ = false;
-		b_IsReconnect = true;
-		if (ReconnectTimer->isActive())
-			return;
-		ReconnectTimer->start(1000 * 10);
-	}
+	//已经连接
+	LPCSTR dataChar = "test";
+	if (g_SimpleProducer.send(dataChar, strlen(dataChar)) == 1)
+		return;
+	//重连是否开启
+	if (ReconnectTimer->isActive())
+		return;
+	LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit("消息中间件开始重连..."));
+	ReconnectTimer->start(1000 * 10);
 }
 
 void EHT::Reconnect()
 {
+	LPCSTR dataChar = "test";
+	if (g_SimpleProducer.send(dataChar, strlen(dataChar))==1)
+	{
+		LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit("消息中间件已经重连1"));
+		ReconnectTimer->stop();
+		return;
+	}
 	g_SimpleProducer.close();
 	g_SimpleProducer_ZDH.close();
+	g_SimpleProducer_sh.close();
 	string brokerURI;
 	string destURI;
 	string destURI_1;
+	string destURI_sh;
 	string UserName;
 	string Password;
 	bool useTopics;
@@ -715,13 +724,12 @@ void EHT::Reconnect()
 	unsigned int numMessages = 2000;
 	destURI = "DataFromFacility";
 	destURI_1 = "ZDH";
+	destURI_sh = "SH_BYD";
 	clientAck = false;
 	useTopics = false;
-	b_IsRunMQ=g_SimpleProducer.start(UserName, Password, brokerURI, numMessages, destURI, useTopics, clientAck);
-	b_IsRunMQ =g_SimpleProducer_ZDH.start(UserName, Password, brokerURI, numMessages, destURI_1, useTopics, clientAck);
-	if (b_IsRunMQ)
-	{
-		ReconnectTimer->stop();
-		b_IsReconnect = false;
-	}
+	g_SimpleProducer.start(UserName, Password, brokerURI, numMessages, destURI, useTopics, clientAck);
+	g_SimpleProducer_ZDH.start(UserName, Password, brokerURI, numMessages, destURI_1, useTopics, clientAck);
+	g_SimpleProducer_sh.start(UserName, Password, brokerURI, numMessages, destURI_sh, useTopics, clientAck);
+
+
 }

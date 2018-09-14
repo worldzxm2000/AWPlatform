@@ -4,7 +4,7 @@
 #include<WinSock2.h>
 #include<Windows.h>
 #include"SimpleProducer.h"
-#include<qdatetime.h>
+#include<QDateTime>
 typedef int(*Fun)(int, int, string*); //定义函数指针,int add(int a,int b);   
 typedef LRESULT(*Char2Json)(QString &buff,QJsonObject &json);//解析数据函数
 typedef int(*GetServiceTypeID_Lib)();//获取业务类型
@@ -13,6 +13,7 @@ typedef int(*GetPort_Lib)();//获取端口
 typedef QString(*GetVersionNo_Lib)();//获取版本号
 extern 	SimpleProducer g_SimpleProducer;
 extern SimpleProducer g_SimpleProducer_ZDH;
+extern SimpleProducer g_SimpleProducer_sh;
 const int DataBuffSize = 4 * 1024;
 typedef void* HLIB;		//动态库句柄
 typedef struct

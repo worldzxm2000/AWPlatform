@@ -12,7 +12,7 @@ public:
 	MyButton(QString FileName, int xnum = 1, QWidget *parent = 0,
 		int ynum = 1, QString bkGrnd = NULL);
 	MyButton(QVector<QString> &list, QWidget *parent = 0, QString bkGrnd = NULL);
-
+	void SetImage(QString FileName, int xnum=1, int ynum=1, QString bkGrnd=NULL);
 	QList<QPixmap> *getPixmapList(void) { return &pixmatpList; }
 	void setcurIndex(int index) { curIndex = index; update(); }
 	int getcurIndex(void) { return curIndex; }

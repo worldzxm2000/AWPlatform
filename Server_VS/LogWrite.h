@@ -22,5 +22,6 @@ public:
 	//写入系统日志
    static void SYSLogMsgOutPut(QString ErrMSG);
    static void DataLogMsgOutPut(QString MSG);
+   static void WarningLogMsgOutPut(QString ErrMSG);
 
 };

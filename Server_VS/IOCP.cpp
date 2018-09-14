@@ -269,11 +269,22 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 					QByteArray byteArray = document.toJson(QJsonDocument::Compact);
 					LPCSTR dataChar;
 					dataChar = byteArray.data();
-					//发送至消息中间件
-					if (g_SimpleProducer.send(dataChar, strlen(dataChar)) < 0)
-						emit ErrorMSGSignal(10304);
-					if (g_SimpleProducer_ZDH.send(dataChar, strlen(dataChar)) < 0)
-						emit ErrorMSGSignal(10304);
+					int ServiceID= data_json.find("ServiceTypeID").value().toInt();
+					if (ServiceID==8||ServiceID==11||ServiceID==12)
+					{    //湿地数据
+						//发送至消息中间件
+						if (g_SimpleProducer_sh.send(dataChar, strlen(dataChar)) < 0)
+							emit ErrorMSGSignal(10304);
+					}
+					else
+					{
+						//发送至消息中间件
+						if (g_SimpleProducer.send(dataChar, strlen(dataChar)) < 0)
+							emit ErrorMSGSignal(10304);
+						if (g_SimpleProducer_ZDH.send(dataChar, strlen(dataChar)) < 0)
+							emit ErrorMSGSignal(10304);
+					}
+				
 					//获取区站号
 					PerHandleData->StationID = data_json.find("StationID").value().toString();
 					//通知EHT,新的数据

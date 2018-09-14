@@ -99,6 +99,8 @@ private:;
 	void mousePressEvent(QMouseEvent *event);
 	void mouseMoveEvent(QMouseEvent *event);
 	void mouseReleaseEvent(QMouseEvent *event);
+	//加载报警信息
+	void LoadWarningInfo();
 private:
 	Ui::Server_VSClass ui;
 	MyDockWidget* m_dockWidget;

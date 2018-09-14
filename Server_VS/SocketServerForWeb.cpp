@@ -1,7 +1,8 @@
 #include "SocketServerForWeb.h"
 #include<qjsondocument.h>
 #include<qjsonobject.h>
-
+#include<QMessageBox>
+#include<qDebug>
 SocketServerForWeb::SocketServerForWeb()
 {
 	IsClose = false;
@@ -9,13 +10,15 @@ SocketServerForWeb::SocketServerForWeb()
 SocketServerForWeb::SocketServerForWeb(QObject *parent)
 	: QObject(parent)
 {
-	
+
 }
 
 SocketServerForWeb::~SocketServerForWeb()
 {
 	IsClose = true;
+	shutdown(m_SrvSocket,2);//先关闭
 	closesocket(m_SrvSocket);
+
 }
 
 //开启线程处理
@@ -59,6 +62,7 @@ void SocketServerForWeb::run()
 			
 			if (IsClose)
 			{
+				qDebug() << "error in recv" << endl;
 				break;
 			}
 			else

@@ -12,7 +12,7 @@
 #include<QDockWidget>
 
 //消息中间件
-SimpleProducer g_SimpleProducer, g_SimpleProducer_ZDH;
+SimpleProducer g_SimpleProducer, g_SimpleProducer_ZDH,g_SimpleProducer_sh;
 
 //构造函数
 Server_VS::Server_VS(QWidget *parent)
@@ -86,7 +86,6 @@ Server_VS::Server_VS(QWidget *parent)
 	connect(ui.UpLoadBtn,SIGNAL(clicked()),this,SLOT(Func_DMTD()));
 	connect(ui.WarningBtn, SIGNAL(clicked()), this, SLOT(ShowWarningDockWidget()));
 	connect(ui.ControlBtn, SIGNAL(clicked()), this, SLOT(OpenControlDlg()));
-	//connect(ui.ClientList, SIGNAL(itemClicked(QTableWidgetItem *)), this, SLOT(on_ClientList_itemClicked(QTableWidgetItem *)));
 	LogWrite::SYSLogMsgOutPut("主程序已启动...");
 	LogWrite::DataLogMsgOutPut("终端接收已启动...");
 	//ListCtrl控件当前选择行
@@ -114,10 +113,12 @@ Server_VS::Server_VS(QWidget *parent)
 //析构函数
 Server_VS::~Server_VS()
 {
+
 	delete socket4web;
 	socket4web = nullptr;
 }
 
+//消息中间件配置窗体
 void Server_VS::ConfigWindow()
 {
 	setWindowFlags(Qt::FramelessWindowHint);
@@ -126,6 +127,7 @@ void Server_VS::ConfigWindow()
 		string brokerURI;
 		string destURI;
 		string destURI_1;
+		string destURI_sh;
 		string UserName;
 		string Password;
 		bool useTopics;
@@ -137,12 +139,14 @@ void Server_VS::ConfigWindow()
 		brokerURI = "tcp://117.158.216.250:61616";
 
 		unsigned int numMessages = 2000;
-		destURI = "gjtest";
-		destURI_1 = "DataFromFacility";
+		destURI = "DataFromFacility";
+		destURI_1 = "ZDH";
+		destURI_sh = "SH_BYD";
 		clientAck = false;
 		useTopics = false;
 		g_SimpleProducer.start(UserName, Password, brokerURI, numMessages, destURI, useTopics, clientAck);
 		g_SimpleProducer_ZDH.start(UserName, Password, brokerURI, numMessages, destURI_1, useTopics, clientAck);
+		g_SimpleProducer_sh.start(UserName, Password, brokerURI, numMessages, destURI_sh, useTopics, clientAck);
 		return;
 	}
 	catch (const std::exception&)
@@ -189,7 +193,7 @@ LRESULT Server_VS::InitializeCommandSocket()
 		connect(socket4web, SIGNAL(ErrorMSGSignal(int)), this, SLOT(GetErrorMSG(int)), Qt::AutoConnection);
 		//处理web端发送过来命令类型
 		connect(socket4web, SIGNAL(NoticfyServerFacilityID(int, QString, QString, int, QString, QString)), this, SLOT(RequestForReadCOMM(int, QString, QString, int, QString, QString)), Qt::AutoConnection);
-		socket4web->m_portServer = 1038;
+		socket4web->m_portServer = 1030;
 		socket4web->setAutoDelete(false);
 		pool.start(socket4web);
 		return 1;
@@ -285,11 +289,7 @@ LRESULT Server_VS::AddDll()
 //获取报警信息
 void Server_VS::GetWarningInfon(QString Result)
 {
-	QDateTime currentTime = QDateTime::currentDateTime();
-	QString current_date = currentTime.toString("yyyy.MM.dd hh:mm:ss");
-	WarningInfoList.append(current_date);
-	WarningInfoList.append(Result);
-
+	LogWrite::WarningLogMsgOutPut(Result);
 }
 
 //获得错误信息
@@ -491,12 +491,32 @@ void Server_VS::OpenControlDlg()
 }
 //打开报警停靠窗口
 void Server_VS:: ShowWarningDockWidget()
-{
-	slModel->setStringList(WarningInfoList);
+{	
+	//读取WaningLog文件中报警信息
+	LoadWarningInfo();
 	ui.WarningDockWidget->show();
 	ui.groupBox_5->setGeometry(QRect(940, 2, 75, 26));
 }
 
+//加载报警信息
+void Server_VS::LoadWarningInfo()
+{
+	QString path = QCoreApplication::applicationDirPath() + "\\Log\\WarningLog.txt";
+	QFile file(path);
+	if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+		return;
+	QTextStream in(&file);
+	QString line = in.readLine();
+	WarningInfoList.append(line);
+	//读取数据
+	while (!line.isNull())
+	{
+		line = in.readLine();
+		WarningInfoList.append(line);
+	}
+	file.close();
+	slModel->setStringList(WarningInfoList);
+}
 //查看业务属性
 void Server_VS::Lib_Attri()
 {
@@ -691,7 +711,8 @@ void Server_VS::showDockWidget(MyDockWidget* dockWidget)
 		}
 
 		adjustDockWidget(dockWidget);
-
+		//读取WaningLog文件中报警信息
+		LoadWarningInfo();
 		dockWidget->show();
 		dockWidget->raise();
 
@@ -908,7 +929,7 @@ void Server_VS::hideDockWidget(MyDockWidget* dockWidget)
 	}
 
 	m_dockWidget = nullptr;
-
+	WarningInfoList.clear();
 	dockWidget->hide();
 }
 
