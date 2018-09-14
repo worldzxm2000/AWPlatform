@@ -54,6 +54,14 @@ public:
 private:
 	//初始化IOCP
 	void InitIOCP();
+	//消息中间件错误重连
+	void ReConnectActiveMq();
+	//重连定时器
+	QTimer *ReconnectTimer;
+	//重连状态
+	bool b_IsReconnect;
+	//连接状态
+	bool b_IsRunMQ;
 	//运行状态
 	bool m_IsRun;
 	//处理线程
@@ -91,6 +99,8 @@ private slots:
     void Disconnect();
     //对时处理
     void SetTime();
+	//重连MQ处理
+	void Reconnect();
     //离线通知
 	void OffLineSlot(unsigned int CltSocket);
 	//新的数据(观测数据或者心跳数据)
@@ -101,6 +111,8 @@ private slots:
 	void OperationResultSlot(QString Value, int SrvPort, QString StationID);
 	void OperationResultSlot(QString Value1, QString Value2, int SrvPort, QString StationID);
 	void OperationResultSlot(QString Command, QString Value1, QString Value2, QString Value3, QString Value4, int SrvPort, QString StationID);
+	//设备实时数据
+	void RealTimeDataSlot(QString data);
 signals:
 	 //UI登录时间
 	 void LoginTimeSignal(int SrvPort, QString Station);
@@ -108,8 +120,8 @@ signals:
 	 void OnLineSignal(QString SrvName,QString StationID, QDateTime LastTime, QDateTime LoginTime);
 	 //UI设备离线信息
 	 void OffLineSignal(QString SrvName, QString StationID, QDateTime LastTime, QDateTime LoginTime);
-	 //Web服务器发送
-	 void SendToWebServiceSignal(QJsonObject Json);
 	 //UI显示终端返回值
 	 void SendWarningInfoToUI(QString Result);
+	 //发送至Web
+	void  SendToWebServiceSignal(QJsonObject Json);
 };

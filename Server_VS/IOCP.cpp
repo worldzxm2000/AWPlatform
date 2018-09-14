@@ -231,6 +231,8 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 		QString RecvStr = QString(QLatin1String(perIOData->buffer,len));
 		//去除多余符号
 		RecvStr = RecvStr.trimmed();
+		if (m_bIsWebCommand)
+			emit RecvRealTimeDataSignal(RecvStr);
 		PerHandleData->Frame += RecvStr;
 		LRESULT pResult = -1;
 		//数据内存判断，如果数据内存大于40M说明有错误数据 需要清空内存，否则会造成内存溢
@@ -269,9 +271,9 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 					dataChar = byteArray.data();
 					//发送至消息中间件
 					if (g_SimpleProducer.send(dataChar, strlen(dataChar)) < 0)
-						ErrorMSGSignal(10304);
+						emit ErrorMSGSignal(10304);
 					if (g_SimpleProducer_ZDH.send(dataChar, strlen(dataChar)) < 0)
-						ErrorMSGSignal(10304);
+						emit ErrorMSGSignal(10304);
 					//获取区站号
 					PerHandleData->StationID = data_json.find("StationID").value().toString();
 					//通知EHT,新的数据
@@ -348,4 +350,9 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 int IOCP:: GetSocket()
 {
 	return m_SrvSocket;
+}
+
+void IOCP::SetWebCommand(bool bCommand)
+{
+	m_bIsWebCommand = bCommand;
 }

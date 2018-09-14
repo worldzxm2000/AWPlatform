@@ -251,6 +251,40 @@ void ControlDlg::SendComm()
 			break;
 		}
 	}
+	else if(text==QString::fromLocal8Bit("读取数据"))
+	{
+		switch (ServiceID)
+		{
+		case TRSF: case TRSF_NM: case TRSF_XJ:
+		{
+			int chk = 0;
+			int SrcAdrr = StationID.toInt();
+			BYTE bytes[1024] = { 0 };
+			bytes[0] = 0xaa;
+			bytes[1] = 0x03;//帧长度
+			bytes[2] = 0x83;//帧命令
+			chk += bytes[2];
+			bytes[3] = SrcAdrr & 0xff;//源地址
+			chk += bytes[3];
+			bytes[4] = (SrcAdrr >> 8) & 0xff;
+			chk += bytes[4];
+			bytes[5] = chk & 0xff;//校验位 低八位
+			bytes[6] = (chk >> 8) & 0xff;//高八位
+			bytes[7] = 0xff;
+			::send(SocketID, (char *)bytes, 8, 0);
+		}
+			break;
+		default:
+		{
+			QString Comm = "SNAPSHOT\r\n";
+			QByteArray ba = Comm.toLatin1();
+			LPCSTR ch = ba.data();
+			int len = Comm.length();
+			::send(SocketID, ch, len, 0);
+		}
+			break;
+		}
+	}
 	else if (text==QString::fromLocal8Bit("补抄数据"))
 	{
 		switch (ServiceID)

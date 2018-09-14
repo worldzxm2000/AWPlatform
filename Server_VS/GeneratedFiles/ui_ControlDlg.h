@@ -94,13 +94,13 @@ public:
         groupBox->setGeometry(QRect(10, 40, 361, 421));
         NameLabel = new QLabel(groupBox);
         NameLabel->setObjectName(QStringLiteral("NameLabel"));
-        NameLabel->setGeometry(QRect(20, 12, 91, 16));
+        NameLabel->setGeometry(QRect(10, 12, 80, 16));
         StationIDLabel = new QLabel(groupBox);
         StationIDLabel->setObjectName(QStringLiteral("StationIDLabel"));
-        StationIDLabel->setGeometry(QRect(120, 12, 81, 16));
+        StationIDLabel->setGeometry(QRect(95, 12, 100, 16));
         SrvNameLabel = new QLabel(groupBox);
         SrvNameLabel->setObjectName(QStringLiteral("SrvNameLabel"));
-        SrvNameLabel->setGeometry(QRect(210, 12, 120, 16));
+        SrvNameLabel->setGeometry(QRect(200, 12, 150, 16));
         groupBox_2 = new QGroupBox(groupBox);
         groupBox_2->setObjectName(QStringLiteral("groupBox_2"));
         groupBox_2->setGeometry(QRect(20, 50, 141, 271));

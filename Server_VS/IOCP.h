@@ -29,6 +29,8 @@ public:
 	void Stop();
 	//获取服务端Socket号
 	int GetSocket();
+	//终端控制判断
+	void SetWebCommand(bool bCommand);
 private:
 	//服务器端
 	SOCKET m_SrvSocket;
@@ -48,6 +50,8 @@ private:
 	QString m_IP;
 	//业务ID
 	int m_SrvID;
+	//判断是否为Web终端命令
+	bool m_bIsWebCommand;
     //信号量
 signals:
 	void WebCommandSignal();
@@ -65,7 +69,7 @@ signals:
 	void OperationResultSignal(QString Command, QString Value1, QString Value2, QString Value3, QString Value4, int SrvPort, QString StationID);
 	//离线通知
 	void OffLineSignal(unsigned int CltSocket);
-	//发送至消息中间件
-	void SendToActiveMQSignal(QJsonObject Json);
+	//发送到Web终端
+	void RecvRealTimeDataSignal(QString data);
 };
 

@@ -38,7 +38,6 @@ void ReadSYSLogTXT::run()
 	}
 	file.close();	
 	SendToUI(strlist);
-
 }
 
 void ReadSYSLogTXT::EndThread()

@@ -137,8 +137,8 @@ void Server_VS::ConfigWindow()
 		brokerURI = "tcp://117.158.216.250:61616";
 
 		unsigned int numMessages = 2000;
-		destURI = "DataFromFacility";
-		destURI_1 = "ZDH";
+		destURI = "gjtest";
+		destURI_1 = "DataFromFacility";
 		clientAck = false;
 		useTopics = false;
 		g_SimpleProducer.start(UserName, Password, brokerURI, numMessages, destURI, useTopics, clientAck);
@@ -189,7 +189,7 @@ LRESULT Server_VS::InitializeCommandSocket()
 		connect(socket4web, SIGNAL(ErrorMSGSignal(int)), this, SLOT(GetErrorMSG(int)), Qt::AutoConnection);
 		//处理web端发送过来命令类型
 		connect(socket4web, SIGNAL(NoticfyServerFacilityID(int, QString, QString, int, QString, QString)), this, SLOT(RequestForReadCOMM(int, QString, QString, int, QString, QString)), Qt::AutoConnection);
-		socket4web->m_portServer = 1030;
+		socket4web->m_portServer = 1038;
 		socket4web->setAutoDelete(false);
 		pool.start(socket4web);
 		return 1;

@@ -24,7 +24,7 @@ void SimpleProducer::onException(const CMSException& ex AMQCPP_UNUSED)
 	printf("CMS Exception occurred.  Shutting down client.\n");
 	exit(1);
 }
-void SimpleProducer::start(const std::string& UserName, const std::string& Password, const std::string& brokerURI, unsigned int numMessages, const std::string& destURI, bool useTopic = false, bool clientAck = false)
+bool SimpleProducer::start(const std::string& UserName, const std::string& Password, const std::string& brokerURI, unsigned int numMessages, const std::string& destURI, bool useTopic = false, bool clientAck = false)
 {
 	this->UserName = UserName;
 	this->Password = Password;
@@ -34,10 +34,10 @@ void SimpleProducer::start(const std::string& UserName, const std::string& Passw
 	this->destURI = destURI;
 	this->clientAck = clientAck;
 
-	initialize();
+	return initialize();
 }
 
-void SimpleProducer::initialize()
+bool SimpleProducer::initialize()
 {
 	try {
 		// Create a ConnectionFactory                                         /////////////////////
@@ -74,9 +74,11 @@ void SimpleProducer::initialize()
 		// Create a MessageProducer from the Session to the Topic or Queue
 		producer = session->createProducer(destination);
 		producer->setDeliveryMode(DeliveryMode::PERSISTENT);
+		return true;
 	}
 	catch (CMSException& e) {
 		e.printStackTrace();
+		return false;
 	}
 }
 

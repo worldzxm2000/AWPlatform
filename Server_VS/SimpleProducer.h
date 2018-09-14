@@ -33,13 +33,13 @@ public:
 	SimpleProducer();
 	virtual ~SimpleProducer();
 
-	void start(const std::string& UserName, const std::string& Password, const std::string& brokerURI, unsigned int numMessages, const std::string& destURI, bool useTopic, bool clientAck);
+	bool start(const std::string& UserName, const std::string& Password, const std::string& brokerURI, unsigned int numMessages, const std::string& destURI, bool useTopic, bool clientAck);
 	LRESULT send(const char* bytesMessage, int nSize);
 	void close();
 
 private:
 	void cleanup();
-	virtual void initialize();
+	virtual bool initialize();
 	virtual void onException(const CMSException& ex AMQCPP_UNUSED);
 
 private:

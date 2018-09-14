@@ -7,9 +7,11 @@ EHT::EHT(QWidget *parent)
 {
 	//初始化IOCP
 	InitIOCP();
+	b_IsReconnect = false;//MQ重连状态
 	//读取SIM卡号配置文件，转成区站号
 	Convert2StationID();
 	m_IsRun = false;
+	b_IsRunMQ = true;
 	WebCommand = false;
 	SetTimeTimer = new QTimer(parent);
 	connect(SetTimeTimer, SIGNAL(timeout()), this, SLOT(SetTime()));
@@ -18,6 +20,10 @@ EHT::EHT(QWidget *parent)
 	OffLineTimer = new QTimer(parent);
 	connect(OffLineTimer, SIGNAL(timeout()), this, SLOT(Disconnect()));
 	OffLineTimer->start(1000 * 60 * 10);
+
+	ReconnectTimer = new QTimer(parent);
+	ReconnectTimer->
+	connect(ReconnectTimer, SIGNAL(timeout()), this, SLOT(Reconnect()));
 }
 
 EHT::~EHT()
@@ -160,8 +166,8 @@ void EHT::InitIOCP()
 	connect(pIOCP, SIGNAL(OperationResultSignal(QString, int, QString)), this, SLOT(OperationResultSlot(QString, int, QString)), Qt::QueuedConnection);
 	connect(pIOCP, SIGNAL(OperationResultSignal(QString, QString, int, QString)), this, SLOT(OperationResultSlot(QString,QString, int, QString)), Qt::QueuedConnection);
 	connect(pIOCP, SIGNAL(OperationResultSignal(QString, QString, QString, QString, QString, int, QString)), this, SLOT(OperationResultSlot(QString, QString, QString, QString, QString, int, QString)),Qt::QueuedConnection);
-//设备数据发送通知
-	connect(pIOCP, SIGNAL(SendToActiveMQSignal(QJsonObject)),this,SLOT(SendToActiveMQSlot(QJsonObject)), Qt::QueuedConnection);
+	//设备终端命令返回值
+	connect(pIOCP, SIGNAL(RecvRealTimeDataSignal(QString)), this, SLOT(RealTimeDataSlot(QString)), Qt::AutoConnection);
 }
 //返回运行状态
 bool EHT::IsRun()
@@ -337,6 +343,7 @@ void EHT:: GetErrorSlot(int ErrorMSG)
 		break;
 	case 10304:
 		strMSG = QString::fromLocal8Bit("消息中间件通信异常！");
+		ReConnectActiveMq();
 		break;
 	case 10305:
 		strMSG = QString::fromLocal8Bit("接收内存溢出");
@@ -479,6 +486,7 @@ void EHT::Disconnect()
 void EHT::SendCommand(OPCommand cmm, QString StationID,QString Params1,QString Params2,bool WebCommand)
 {
 	this->WebCommand = WebCommand;
+	pIOCP->SetWebCommand(1);
 	//获取当前终端指令
 	this->CurrentCommand = cmm;
 	//找到对应台站号的Socket值
@@ -666,4 +674,54 @@ int EHT::GetOnlineCount()
 			count++;
 	}
 	return count;
+}
+
+//实时接收数据
+void EHT::RealTimeDataSlot(QString data)
+{
+
+}
+
+void EHT::ReConnectActiveMq()
+{
+	//开启重连状态
+	if (!b_IsReconnect)
+	{
+		b_IsRunMQ = false;
+		b_IsReconnect = true;
+		if (ReconnectTimer->isActive())
+			return;
+		ReconnectTimer->start(1000 * 10);
+	}
+}
+
+void EHT::Reconnect()
+{
+	g_SimpleProducer.close();
+	g_SimpleProducer_ZDH.close();
+	string brokerURI;
+	string destURI;
+	string destURI_1;
+	string UserName;
+	string Password;
+	bool useTopics;
+	bool clientAck;
+
+	activemq::library::ActiveMQCPP::initializeLibrary();
+	UserName = "admin";
+	Password = "admin";
+	brokerURI = "tcp://117.158.216.250:61616";
+
+	unsigned int numMessages = 2000;
+	destURI = "DataFromFacility";
+	destURI_1 = "ZDH";
+	clientAck = false;
+	useTopics = false;
+	b_IsRunMQ=g_SimpleProducer.start(UserName, Password, brokerURI, numMessages, destURI, useTopics, clientAck);
+	b_IsRunMQ =g_SimpleProducer_ZDH.start(UserName, Password, brokerURI, numMessages, destURI_1, useTopics, clientAck);
+	if (b_IsRunMQ)
+	{
+		ReconnectTimer->stop();
+		b_IsReconnect = false;
+	}
 }
