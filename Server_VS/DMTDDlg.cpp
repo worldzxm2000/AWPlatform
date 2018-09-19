@@ -26,6 +26,7 @@ DMTDDlg::DMTDDlg(QWidget *parent)
 	impDataThread = new ImpDataThread();
 	connect(impDataThread, SIGNAL(finished()), this, SLOT(ImpDataThreadFinish()), Qt::QueuedConnection);
 	connect(impDataThread, SIGNAL(ProcessingSignal(int)), this, SLOT(QProcessBarSlot(int)));
+	connect(impDataThread, SIGNAL(ErrorMSGSignal(int)), this, SLOT(GetErrorMSG(int)));
 }
 
 DMTDDlg::~DMTDDlg()
@@ -46,7 +47,7 @@ void DMTDDlg::LoadTxtThreadFinish()
 void DMTDDlg::ImpDataThreadFinish()
 {
 	ui.ImpBtn->setEnabled(true);
-	QMessageBox::about(NULL, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("上传完毕!"));
+	QMessageBox::about(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("上传完毕!"));
 
 }
 
@@ -66,6 +67,11 @@ void DMTDDlg::QProcessBarSlot(int count)
 void DMTDDlg::RecJsonData(QJsonObject json)
 {
 	JsonList.append(json);
+}
+
+void DMTDDlg::GetErrorMSG(int Result)
+{
+	emit ErrorMSGSignal(Result);
 }
 //浏览文件夹按钮事件
 void DMTDDlg::on_BrowsingBtn_clicked()

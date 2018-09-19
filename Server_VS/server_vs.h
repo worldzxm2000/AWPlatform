@@ -181,10 +181,6 @@ private slots:
 	void RequestForReadCOMM(int ServiceTypeID, QString StationID, QString FacilityID, int Command, QString Param1, QString Param2);
 	//错误提示
 	void GetErrorMSG(int error);
-	////更新UI界面
-	//void UpdateUI(QString stationID, QString observeTime, int count, bool connected, QString ip, int port, int socket, int SrvPort);
-	//报警信息通知
-	void GetWarningInfon(QString Result);
 	//添加Lib按钮事件
 	void on_AddBtn_clicked();
 	//移除业务Lib

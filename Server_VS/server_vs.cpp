@@ -10,7 +10,8 @@
 #include"SYSLogDlg.h"
 #include"DataLogDlg.h"
 #include<QDockWidget>
-
+#include<QApplication>
+#include<QDesktopWidget>
 //消息中间件
 SimpleProducer g_SimpleProducer, g_SimpleProducer_ZDH,g_SimpleProducer_sh;
 
@@ -122,6 +123,7 @@ Server_VS::~Server_VS()
 void Server_VS::ConfigWindow()
 {
 	setWindowFlags(Qt::FramelessWindowHint);
+	move((QApplication::desktop()->width() - this->width()) / 2, (QApplication::desktop()->height() - this->height()) / 2);
 	try
 	{
 		string brokerURI;
@@ -286,11 +288,6 @@ LRESULT Server_VS::AddDll()
 	return 1;
 }
 
-//获取报警信息
-void Server_VS::GetWarningInfon(QString Result)
-{
-	LogWrite::WarningLogMsgOutPut(Result);
-}
 
 //获得错误信息
 void Server_VS::GetErrorMSG(int error)
@@ -317,7 +314,6 @@ void Server_VS::GetErrorMSG(int error)
 		strMSG = QString::number(error);
 		break;
 	}
-	GetWarningInfon(strMSG);
 }
 
 //刷新设备ListCtrl控件
@@ -415,6 +411,7 @@ void Server_VS::Lib_Run(int ServerIndex)
 	int Row = SelectedItem->row();
 	EHTPool.Run(ui.ServerList->item(Row, 0)->text());
 }
+
 //停止Lib服务
 void Server_VS::Lib_Stop(int ServerIndex)
 {
@@ -456,6 +453,7 @@ void Server_VS::Func_DMTD()
 	//初始化
 	DMTDDlg dmtddlg;
 	dmtddlg.func_Char2Json =EHTPool.GetEHT(ServiceName)->GetDataFunc();
+	connect(&dmtddlg, SIGNAL(ErrorMSGSignal(int)), this, SLOT(GetErrorMSG(int)));
 	dmtddlg.exec();
 
 }

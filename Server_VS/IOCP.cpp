@@ -269,8 +269,8 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 					QByteArray byteArray = document.toJson(QJsonDocument::Compact);
 					LPCSTR dataChar;
 					dataChar = byteArray.data();
-					int ServiceID= data_json.find("ServiceTypeID").value().toInt();
-					if (ServiceID==8||ServiceID==11||ServiceID==12)
+					QString ServiceID= data_json.find("ServiceTypeID").value().toString();
+					if (ServiceID.toInt() ==8||ServiceID.toInt() ==11||ServiceID.toInt() ==12)
 					{    //湿地数据
 						//发送至消息中间件
 						if (g_SimpleProducer_sh.send(dataChar, strlen(dataChar)) < 0)

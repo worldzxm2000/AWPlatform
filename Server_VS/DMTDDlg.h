@@ -36,6 +36,8 @@ public slots:
 	void QLabelSlot(int count);//刷新UI数据个数
 	void RecJsonData(QJsonObject json);//接收数据
 	void QProcessBarSlot(int count);//进度条刷新
+	void GetErrorMSG(int Result);//导出错误
 signals:
 	void finished();
+	void ErrorMSGSignal(int Error);//发送错误
 };

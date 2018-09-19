@@ -365,7 +365,7 @@ void EHT:: GetErrorSlot(int ErrorMSG)
 		break;
 	}
 	SendWarningInfoToUI(strMSG);
-	//LogWrite::SYSLogMsgOutPut(strMSG);
+	LogWrite::WarningLogMsgOutPut(strMSG);
 }
 //读取SIM卡号配置文件，转成区站号
 void EHT::Convert2StationID()

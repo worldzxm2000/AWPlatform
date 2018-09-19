@@ -39,9 +39,8 @@ public:
             DMTDDlg->setObjectName(QStringLiteral("DMTDDlg"));
         DMTDDlg->resize(525, 160);
         QIcon icon;
-        icon.addFile(QStringLiteral("../Image/upload.ico"), QSize(), QIcon::Normal, QIcon::Off);
+        icon.addFile(QStringLiteral("../Image/png/Weather.ico"), QSize(), QIcon::Normal, QIcon::Off);
         DMTDDlg->setWindowIcon(icon);
-        DMTDDlg->setStyleSheet(QStringLiteral(""));
         BrowsingBtn = new QPushButton(DMTDDlg);
         BrowsingBtn->setObjectName(QStringLiteral("BrowsingBtn"));
         BrowsingBtn->setGeometry(QRect(430, 40, 75, 21));
@@ -63,6 +62,7 @@ public:
         ImpBtn = new QPushButton(DMTDDlg);
         ImpBtn->setObjectName(QStringLiteral("ImpBtn"));
         ImpBtn->setGeometry(QRect(430, 80, 75, 23));
+	
         QFont font1;
         font1.setFamily(QStringLiteral("04b_21"));
         font1.setPointSize(10);

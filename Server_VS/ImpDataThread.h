@@ -16,4 +16,5 @@ private:
 	void  ImpData();//上传数据
 signals:
 	void ProcessingSignal(int Proccessing);//进度条
+	void ErrorMSGSignal(int ErrorMSG);//异常处理
 };

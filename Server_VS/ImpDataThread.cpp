@@ -11,6 +11,7 @@ ImpDataThread::~ImpDataThread()
 }
 void ImpDataThread::run()
 {
+	emit ErrorMSGSignal(1);
 	ImpData();
 }
 
@@ -26,21 +27,20 @@ void  ImpDataThread::ImpData()
 		QByteArray byteArray = document.toJson(QJsonDocument::Compact);
 		LPCSTR dataChar;
 		dataChar = byteArray.data();
-		int ServiceID = JsonList[i].find("ServiceTypeID").value().toInt();
-		if (ServiceID == 8 || ServiceID == 11 || ServiceID == 12)
+		QString ServiceID = JsonList[i].find("ServiceTypeID").value().toString();
+		if (ServiceID.toInt() == 8 || ServiceID.toInt() == 11 || ServiceID.toInt() == 12)
 		{    //湿地数据
 			 //发送至消息中间件
-			pResult = g_SimpleProducer_sh.send(dataChar, strlen(dataChar));
+			if (g_SimpleProducer_sh.send(dataChar, strlen(dataChar)) < 0)
+				emit ErrorMSGSignal(10304);
 		}
 		else
 		{
-			pResult = g_SimpleProducer.send(dataChar, strlen(dataChar));
-			pResult = g_SimpleProducer_ZDH.send(dataChar, strlen(dataChar));
-		}
-		if (pResult < 0)
-		{
-			QMessageBox::warning(NULL, "错误", "消息中间件发生错误");
-			return ;
+			//发送至消息中间件
+			if (g_SimpleProducer.send(dataChar, strlen(dataChar)) < 0)
+				emit ErrorMSGSignal(10304);
+			if (g_SimpleProducer_ZDH.send(dataChar, strlen(dataChar)) < 0)
+				emit ErrorMSGSignal(10304);
 		}
 		ProcessingSignal(i + 1);
 	}
