@@ -28,7 +28,9 @@ void  ImpDataThread::ImpData()
 		LPCSTR dataChar;
 		dataChar = byteArray.data();
 		QString ServiceID = JsonList[i].find("ServiceTypeID").value().toString();
-		if (ServiceID.toInt() == 8 || ServiceID.toInt() == 11 || ServiceID.toInt() == 12)
+		if (ServiceID.toInt() == 8 || ServiceID.toInt() == 11 || ServiceID.toInt() == 12 || ServiceID.toInt() == 13 ||
+			ServiceID.toInt() == 14 || ServiceID.toInt() == 15 || ServiceID.toInt() == 16 ||
+			ServiceID.toInt() == 17 || ServiceID.toInt() == 18)
 		{    //湿地数据
 			 //发送至消息中间件
 			if (g_SimpleProducer_sh.send(dataChar, strlen(dataChar)) < 0)

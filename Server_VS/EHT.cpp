@@ -43,7 +43,11 @@ LRESULT EHT::LoadLib(QString Lib_Path)
 		GetVersionNo_Lib func_GetVersionNo = (GetVersionNo_Lib)m_Lib.resolve("GetVersionNo");//获取版本号
 		Char2Json func_Char2Json = (Char2Json)(m_Lib.resolve("Char2Json"));//获取解析数据
 		if (!(func_GetServiceTypeID && func_GetServiceTypeName && func_GetVersionNo && func_GetPort&&func_Char2Json))
+		{
+			UnloadLib();
 			return -1;
+		}
+			
 
 		//获取业务类型
 		m_ServiceID = func_GetServiceTypeID();
@@ -59,20 +63,31 @@ LRESULT EHT::LoadLib(QString Lib_Path)
 		CfgWnd.SetServicePort(m_Port);
 		int r = CfgWnd.exec();
 		if (r != QDialog::Accepted)
+		{
+			UnloadLib();
 			return 0;
+		}
+
 		
 		//获取IP
 		m_IP = CfgWnd.m_IP;
 		//判断端口合法性
 		if (!IsLegallyPort(CfgWnd.m_Port))
+		{
+			UnloadLib();
 			return -2;
+		}
 		//获取IP
 		m_Port = CfgWnd.m_Port;
 		//获取描述
 		m_Attribute = CfgWnd.m_Attribute;
 		return true;
 	}
-	return false;
+	else
+	{
+		UnloadLib();
+		return false;
+	}
 }
 //卸载动态链接库
 bool EHT::UnloadLib()
@@ -401,7 +416,7 @@ void EHT::SetTime()
 	sec = nowtime.toString("ss");
 	switch (m_ServiceID)
 	{
-	case TRSF: case TRSF_NM: case TRSF_XJ:
+	case TRSF_NM: case TRSF:case TRSF_XJ:case SH_TRSF_SQ:
 	{
 		for (int i = 0; i < Clients.size(); i++)
 		{
@@ -442,6 +457,7 @@ void EHT::SetTime()
 		}
 		break;
 	}
+		
 	default:
 	{
 		for (int i = 0; i < Clients.size(); i++)
@@ -483,7 +499,7 @@ void EHT::Disconnect()
 }
 
 //终端命令操作
-void EHT::SendCommand(OPCommand cmm, QString StationID,QString Params1,QString Params2,bool WebCommand)
+void EHT::SendCommand(OPCommand cmm, QString StationID, QString Params1, QString Params2, bool WebCommand)
 {
 	this->WebCommand = WebCommand;
 	pIOCP->SetWebCommand(1);
@@ -491,12 +507,170 @@ void EHT::SendCommand(OPCommand cmm, QString StationID,QString Params1,QString P
 	this->CurrentCommand = cmm;
 	//找到对应台站号的Socket值
 	unsigned int SocketID = 0;
-	SocketID=GetSocket(StationID);
+	SocketID = GetSocket(StationID);
 	//土壤水分
 	switch (m_ServiceID)
 	{
-	case TRSF_NM: case TRSF:case TRSF_XJ:
+	case TRSF_NM: case TRSF:case TRSF_XJ:case SH_TRSF_SQ:
+	{
+		switch (cmm)
+		{
+		case NONE:
+			break;
+		case BASEINFO:
+			break;
+			//设置或读取采集器日期时间操作
+		case DATETIME:
+		{
+			if (Params1 != "NULL")
+			{
+				QDateTime nowtime = QDateTime::currentDateTime();
+				QString datetime = nowtime.toString("yyyy.MM.dd hh:mm:ss");
+				QString year, month, day, hour, min, sec;
+				year = nowtime.toString("yy");
+				month = nowtime.toString("MM");
+				day = nowtime.toString("dd");
+				hour = nowtime.toString("hh");
+				min = nowtime.toString("mm");
+				sec = nowtime.toString("ss");
+
+				int chk = 0;
+				int SrcAdrr = StationID.toInt();
+				BYTE bytes[1024] = { 0 };
+				bytes[0] = 0xaa;
+				bytes[1] = 0x0a;//帧长度
+				bytes[2] = 0x81;//帧命令
+				chk += bytes[2];
+				bytes[3] = SrcAdrr & 0xff;//源地址
+				chk += bytes[3];
+				bytes[4] = (SrcAdrr >> 8) & 0xff;
+				chk += bytes[4];
+				bytes[5] = 0x14;//20
+				chk += bytes[5];
+				bytes[6] = year.toInt();
+				chk += bytes[6];
+				bytes[7] = month.toInt();
+				chk += bytes[7];
+				bytes[8] = day.toInt();
+				chk += bytes[8];
+				bytes[9] = hour.toInt();
+				chk += bytes[9];
+				bytes[10] = min.toInt();
+				chk += bytes[10];
+				bytes[11] = sec.toInt();
+				chk += bytes[11];
+				bytes[12] = chk & 0xff;//校验位 低八位
+				bytes[13] = (chk >> 8) & 0xff;//高八位
+				bytes[14] = 0xff;
+				::send(SocketID, (char *)bytes, 15, 0);
+			}
+			else
+			{
+				int chk = 0;
+				int SrcAdrr = StationID.toInt();
+				BYTE bytes[1024] = { 0 };
+				bytes[0] = 0xaa;
+				bytes[1] = 0x03;//帧长度
+				bytes[2] = 0x82;//帧命令
+				chk += bytes[2];
+				bytes[3] = SrcAdrr & 0xff;//源地址
+				chk += bytes[3];
+				bytes[4] = (SrcAdrr >> 8) & 0xff;
+				chk += bytes[4];
+				bytes[5] = chk & 0xff;//校验位 低八位
+				bytes[6] = (chk >> 8) & 0xff;//高八位
+				bytes[7] = 0xff;
+				::send(SocketID, (char *)bytes, 8, 0);
+			}
+		}
 		break;
+		//设置或读取采集器IP和端口
+		case ID:
+		{
+			if (Params1 != "NULL"&&Params2 != "NULL")
+			{
+			}
+		}
+		break;
+		case LAT:
+			break;
+		case LONGITUDE:
+			break;
+		case ALT:
+			break;
+		case CFSET:
+			break;
+		case CAPTIME:
+			break;
+		case CAPINTERVAL:
+			break;
+		case SNAPSHOT:
+			break;
+		case RESET:
+			break;
+		case UPDATE:
+			break;
+			//补抄数据命令
+		case DMTD:
+		{
+			if (Params1 != "NULL"&&Params2 != "NULL")
+			{
+				QDateTime Btime = QDateTime::fromString(Params1, "yyyy-MM-dd hh:mm:ss");
+				QDateTime Etime = QDateTime::fromString(Params2, "yyyy-MM-dd hh:mm:ss");
+				QString yearB, monthB, dayB, hourB, minB, yearE, monthE, dayE, hourE, minE;
+				yearB = Btime.toString("yy");
+				monthB = Btime.toString("MM");
+				dayB = Btime.toString("DD");
+				hourB = Btime.toString("hh");
+				minB = Btime.toString("mm");
+
+				yearE = Etime.toString("yy");
+				monthE = Etime.toString("MM");
+				dayE = Etime.toString("DD");
+				hourE = Etime.toString("hh");
+				minE = Etime.toString("mm");
+				int chk = 0;
+				int SrcAdrr = StationID.toInt();
+				BYTE bytes[1024] = { 0 };
+				bytes[0] = 0xaa;
+				bytes[1] = 0x0d;//帧长度
+				bytes[2] = 0x94;//帧命令
+				chk += bytes[2];
+				bytes[3] = SrcAdrr & 0xff;//源地址
+				chk += bytes[3];
+				bytes[4] = (SrcAdrr >> 8) & 0xff;
+				chk += bytes[4];
+				bytes[5] = yearB.toInt() - 2000;
+				chk += bytes[5];
+				bytes[6] = monthB.toInt();
+				chk += bytes[6];
+				bytes[7] = dayB.toInt();
+				chk += bytes[7];
+				bytes[8] = hourB.toInt();
+				chk += bytes[8];
+				bytes[9] = minB.toInt();
+				chk += bytes[9];
+				bytes[10] = yearE.toInt() - 2000;
+				chk += bytes[10];
+				bytes[11] = monthE.toInt();
+				chk += bytes[11];
+				bytes[12] = dayE.toInt();
+				chk += bytes[12];
+				bytes[13] = hourE.toInt();
+				chk += bytes[13];
+				bytes[14] = minE.toInt();
+				chk += bytes[14];
+				bytes[15] = chk & 0xff;//校验位 低八位
+				bytes[16] = (chk >> 8) & 0xff;//高八位
+				bytes[17] = 0xff;
+				::send(SocketID, (char *)bytes, 18, 0);
+			}
+		}
+		default:
+			break;
+		}
+		break;
+	}
 	default:
 	{
 		//发送终端命令
@@ -655,15 +829,26 @@ void EHT::SendCommand(OPCommand cmm, QString StationID,QString Params1,QString P
 			::send(SocketID, ch, len, 0);
 			break;
 		}
+		//补抄数据命令
+		case DMTD:
+		{
+			if (Params1 != "NULL"&&Params2 != "NULL")
+			{
+				QString Comm = "DMTD " + Params1 + " " + Params2 + "\r\n";
+				QByteArray ba = Comm.toLatin1();
+				LPCSTR ch = ba.data();
+				int len = Comm.length();
+				::send(SocketID, ch, len, 0);
+			}
+			break;
+		}
 		default:
 			break;
 		}
 	}
-		break;
+	break;
 	}
-	
 }
-
 //统计在线个数
 int EHT::GetOnlineCount()
 {

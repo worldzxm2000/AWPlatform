@@ -53,8 +53,17 @@ enum ServiceID
 	NTXQH = 03,//农田小气候
 	TRSF = 04,//土壤水分
 	HKQX = 05,//航空气象
+	SH_NTXQH = 8,//湿地农田小气候
 	TRSF_NM = 9,//土壤水分内蒙
-	TRSF_XJ=10//土壤水分新疆
+	TRSF_XJ=10,//土壤水分新疆
+	SH_NTXQH_SZ = 11,//湿地农田小气候水质
+	SH_DQFY = 12,//湿地大气负氧离子
+	SH_TRSF_QY = 13,//是地铁土壤水分区域
+	SH_TRSF_SQ=14,//湿地土壤水分墒情
+	
+	
+	
+	
 };
 
 //错误返回值
@@ -95,13 +104,14 @@ enum OPCommand
 	ID = 233,
 	LAT = 234,
 	LONGITUDE = 235,
-	ALT=236,
-	CFSET=237,
-	CAPTIME=238,
-	CAPINTERVAL=239,
-	SNAPSHOT=2310,
-	RESET=2311,
-	UPDATE=2312
+	ALT = 236,
+	CFSET = 237,
+	CAPTIME = 238,
+	CAPINTERVAL = 239,
+	SNAPSHOT = 2310,
+	RESET = 2311,
+	UPDATE = 2312,
+	DMTD=2313
 };
 
 #endif // PARAM_H

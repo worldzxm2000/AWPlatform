@@ -1,7 +1,7 @@
 ﻿#include "CommandDlg.h"
 #include<QSettings>
 #include"param.h"
-#include<qmessagebox.h>
+#include<QMessageBox>
 CommandDlg::CommandDlg(int ServiceType)
 {
 	

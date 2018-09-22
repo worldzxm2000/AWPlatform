@@ -2,8 +2,8 @@
 
 #include <QDialog>
 #include "ui_CommandDlg.h"
-#include"qcompleter.h"
-#include<qstringlistmodel.h>
+#include<QCompleter>
+#include<QStringListModel>
 class CommandDlg : public QDialog
 {
 	Q_OBJECT

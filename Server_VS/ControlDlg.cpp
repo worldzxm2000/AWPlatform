@@ -77,7 +77,7 @@ void ControlDlg::SendComm()
 	{
 		switch (ServiceID)
 		{
-		case TRSF: case TRSF_NM: case TRSF_XJ:
+		case TRSF_NM: case TRSF:case TRSF_XJ:case SH_TRSF_SQ:
 
 			break;
 		default:
@@ -93,7 +93,7 @@ void ControlDlg::SendComm()
 	{
 		switch (ServiceID)
 		{
-		case TRSF: case TRSF_NM: case TRSF_XJ:
+		case TRSF_NM: case TRSF:case TRSF_XJ:case SH_TRSF_SQ:
 		{
 			int chk = 0;
 			int SrcAdrr = StationID.toInt();
@@ -127,7 +127,7 @@ void ControlDlg::SendComm()
 	{
 		switch (ServiceID)
 		{
-		case TRSF: case TRSF_NM: case TRSF_XJ:
+		case TRSF_NM: case TRSF:case TRSF_XJ:case SH_TRSF_SQ:
 		{
 			int chk = 0;
 			int SrcAdrr = StationID.toInt();
@@ -289,7 +289,7 @@ void ControlDlg::SendComm()
 	{
 		switch (ServiceID)
 		{
-		case TRSF: case TRSF_NM: case TRSF_XJ:
+		case TRSF_NM: case TRSF:case TRSF_XJ:case SH_TRSF_SQ:
 		{
 			QString yearB, monthB, dayB, hourB, minB, yearE, monthE, dayE, hourE, minE;
 			yearB=ui.dateTimeEdit_B->sectionText(QDateTimeEdit::YearSection);

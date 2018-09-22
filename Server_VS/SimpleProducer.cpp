@@ -1,6 +1,6 @@
 
 #include "SimpleProducer.h"
-
+#include<QMessageBox>
 SimpleProducer::SimpleProducer()
 {
 	 connection = nullptr;
@@ -48,6 +48,7 @@ bool SimpleProducer::initialize()
 		{
 			connection = connectionFactory->createConnection();
 			connection->start();
+		
 		}
 		catch (CMSException& e)
 		{
