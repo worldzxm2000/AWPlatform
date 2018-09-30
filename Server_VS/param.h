@@ -11,6 +11,8 @@ typedef int(*GetServiceTypeID_Lib)();//获取业务类型
 typedef QString(*GetServiceTypeName_Lib)();//获取业务名称
 typedef int(*GetPort_Lib)();//获取端口
 typedef QString(*GetVersionNo_Lib)();//获取版本号
+typedef void(*GetControlWidget_Lib)(QString StationID, uint Socket, QWidget* parent);//获取调试窗体
+
 extern 	SimpleProducer g_SimpleProducer;
 extern SimpleProducer g_SimpleProducer_ZDH;
 extern SimpleProducer g_SimpleProducer_sh;
@@ -60,10 +62,7 @@ enum ServiceID
 	SH_DQFY = 12,//湿地大气负氧离子
 	SH_TRSF_QY = 13,//是地铁土壤水分区域
 	SH_TRSF_SQ=14,//湿地土壤水分墒情
-	
-	
-	
-	
+	SH_TRSF_SW=15//湿地土壤水分地下水
 };
 
 //错误返回值
@@ -112,6 +111,14 @@ enum OPCommand
 	RESET = 2311,
 	UPDATE = 2312,
 	DMTD=2313
+};
+
+//上传文件类型
+enum FileType
+{
+	IMAGE = 1,
+	TXT=2,
+	XML=3
 };
 
 #endif // PARAM_H

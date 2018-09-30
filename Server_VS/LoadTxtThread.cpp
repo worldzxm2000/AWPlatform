@@ -62,7 +62,7 @@ void LoadTxtThread::LoadTXT(QString path)
 				{
 
 					QString st = line;
-					st.simplified();
+					st.trimmed();
 					QJsonObject json;
 					if (func_Char2Json == NULL)
 					{

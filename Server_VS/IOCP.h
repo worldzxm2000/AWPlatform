@@ -59,6 +59,7 @@ signals:
 	void ErrorMSGSignal(int errorMSG);
 	//数据通知(观测数据或者心跳数据)
 	void NewDataSignal(QString StationID,QString IP,int Port, unsigned int Socket);
+	void NewDataSignal(QString StationID,QString IP,int Port,int File,unsigned int Socket);
 	//新设备连接信号
 	void NewConnectionSignal(QString IP, int Port, int m_Port, unsigned int Socket);
 	//终端操作命令信号

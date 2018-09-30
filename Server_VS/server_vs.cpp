@@ -12,6 +12,8 @@
 #include<QDockWidget>
 #include<QApplication>
 #include<QDesktopWidget>
+#include<QtXml>
+#include"test.h"
 //消息中间件
 SimpleProducer g_SimpleProducer, g_SimpleProducer_ZDH,g_SimpleProducer_sh;
 
@@ -22,13 +24,17 @@ Server_VS::Server_VS(QWidget *parent)
 
 {
 	ui.setupUi(this);
+
+	/*test *t = new test();
+	t->show();*/
+	setWindowFlags(Qt::FramelessWindowHint);
+	move((QApplication::desktop()->width() - this->width()) / 2, (QApplication::desktop()->height() - this->height()) / 2);
 	ConfigWindow();
 	setFixedSize(1280, 660);
 	strOperateType = "未知操作";
 	ui.OnLineCountLabel->setText("当前在线设备个数：0");
 	pool.setMaxThreadCount(1024);
 	addDockWidget(Qt::RightDockWidgetArea,ui.WarningDockWidget);
-
 	controlDlg = new ControlDlg;
 	slModel = new QStringListModel();
 	slModel->setStringList(WarningInfoList);
@@ -108,13 +114,11 @@ Server_VS::Server_VS(QWidget *parent)
 		LogWrite::SYSLogMsgOutPut("消息中间件已启动...");
 		break;
 	}
-
 }
 
 //析构函数
 Server_VS::~Server_VS()
-{
-
+{	
 	delete socket4web;
 	socket4web = nullptr;
 }
@@ -122,8 +126,7 @@ Server_VS::~Server_VS()
 //消息中间件配置窗体
 void Server_VS::ConfigWindow()
 {
-	setWindowFlags(Qt::FramelessWindowHint);
-	move((QApplication::desktop()->width() - this->width()) / 2, (QApplication::desktop()->height() - this->height()) / 2);
+	
 	try
 	{
 		string brokerURI;
@@ -269,25 +272,46 @@ LRESULT Server_VS::AddDll()
 	if (fileDialog.exec() != QDialog::Accepted)
 		return 0;
 	strName = fileDialog.selectedFiles()[0];
-	//创建
-	EHT *pEHT=new EHT(this);
-	//数据或心跳通知
-	connect(pEHT, SIGNAL(OnLineSignal(QString, QString, QDateTime, QDateTime)), this, SLOT(RefreshListCtrl(QString, QString, QDateTime, QDateTime)));
-	//离线通知
-	connect(pEHT, SIGNAL(OffLineSignal(QString, QString, QDateTime, QDateTime)), this, SLOT(OffLineListCtrl(QString, QString, QDateTime, QDateTime)));
-	//Web端发送指令通知
-	connect(pEHT, SIGNAL(SendToWebServiceSignal(QJsonObject)), socket4web,SLOT(SendToWebServiceSlot(QJsonObject)));
-	//终端返回命令通知
-	connect(pEHT, SIGNAL(SendWarningInfoToUI(QString)), this, SLOT(GetWarningInfon(QString)));
-	int size = sizeof(EHT);
-	LRESULT pResult = pEHT->LoadLib(strName);
-	if (pResult<1)
-		return pResult;
-	ui.ServerList->AddRow(pEHT->GetServiceName(), strName);
-	EHTPool.Start(pEHT);
-	return 1;
+	//if (strName.contains("SH_ZB.dll"))
+	//{
+	//	//创建
+	//	FTPEHT *pEHT = new FTPEHT(this);
+	//	//数据或心跳通知
+	//	connect(pEHT, SIGNAL(OnLineSignal(QString, QString, QDateTime, QDateTime)), this, SLOT(RefreshListCtrl(QString, QString, QDateTime, QDateTime)));
+	//	//离线通知
+	//	connect(pEHT, SIGNAL(OffLineSignal(QString, QString, QDateTime, QDateTime)), this, SLOT(OffLineListCtrl(QString, QString, QDateTime, QDateTime)));
+	//	//Web端发送指令通知
+	//	connect(pEHT, SIGNAL(SendToWebServiceSignal(QJsonObject)), socket4web, SLOT(SendToWebServiceSlot(QJsonObject)));
+	//	//终端返回命令通知
+	//	connect(pEHT, SIGNAL(SendWarningInfoToUI(QString)), this, SLOT(GetWarningInfon(QString)));
+	//	LRESULT pResult = pEHT->LoadLib(strName);
+	//	if (pResult<1)
+	//		return pResult;
+	//	ui.ServerList->AddRow(pEHT->GetServiceName(), strName);
+	//	EHTPool.Start(pEHT);
+	//	return 1;
+	//}
+	//else
+	//{
+		//创建
+		EHT *pEHT = new EHT(this);
+		//数据或心跳通知
+		connect(pEHT, SIGNAL(OnLineSignal(QString, QString, QDateTime, QDateTime)), this, SLOT(RefreshListCtrl(QString, QString, QDateTime, QDateTime)));
+		//离线通知
+		connect(pEHT, SIGNAL(OffLineSignal(QString, QString, QDateTime, QDateTime)), this, SLOT(OffLineListCtrl(QString, QString, QDateTime, QDateTime)));
+		//Web端发送指令通知
+		connect(pEHT, SIGNAL(SendToWebServiceSignal(QJsonObject)), socket4web, SLOT(SendToWebServiceSlot(QJsonObject)));
+		//终端返回命令通知
+		connect(pEHT, SIGNAL(SendWarningInfoToUI(QString)), this, SLOT(GetWarningInfon(QString)));
+		LRESULT pResult = pEHT->LoadLib(strName);
+		if (pResult<1)
+			return pResult;
+		ui.ServerList->AddRow(pEHT->GetServiceName(), strName);
+		EHTPool.Start(pEHT);
+		return 1;
+	//}
+	
 }
-
 
 //获得错误信息
 void Server_VS::GetErrorMSG(int error)
@@ -307,7 +331,7 @@ void Server_VS::GetErrorMSG(int error)
 	case -5:
 		strMSG = QString("发送Web服务器失败！");
 		break;
-	case -10311:
+	case 10311:
 		strMSG = QString("端口号监听失败！");
 		break;
 	default:
@@ -493,7 +517,7 @@ void Server_VS:: ShowWarningDockWidget()
 	//读取WaningLog文件中报警信息
 	LoadWarningInfo();
 	ui.WarningDockWidget->show();
-	ui.groupBox_5->setGeometry(QRect(940, 2, 75, 26));
+	ui.groupBox->setGeometry(QRect(940, 2, 75, 26));
 }
 
 //加载报警信息
@@ -537,10 +561,23 @@ void Server_VS::SendCOMM()
 	QString ServiceName = ui.ClientList->item(iSelectedRowOfClientListCtrl, 0)->text();
 	QString StationID = ui.ClientList->item(iSelectedRowOfClientListCtrl, 1)->text();
 	int SeverID = EHTPool.GetEHT(ServiceName)->GetServiceID();
-	CommandDlg commdlg(SeverID);
+
+	//QLibrary m_Lib;
+	//m_Lib.setFileName("F://qt//SH_TRSF_SW//debug//SH_TRSF_SW.dll");
+	////(strName);
+	////读取成功
+	//if (m_Lib.load())
+	//{
+	//	GetControlWidget_Lib func_GetControlWidget = (GetControlWidget_Lib)m_Lib.resolve("GetControlWidget");//获取业务ID
+	//																										 //设备控制窗体
+	//	ContainerWidget *containerWidget = new ContainerWidget();
+	//	func_GetControlWidget("05", EHTPool.GetEHT(ServiceName)->GetSocket(StationID), containerWidget->MainWidget);
+	//	containerWidget->show();
+	//}
+	/*CommandDlg commdlg(SeverID);
 	commdlg.Socket = EHTPool.GetEHT(ServiceName)->GetSocket(StationID);
 	connect(&commdlg,SIGNAL(NoticfyUICOMMSTR(QString)),this,SLOT(GetCommName(QString)));
-	commdlg.exec();
+	commdlg.exec()*/;
 }
 
 //获取终端命令名称
@@ -633,7 +670,7 @@ void Server_VS::dockWidgetUnpinned(MyDockWidget* dockWidget)
 	{
 		getDockWidgetBar(Qt::TopDockWidgetArea)->insertSpacing();
 		getDockWidgetBar(Qt::BottomDockWidgetArea)->insertSpacing();
-		ui.groupBox_5->setGeometry(QRect(1175, 2, 75, 26));
+		ui.groupBox->setGeometry(QRect(1175, 2, 75, 26));
 	}
 }
 
@@ -685,7 +722,7 @@ void Server_VS::dockWidgetPinned(MyDockWidget* dockWidget)
 	if((dockWidget->getArea() == Qt::RightDockWidgetArea) &&
 		dockWidgetBar->isHidden())
 	{
-		ui.groupBox_5->setGeometry(QRect(935, 2, 75, 26));
+		ui.groupBox->setGeometry(QRect(935, 2, 75, 26));
 	}
 	
 }
@@ -717,12 +754,12 @@ void Server_VS::showDockWidget(MyDockWidget* dockWidget)
 		dockWidget->setFocus();
 
 		m_dockWidget = dockWidget;
-		ui.groupBox_5->setGeometry(QRect(915, 2, 75, 26));
+		ui.groupBox->setGeometry(QRect(915, 2, 75, 26));
 	}
 	else
 	{
 		hideDockWidget(dockWidget);
-		ui.groupBox_5->setGeometry(QRect(1170, 2, 75, 26));
+		ui.groupBox->setGeometry(QRect(1170, 2, 75, 26));
 	}
 }
 
@@ -757,7 +794,7 @@ void Server_VS::adjustDockWidget(MyDockWidget* dockWidget)
 								break;
 
 	case Qt::RightDockWidgetArea: {
-		ui.groupBox_5->setGeometry(QRect(915, 2, 75, 26));
+		ui.groupBox->setGeometry(QRect(915, 2, 75, 26));
 		dockWidget->setGeometry(rect.left() + rect.width() - dockWidget->width(), rect.top(), dockWidget->width(), rect.height());
 	}
 								  break;
@@ -838,7 +875,7 @@ void Server_VS::dockWidgetDocked(MyDockWidget* dockWidget)
 
 void Server_VS::dockWidgetClose(MyDockWidget* dockWidget)
 {
-    ui.groupBox_5->setGeometry(QRect(1200, 2, 75, 26));
+    ui.groupBox->setGeometry(QRect(1200, 2, 75, 26));
 }
 
 void Server_VS::dockWidgetUndocked(MyDockWidget* dockWidget)

@@ -22,6 +22,7 @@
 #include"MyDockWidgetTabBar.h"
 #include"MyDockWidgetTabButton.h"
 #include"ControlDlg.h"
+#include"ContainerWidget.h"
 //业务类型连接信息
 typedef struct
 {
@@ -170,6 +171,7 @@ private:
 	QListView* strView;
 	//控制窗体
 	ControlDlg *controlDlg;
+
 private slots:
     //最小化窗体
     void slot_minWindow();

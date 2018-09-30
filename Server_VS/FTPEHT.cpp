@@ -1,82 +1,70 @@
-ï»¿#include "EHT.h"
+#include "FTPEHT.h"
 #include "ConfigWnd.h"
 #include"LogWrite.h"
 #include<QSettings>
 #include<QDir>
 #include<QtXml>
-EHT::EHT(QWidget *parent)
-	: QWidget(parent)
+FTPEHT::FTPEHT(QWidget *parent)
 {
-	//åˆå§‹åŒ–IOCP
+	//³õÊ¼»¯IOCP
 	InitIOCP();
-	b_IsReconnect = false;//MQé‡è¿çŠ¶æ€
-	IsExistImage = false;
-	IsExistXML = false;
-	IsExistTXT = false;
-	//è¯»å–SIMå¡å·é…ç½®æ–‡ä»¶ï¼Œè½¬æˆåŒºç«™å·
+	b_IsReconnect = false;//MQÖØÁ¬×´Ì¬
+	IsExistImageXML = false;
+	//¶ÁÈ¡SIM¿¨ºÅÅäÖÃÎÄ¼ş£¬×ª³ÉÇøÕ¾ºÅ
 	Convert2StationID();
 	m_IsRun = false;
 	b_IsRunMQ = false;
 	WebCommand = false;
 	SetTimeTimer = new QTimer(parent);
 	connect(SetTimeTimer, SIGNAL(timeout()), this, SLOT(SetTime()));
-	SetTimeTimer->start(1000 * 60 * 60*24 );
+	SetTimeTimer->start(1000 * 60 * 60 * 24);
 
 	OffLineTimer = new QTimer(parent);
 	connect(OffLineTimer, SIGNAL(timeout()), this, SLOT(Disconnect()));
 	OffLineTimer->start(1000 * 60 * 10);
-	//æ¶ˆæ¯ä¸­é—´ä»¶é‡è¿æ—¶é—´
-	ReconnectTimer = new QTimer(parent);
-	ReconnectTimer->
-	connect(ReconnectTimer, SIGNAL(timeout()), this, SLOT(Reconnect()));
-	//Imageå›¾ç‰‡é‡æ–°å¤„ç†æ—¶é—´
-	ReHandleZB_IMAGE = new QTimer(parent);
-	ReHandleZB_IMAGE->connect(ReHandleZB_IMAGE, SIGNAL(timeout()), this, SLOT(MoveImageToDesAddr()));
-	//XMLæ–‡ä»¶é‡æ–°å¤„ç†æ—¶é—´
-	ReHandleZB_XML = new QTimer(parent);
-	ReHandleZB_XML->connect(ReHandleZB_XML, SIGNAL(timeout()), this, SLOT(MoveXMLToDesAddr()));
-	//TXTæ–‡ä»¶é‡æ–°å¤„ç†æ—¶é—´
-	ReHandleZB_TXT = new QTimer(parent);
-	ReHandleZB_TXT->connect(ReHandleZB_TXT, SIGNAL(timeout()), this, SLOT(MoveTXTToDesAddr()));
-}
-EHT::EHT()
-{
 
+	ReconnectTimer = new QTimer(parent);
+	ReconnectTimer->connect(ReconnectTimer, SIGNAL(timeout()), this, SLOT(Reconnect()));
+
+	ReHandleZB = new QTimer(parent);
+	ReHandleZB->connect(ReHandleZB,SIGNAL(timeout()),this,SLOT(MoveImageToDesAddr()));
 }
-EHT::~EHT()
+
+FTPEHT::~FTPEHT()
 {
 }
-//åŠ è½½åŠ¨æ€é“¾æ¥åº“
-LRESULT EHT::LoadLib(QString Lib_Path)
+
+//¼ÓÔØ¶¯Ì¬Á´½Ó¿â
+LRESULT FTPEHT::LoadLib(QString Lib_Path)
 {
 	m_Lib.setFileName(Lib_Path);
 	//(strName);
-	//è¯»å–æˆåŠŸ
+	//¶ÁÈ¡³É¹¦
 	if (m_Lib.load())
 	{
-		GetServiceTypeID_Lib func_GetServiceTypeID = (GetServiceTypeID_Lib)m_Lib.resolve("GetServiceTypeID");//è·å–ä¸šåŠ¡ID
-		GetServiceTypeName_Lib func_GetServiceTypeName = (GetServiceTypeName_Lib)m_Lib.resolve("GetServiceTypeName");//è·å–ä¸šåŠ¡åç§°
-		GetPort_Lib func_GetPort = (GetPort_Lib)m_Lib.resolve("GetPort");//è·å–ç«¯å£å·
-		GetVersionNo_Lib func_GetVersionNo = (GetVersionNo_Lib)m_Lib.resolve("GetVersionNo");//è·å–ç‰ˆæœ¬å·
-		Char2Json func_Char2Json = (Char2Json)(m_Lib.resolve("Char2Json"));//è·å–è§£ææ•°æ®
+		GetServiceTypeID_Lib func_GetServiceTypeID = (GetServiceTypeID_Lib)m_Lib.resolve("GetServiceTypeID");//»ñÈ¡ÒµÎñID
+		GetServiceTypeName_Lib func_GetServiceTypeName = (GetServiceTypeName_Lib)m_Lib.resolve("GetServiceTypeName");//»ñÈ¡ÒµÎñÃû³Æ
+		GetPort_Lib func_GetPort = (GetPort_Lib)m_Lib.resolve("GetPort");//»ñÈ¡¶Ë¿ÚºÅ
+		GetVersionNo_Lib func_GetVersionNo = (GetVersionNo_Lib)m_Lib.resolve("GetVersionNo");//»ñÈ¡°æ±¾ºÅ
+		Char2Json func_Char2Json = (Char2Json)(m_Lib.resolve("Char2Json"));//»ñÈ¡½âÎöÊı¾İ
 		if (!(func_GetServiceTypeID && func_GetServiceTypeName && func_GetVersionNo && func_GetPort&&func_Char2Json))
 		{
 			UnloadLib();
 			return -1;
 		}
-			
 
-		//è·å–ä¸šåŠ¡ç±»å‹
+
+		//»ñÈ¡ÒµÎñÀàĞÍ
 		m_ServiceID = func_GetServiceTypeID();
-		//è·å–ç«¯å£å·
+		//»ñÈ¡¶Ë¿ÚºÅ
 		m_Port = func_GetPort();
-		//è·å–ä¸šåŠ¡åç§°
+		//»ñÈ¡ÒµÎñÃû³Æ
 		m_ServiceName = func_GetServiceTypeName();
-		//è·å–ç‰ˆæœ¬å·
+		//»ñÈ¡°æ±¾ºÅ
 		m_Vesion = func_GetVersionNo();
-		//å¼€å¯IPå’Œç«¯å£è®¾ç½®çª—ä½“
+		//¿ªÆôIPºÍ¶Ë¿ÚÉèÖÃ´°Ìå
 		ConfigWnd CfgWnd(this->parentWidget());
-		CfgWnd.DialogMode = true;//è®¾ç½® falseä¸ºè¯»å–
+		CfgWnd.DialogMode = true;//ÉèÖÃ falseÎª¶ÁÈ¡
 		CfgWnd.SetServicePort(m_Port);
 		int r = CfgWnd.exec();
 		if (r != QDialog::Accepted)
@@ -85,18 +73,18 @@ LRESULT EHT::LoadLib(QString Lib_Path)
 			return 0;
 		}
 
-		
-		//è·å–IP
+
+		//»ñÈ¡IP
 		m_IP = CfgWnd.m_IP;
-		//åˆ¤æ–­ç«¯å£åˆæ³•æ€§
+		//ÅĞ¶Ï¶Ë¿ÚºÏ·¨ĞÔ
 		if (!IsLegallyPort(CfgWnd.m_Port))
 		{
 			UnloadLib();
 			return -2;
 		}
-		//è·å–IP
+		//»ñÈ¡IP
 		m_Port = CfgWnd.m_Port;
-		//è·å–æè¿°
+		//»ñÈ¡ÃèÊö
 		m_Attribute = CfgWnd.m_Attribute;
 		return true;
 	}
@@ -106,202 +94,162 @@ LRESULT EHT::LoadLib(QString Lib_Path)
 		return false;
 	}
 }
-//å¸è½½åŠ¨æ€é“¾æ¥åº“
-bool EHT::UnloadLib()
+//Ğ¶ÔØ¶¯Ì¬Á´½Ó¿â
+bool FTPEHT::UnloadLib()
 {
 	return	m_Lib.unload();
 }
-//è·å–ç‰ˆæœ¬å·
-QString EHT::GetVesionNo()
+//»ñÈ¡°æ±¾ºÅ
+QString FTPEHT::GetVesionNo()
 {
 	return m_Vesion;
 }
-//è·å–ä¸šåŠ¡ID
-int EHT::GetServiceID()
+//»ñÈ¡ÒµÎñID
+int FTPEHT::GetServiceID()
 {
 	return m_ServiceID;
 }
-//è·å–ä¸šåŠ¡åç§°
-QString EHT::GetServiceName()
+//»ñÈ¡ÒµÎñÃû³Æ
+QString FTPEHT::GetServiceName()
 {
 	return m_ServiceName;
 }
-//è·å–IPå·
-QString EHT::GetIP()
+//»ñÈ¡IPºÅ
+QString FTPEHT::GetIP()
 {
 	return m_IP;
 }
-//è·å–ç«¯å£å·
-int EHT::GetPort()
+//»ñÈ¡¶Ë¿ÚºÅ
+int FTPEHT::GetPort()
 {
 	return m_Port;
 }
-//è·å–Socketå·
-unsigned int EHT::GetSocket(QString StationID)
+//»ñÈ¡SocketºÅ
+unsigned int FTPEHT::GetSocket(QString StationID)
 {
 	for (int i = 0; i < Clients.size(); i++)
 	{
-		if (Clients[i].StationID==StationID)
+		if (Clients[i].StationID == StationID)
 			return Clients[i].SocketID;
 	}
 	return 0;
 }
 
-//è·å–ä¸šåŠ¡æè¿°
-QString EHT::GetAttribute()
+//»ñÈ¡ÒµÎñÃèÊö
+QString FTPEHT::GetAttribute()
 {
 	return m_Attribute;
 }
-//è·å–æ•°æ®è§£æ
-Char2Json EHT::GetDataFunc()
+//»ñÈ¡Êı¾İ½âÎö
+Char2Json FTPEHT::GetDataFunc()
 {
 	return m_DataFunc;
 }
-//å¯åŠ¨ç›‘å¬æ•°æ®æœåŠ¡
-void EHT::Run(QThreadPool &ThreadPool)
+//Æô¶¯¼àÌıÊı¾İ·şÎñ
+void FTPEHT::Run(QThreadPool &ThreadPool)
 {
 	if (pIOCP == NULL)
 		InitIOCP();
 	pIOCP->func_Char2Json = (Char2Json)m_Lib.resolve("Char2Json");
-	m_DataFunc= (Char2Json)m_Lib.resolve("Char2Json");
-	pIOCP->SetListenedPort(m_Port, m_IP,m_ServiceID);
+	m_DataFunc = (Char2Json)m_Lib.resolve("Char2Json");
+	pIOCP->SetListenedPort(m_Port, m_IP, m_ServiceID);
 	ThreadPool.start(pIOCP);
 	m_IsRun = true;
 }
 
-//ç»“æŸç›‘å¬æ•°æ®æœåŠ¡
-void EHT::Stop()
+//½áÊø¼àÌıÊı¾İ·şÎñ
+void FTPEHT::Stop()
 {
 	if (pIOCP == nullptr)
 	{
 		UnloadLib();
 		return;
 	}
-	//å…³é—­IOCP
+	//¹Ø±ÕIOCP
 	pIOCP->Stop();
 	UnloadLib();
 	m_IsRun = false;
 	pIOCP = nullptr;
 }
-//åˆå§‹åŒ–IOCP
-void EHT::InitIOCP()
+//³õÊ¼»¯IOCP
+void FTPEHT::InitIOCP()
 {
-	//IOCPå­çº¿ç¨‹
+	//IOCP×ÓÏß³Ì
 	pIOCP = new IOCP();
-	//è®¾å¤‡ç¦»çº¿é€šçŸ¥
+	//Éè±¸ÀëÏßÍ¨Öª
 	connect(pIOCP, SIGNAL(OffLineSignal(unsigned int)), this, SLOT(OffLineSlot(unsigned int)), Qt::QueuedConnection);
-	//è®¾å¤‡æ•°æ®é”™è¯¯é€šçŸ¥
+	//Éè±¸Êı¾İ´íÎóÍ¨Öª
 	connect(pIOCP, SIGNAL(ErrorMSGSignal(int)), this, SLOT(GetErrorSlot(int)), Qt::QueuedConnection);
-	//è®¾å¤‡æ–°æ•°æ®é€šçŸ¥
-	connect(pIOCP, SIGNAL(NewDataSignal(QString, QString,int, unsigned int)), this, SLOT(NewDataSlot(QString ,QString ,int, unsigned int)), Qt::QueuedConnection);
-	connect(pIOCP, SIGNAL(NewDataSignal(QString, QString, int, int,unsigned int)), this, SLOT(NewDataSlot(QString, QString, int, int, unsigned int)), Qt::QueuedConnection);
-	//è®¾å¤‡æ“ä½œçŠ¶æ€é€šçŸ¥
+	//Éè±¸ĞÂÊı¾İÍ¨Öª
+	connect(pIOCP, SIGNAL(NewDataSignal(QString, QString, int,FileType,unsigned int)), this, SLOT(NewDataSlot(QString, QString, int, FileType, unsigned int)), Qt::QueuedConnection);
+	//Éè±¸²Ù×÷×´Ì¬Í¨Öª
 	connect(pIOCP, SIGNAL(OperationResultSignal(QString, int, QString)), this, SLOT(OperationResultSlot(QString, int, QString)), Qt::QueuedConnection);
-	connect(pIOCP, SIGNAL(OperationResultSignal(QString, QString, int, QString)), this, SLOT(OperationResultSlot(QString,QString, int, QString)), Qt::QueuedConnection);
-	connect(pIOCP, SIGNAL(OperationResultSignal(QString, QString, QString, QString, QString, int, QString)), this, SLOT(OperationResultSlot(QString, QString, QString, QString, QString, int, QString)),Qt::QueuedConnection);
-	//è®¾å¤‡ç»ˆç«¯å‘½ä»¤è¿”å›å€¼
+	connect(pIOCP, SIGNAL(OperationResultSignal(QString, QString, int, QString)), this, SLOT(OperationResultSlot(QString, QString, int, QString)), Qt::QueuedConnection);
+	connect(pIOCP, SIGNAL(OperationResultSignal(QString, QString, QString, QString, QString, int, QString)), this, SLOT(OperationResultSlot(QString, QString, QString, QString, QString, int, QString)), Qt::QueuedConnection);
+	//Éè±¸ÖÕ¶ËÃüÁî·µ»ØÖµ
 	connect(pIOCP, SIGNAL(RecvRealTimeDataSignal(QString)), this, SLOT(RealTimeDataSlot(QString)), Qt::AutoConnection);
 }
-//è¿”å›è¿è¡ŒçŠ¶æ€
-bool EHT::IsRun()
+//·µ»ØÔËĞĞ×´Ì¬
+bool FTPEHT::IsRun()
 {
 	return m_IsRun;
 }
-//åˆ¤æ–­ç«¯å£åˆæ³•æ€§
-bool EHT::IsLegallyPort(int port)
+//ÅĞ¶Ï¶Ë¿ÚºÏ·¨ĞÔ
+bool FTPEHT::IsLegallyPort(int port)
 {
-	//åˆå§‹åŒ–WSA    åŠ è½½socketåŠ¨æ€é“¾æ¥åº“
+	//³õÊ¼»¯WSA    ¼ÓÔØsocket¶¯Ì¬Á´½Ó¿â
 	WORD sockVersion = MAKEWORD(2, 2);
-	WSADATA wsaData;     // æ¥æ”¶Windows Socketçš„ç»“æ„ä¿¡æ¯
+	WSADATA wsaData;     // ½ÓÊÕWindows SocketµÄ½á¹¹ĞÅÏ¢
 	if (WSAStartup(sockVersion, &wsaData) != 0)
 		return false;
-	
+
 	SOCKET BindSocket;
 	BindSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
 	SOCKADDR_IN  srvAddr;
-	//è·å–æœ¬åœ°IP
+	//»ñÈ¡±¾µØIP
 	LPCSTR  ch;
 	QByteArray ba = m_IP.toLatin1();
 	ch = ba.data();
 	srvAddr.sin_addr.S_un.S_addr = inet_addr(ch);
 	srvAddr.sin_family = AF_INET;
 	srvAddr.sin_port = htons(port);
-	//ç»‘å®šSOCKETåˆ°æœ¬æœº
+	//°ó¶¨SOCKETµ½±¾»ú
 	int bindResult = ::bind(BindSocket, (SOCKADDR*)&srvAddr, sizeof(SOCKADDR_IN));
 	if (SOCKET_ERROR == bindResult)
 		return false;
 	closesocket(BindSocket);
 	return true;
 }
-//ç¦»çº¿å¤„ç†
-void EHT::OffLineSlot(unsigned int CltSocket)
+//ÀëÏß´¦Àí
+void FTPEHT::OffLineSlot(unsigned int CltSocket)
 {
 	for (int i = 0; i < Clients.size(); i++)
 	{
-		//æ‰¾åˆ°ç¦»çº¿
+		//ÕÒµ½ÀëÏß
 		if (Clients[i].SocketID == CltSocket)
 		{
 			QDateTime current_date_time = QDateTime::currentDateTime();
 			QString current_date = current_date_time.toString("yyyy.MM.dd hh:mm:ss");
-			LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit("åŒºç«™å· ") + Clients[i].StationID + QString::fromLocal8Bit("å·²ç»æ–­å¼€è¿æ¥"));
-			Clients[i].SocketID = 0;//Socketç½®é›¶
-			Clients[i].Online = false;//è®¾ç½®ç¦»çº¿çŠ¶æ€
+			LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit("ÇøÕ¾ºÅ ") + Clients[i].StationID + QString::fromLocal8Bit("ÒÑ¾­¶Ï¿ªÁ¬½Ó"));
+			Clients[i].SocketID = 0;//SocketÖÃÁã
+			Clients[i].Online = false;//ÉèÖÃÀëÏß×´Ì¬
 			emit OffLineSignal(m_ServiceName, Clients[i].StationID, current_date_time, Clients[i].LoginTime);
 			break;
 		}
 	}
 }
-//æœ‰æ•°æ®ä¼ è¾“
-void EHT::NewDataSlot(QString StationID, QString IP, int Port, unsigned int CltSocket)
+//ÓĞÊı¾İ´«Êä
+void FTPEHT::NewDataSlot(QString StationID, QString IP, int Port,FileType File,unsigned int CltSocket)
 {
-	//å°ç«™å·ä¸ºç©º
+	//Ì¨Õ¾ºÅÎª¿Õ
 	if (StationID == NULL)
 		return;
-	//å†œå§”ç«™å·è½¬å˜
+	//Å©Î¯Õ¾ºÅ×ª±ä
 	if (m_ServiceID == NW)
 	{
 		if (SIM2Staion.contains(StationID))
 		{
-			//æ‰¾åˆ°ç‰¹å®šçš„â€œé”®-å€¼â€å¯¹
-			QMap<QString, QString>::iterator it = SIM2Staion.find(StationID);
-			StationID = it.value();
-		}
-	}
-	QDateTime current_date_time = QDateTime::currentDateTime();
-	for (int i = 0; i < Clients.count(); i++)
-	{
-		//å­˜åœ¨
-		if (Clients[i].StationID.toUpper().compare(StationID.toUpper()) == 0)
-		{
-			Clients[i].LatestTimeOfHeartBeat = current_date_time;//æ›´æ–°æ—¶é—´
-			Clients[i].SocketID = CltSocket;//æ›´æ–°Socketå·
-			Clients[i].IP = IP;//æ›´æ–°IP
-			Clients[i].Port = Port;//æ›´æ–°ç«¯å£
-			Clients[i].Online = true;//è®¾ç½®åœ¨çº¿
-			emit OnLineSignal(m_ServiceName,StationID,Clients[i].LatestTimeOfHeartBeat,Clients[i].LoginTime);//åˆ·æ–°UI
-		//	LogWrite::DataLogMsgOutPut("æ–°æ•°æ®å·²åˆ°è¾¾ï¼å°ç«™å·ä¸ºï¼š" + Clients[i].StationID);
-			return;
-		}
-	}
-	//ä¸å­˜åœ¨æ’å…¥
-	CLIENTINFO clientinfo{ IP, Port,CltSocket,StationID,current_date_time,true,current_date_time };
-	Clients.push_back(clientinfo);
-	LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit("æ–°è®¾å¤‡å·²è¿æ¥ï¼Œå°ç«™å·ä¸ºï¼š") + clientinfo.StationID);
-	emit  OnLineSignal(m_ServiceName, StationID,clientinfo.LatestTimeOfHeartBeat,clientinfo.LoginTime);;//åˆ·æ–°UI
-}
-
-//æœ‰æ•°æ®ä¼ è¾“æ¤è¢«
-void EHT::NewDataSlot(QString StationID, QString IP, int Port, int File, unsigned int CltSocket)
-{
-	//å°ç«™å·ä¸ºç©º
-	if (StationID == NULL)
-		return;
-	//å†œå§”ç«™å·è½¬å˜
-	if (m_ServiceID == NW)
-	{
-		if (SIM2Staion.contains(StationID))
-		{
-			//æ‰¾åˆ°ç‰¹å®šçš„â€œé”®-å€¼â€å¯¹
+			//ÕÒµ½ÌØ¶¨µÄ¡°¼ü-Öµ¡±¶Ô
 			QMap<QString, QString>::iterator it = SIM2Staion.find(StationID);
 			StationID = it.value();
 		}
@@ -310,21 +258,12 @@ void EHT::NewDataSlot(QString StationID, QString IP, int Port, int File, unsigne
 	{
 	case IMAGE:
 	{
-		IsExistImage = false;
-		ReHandleZB_IMAGE->start(1000 * 10);
+		IsExistImageXML = false;
+		ReconnectTimer->start(1000 * 10);
 	}
-	break;
-	case XML:
-	{
-		IsExistXML = false;
-		ReHandleZB_XML->start(1000*10);
-	}
-	break;
+		break;
 	case TXT:
-	{
-		IsExistXML = false;
-		ReHandleZB_TXT->start(1000* 10);
-	}
+		MoveTXTToDesAddr();
 		break;
 	default:
 		break;
@@ -332,174 +271,133 @@ void EHT::NewDataSlot(QString StationID, QString IP, int Port, int File, unsigne
 	QDateTime current_date_time = QDateTime::currentDateTime();
 	for (int i = 0; i < Clients.count(); i++)
 	{
-		//å­˜åœ¨
+		//´æÔÚ
 		if (Clients[i].StationID.toUpper().compare(StationID.toUpper()) == 0)
 		{
-			Clients[i].LatestTimeOfHeartBeat = current_date_time;//æ›´æ–°æ—¶é—´
-			Clients[i].SocketID = CltSocket;//æ›´æ–°Socketå·
-			Clients[i].IP = IP;//æ›´æ–°IP
-			Clients[i].Port = Port;//æ›´æ–°ç«¯å£
-			Clients[i].Online = true;//è®¾ç½®åœ¨çº¿
-			emit OnLineSignal(m_ServiceName, StationID, Clients[i].LatestTimeOfHeartBeat, Clients[i].LoginTime);//åˆ·æ–°UI
+			Clients[i].LatestTimeOfHeartBeat = current_date_time;//¸üĞÂÊ±¼ä
+			Clients[i].SocketID = CltSocket;//¸üĞÂSocketºÅ
+			Clients[i].IP = IP;//¸üĞÂIP
+			Clients[i].Port = Port;//¸üĞÂ¶Ë¿Ú
+			Clients[i].Online = true;//ÉèÖÃÔÚÏß
+			emit OnLineSignal(m_ServiceName, StationID, Clients[i].LatestTimeOfHeartBeat, Clients[i].LoginTime);//Ë¢ĞÂUI
+	     //	LogWrite::DataLogMsgOutPut("ĞÂÊı¾İÒÑµ½´ï£¡Ì¨Õ¾ºÅÎª£º" + Clients[i].StationID);
 			return;
 		}
 	}
-	//ä¸å­˜åœ¨æ’å…¥
+	//²»´æÔÚ²åÈë
 	CLIENTINFO clientinfo{ IP, Port,CltSocket,StationID,current_date_time,true,current_date_time };
 	Clients.push_back(clientinfo);
-	LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit("æ–°è®¾å¤‡å·²è¿æ¥ï¼Œå°ç«™å·ä¸ºï¼š") + clientinfo.StationID);
-	emit  OnLineSignal(m_ServiceName, StationID, clientinfo.LatestTimeOfHeartBeat, clientinfo.LoginTime);;//åˆ·æ–°UI
+	LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit("ĞÂÉè±¸ÒÑÁ¬½Ó£¬Ì¨Õ¾ºÅÎª£º") + clientinfo.StationID);
+	emit  OnLineSignal(m_ServiceName, StationID, clientinfo.LatestTimeOfHeartBeat, clientinfo.LoginTime);;//Ë¢ĞÂUI
 }
 
-//å›¾ç‰‡å¤„ç†
-void EHT::MoveImageToDesAddr()
+//Í¼Æ¬´¦Àí
+void FTPEHT::MoveImageToDesAddr()
 {
-	if (IsExistImage)
-		ReHandleZB_IMAGE->stop();
+	if (IsExistImageXML)
+		ReHandleZB->stop();
 	QDateTime current_date_time = QDateTime::currentDateTime();
-	QString yy = current_date_time.toString("yyyy");
-	QString mm = current_date_time.toString("MM");
-	QString dd = current_date_time.toString("dd");
+	QString current_date = current_date_time.toString("yyyy.MM.dd");
 	QString fileName = "E:\\EcologyImage";
 	QDir dir(fileName);
 	QStringList filter;
 	filter << QString("*.jpeg") << QString("*.jpg") << QString("*.png") << QString("*.tiff") << QString("*.gif") << QString("*.bmp");
-	dir.setFilter(QDir::Files | QDir::NoSymLinks);//è®¾ç½®ç±»å‹è¿‡æ»¤å™¨ï¼Œåªä¸ºæ–‡ä»¶æ ¼å¼
+	dir.setFilter(QDir::Files | QDir::NoSymLinks);//ÉèÖÃÀàĞÍ¹ıÂËÆ÷£¬Ö»ÎªÎÄ¼ş¸ñÊ½
 	dir.setNameFilters(filter);
 	QList<QFileInfo> *fileInfo = new QList<QFileInfo>(dir.entryInfoList(filter));
 	int dir_count = dir.count();
 	for (int i = 0; i < dir_count; i++)
 	{
-		//æ‰¾åˆ°æ˜¯å›¾ç‰‡
+		//ÕÒµ½ÊÇÍ¼Æ¬
 		QString path = fileInfo->at(i).filePath();
 		QString name = fileInfo->at(i).fileName();
-		//è·å–å›¾ç‰‡åç§°
+		//»ñÈ¡Í¼Æ¬Ãû³Æ
 		QStringList namestrlit = name.split(".");
 		if (namestrlit.count() < 1)
 			continue;
-		
-		//ç”ŸæˆåŸå§‹å›¾å’Œç¼©ç•¥å›¾
-		QString DesFile_Image = "D://Tomcat 8.0//webapps//byd//upload//yszb//" + yy+"//"+mm+"//"+dd;//åŸå§‹å›¾
-		QString DesFile_MinImage = "D://Tomcat 8.0//webapps//byd//upload//slzb//" +yy + "//" + mm + "//" + dd;//ç¼©ç•¥å›¾
+		//ÅĞ¶ÏÊÇ·ñ´æÔÚÊ¶±ğ½á¹ûXML
+		QFileInfo file("E:\\EcologyImage\\" + namestrlit.at(0) + ".xml");
+		if (file.exists() == false)
+			return;
+		IsExistImageXML = true;
+		//Á½¸öÎÄ¼ş¶¼´æÔÚ,Éú³ÉÔ­Ê¼Í¼ºÍËõÂÔÍ¼
+		QString DesFile_Image = "D://Tomcat 8.0//webapps//byd//upload//yszb//" + current_date;//Ô­Ê¼Í¼
+		QString DesFile_MinImage = "D://Tomcat 8.0//webapps//byd//upload//slzb//" + current_date;//ËõÂÔÍ¼
 		QDir dir(DesFile_Image);
 		if (!dir.exists())
-			dir.mkpath(DesFile_Image);//åˆ›å»ºå¤šçº§ç›®å½•
+			dir.mkpath(DesFile_Image);//´´½¨¶à¼¶Ä¿Â¼
 		QDir dir_mi(DesFile_MinImage);
 		if (!dir_mi.exists())
-			dir_mi.mkpath(DesFile_MinImage);//åˆ›å»ºå¤šçº§ç›®å½•
-		DesFile_Image += "//" + name;
-		DesFile_MinImage += "//" + name;
+			dir_mi.mkpath(DesFile_MinImage);//´´½¨¶à¼¶Ä¿Â¼
+		DesFile_Image += "\\" + name;
+		DesFile_MinImage += "\\" + name;
 		QImage minImage;
 		minImage.load(path);
 		minImage = minImage.scaled(300, 200, Qt::KeepAspectRatio);
 		minImage.save(DesFile_MinImage, "JPG");
-		//XMLæ–‡ä»¶å¤„ç†
+		//XMLÎÄ¼ş´¦Àí
 		QJsonObject Json;
-		QStringList strName = name.split("_");
-		if (strName.count()!=4)
-			continue;
-		QStringList strDll = strName.at(3).split(".");
-		QString DeviceID = strDll.at(0);
-		QString OBcurrent_date = strName.at(2);
-		QString StationID = strName.at(0);
-		//åŸå›¾åç§°
-		Json.insert("ImageName",name);
-		//åŸå›¾è·¯å¾„
-		Json.insert("ImagePath","//byd//upload//yszb//"+yy + "//" + mm + "//" + dd +"//"+name);
-		//ç¼©ç•¥å›¾è·¯å¾„
-		Json.insert("MinImgPath", "//byd//upload//slzb//" + yy + "//" + mm + "//" + dd + "//" + name);
-		//è®¾å¤‡ID
-		Json.insert("DeviceID", DeviceID);
-		//è®¾å¤‡æ˜¯å¦å«æœ‰åŒºç«™å·
-		Json.insert("ContainSID", false);
-		Json.insert("StationID", DeviceID);
-		//è§‚æµ‹æ—¶é—´
-		Json.insert("ObserveTime", OBcurrent_date);
-		//ä¸šåŠ¡å·
-		Json.insert("ServiceTypeID", "18");
-
-		QJsonDocument document;
-		document.setObject(Json);
-		QByteArray byteArray = document.toJson(QJsonDocument::Compact);
-		LPCSTR dataChar;
-		dataChar = byteArray.data();
-		if (g_SimpleProducer_sh.send(dataChar, strlen(dataChar)) < 0)
-			GetErrorSlot(10304);
-		//å¤åˆ¶æˆåŠŸå åˆ é™¤æºæ–‡ä»¶
-		if (QFile::copy(path, DesFile_Image))
+		MoveXMLToDesAddr(Json);
+		//¸´ÖÆ³É¹¦ºó É¾³ıÔ´ÎÄ¼ş
+		if(QFile::copy(path, DesFile_Image))
 			QFile::remove(path);
-		IsExistImage = true;
 	}
 }
 
-//æ–‡æœ¬å¤„ç†
-void EHT::MoveTXTToDesAddr()
+//ÎÄ±¾´¦Àí
+void FTPEHT::MoveTXTToDesAddr()
 {
-	if (IsExistTXT)
-		ReHandleZB_TXT->stop();
 	QDateTime current_date_time = QDateTime::currentDateTime();
 	QString current_date = current_date_time.toString("yyyy.MM.dd");
 	QString fileName = "E:\\EcologyImage";
 	QDir dir(fileName);
 	QStringList filter;
 	filter << QString("*.txt");
-	dir.setFilter(QDir::Files | QDir::NoSymLinks);//è®¾ç½®ç±»å‹è¿‡æ»¤å™¨ï¼Œåªä¸ºæ–‡ä»¶æ ¼å¼
+	dir.setFilter(QDir::Files | QDir::NoSymLinks);//ÉèÖÃÀàĞÍ¹ıÂËÆ÷£¬Ö»ÎªÎÄ¼ş¸ñÊ½
 	dir.setNameFilters(filter);
 	QList<QFileInfo> *fileInfo = new QList<QFileInfo>(dir.entryInfoList(filter));
 	int dir_count = dir.count();
 	for (int i = 0; i < dir_count; i++)
 	{
-		//æ‰¾åˆ°æ˜¯TXT
+		//ÕÒµ½ÊÇTXT
 		QString path = fileInfo->at(i).filePath();
 		QString name = fileInfo->at(i).fileName();
-		QString DesFile_TXT = "D://SH_ZB_TXT//" + current_date;//ç›®çš„è·¯å¾„
+		QString DesFile_TXT = "D://SH_ZB_TXT//" + current_date;//Ä¿µÄÂ·¾¶
 		QDir dir(DesFile_TXT);
 		if (!dir.exists())
-			dir.mkpath(DesFile_TXT);//åˆ›å»ºå¤šçº§ç›®å½•
+			dir.mkpath(DesFile_TXT);//´´½¨¶à¼¶Ä¿Â¼
 		DesFile_TXT += "\\" + name;
-		
-		//å¤åˆ¶æˆåŠŸå åˆ é™¤æºæ–‡ä»¶
-		if (QFile::copy(path, DesFile_TXT))
+		//¸´ÖÆ³É¹¦ºó É¾³ıÔ´ÎÄ¼ş
+		if(QFile::copy(path, DesFile_TXT))
 			QFile::remove(path);
-		IsExistTXT = true;
 	}
 }
 
-//XMLå¤„ç†
-void EHT::MoveXMLToDesAddr()
+//XML´¦Àí
+void FTPEHT::MoveXMLToDesAddr(QJsonObject &Json)
 {
-	if (IsExistXML)
-		ReHandleZB_XML->stop();
-	QJsonObject Json;
 	QDateTime current_date_time = QDateTime::currentDateTime();
 	QString current_date = current_date_time.toString("yyyy.MM.dd");
 	QString fileName = "E:\\EcologyImage";
 	QDir dir(fileName);
 	QStringList filter;
 	filter << QString("*.xml");
-	dir.setFilter(QDir::Files | QDir::NoSymLinks);//è®¾ç½®ç±»å‹è¿‡æ»¤å™¨ï¼Œåªä¸ºæ–‡ä»¶æ ¼å¼
+	dir.setFilter(QDir::Files | QDir::NoSymLinks);//ÉèÖÃÀàĞÍ¹ıÂËÆ÷£¬Ö»ÎªÎÄ¼ş¸ñÊ½
 	dir.setNameFilters(filter);
 	QList<QFileInfo> *fileInfo = new QList<QFileInfo>(dir.entryInfoList(filter));
 	int dir_count = dir.count();
 	for (int i = 0; i < dir_count; i++)
 	{
-		//æ‰¾åˆ°æ˜¯XML
+		//ÕÒµ½ÊÇXML
 		QString path = fileInfo->at(i).filePath();
 		QString name = fileInfo->at(i).fileName();
-		QStringList strName = name.split("_");
-		if (strName.count() != 4)
-			continue;
-		QStringList strDll = strName.at(3).split(".");
-		QString DeviceID = strDll.at(0);
-		QString OBcurrent_date = strName.at(2);
-		QString StationID = strName.at(0);
-		QString DesFile_XML = "D://SH_ZB_XML//" + current_date;//ç›®çš„è·¯å¾„
+		QString DesFile_XML = "D://SH_ZB_TXT//" + current_date;//Ä¿µÄÂ·¾¶
 		QDir dir(DesFile_XML);
 		if (!dir.exists())
-			dir.mkpath(DesFile_XML);//åˆ›å»ºå¤šçº§ç›®å½•
+			dir.mkpath(DesFile_XML);//´´½¨¶à¼¶Ä¿Â¼
 		DesFile_XML += "\\" + name;
-		//è§£ææ–‡ä»¶
-		QFile file(path); //ç›¸å¯¹è·¯å¾„ã€ç»å¯¹è·¯å¾„ã€èµ„æºè·¯å¾„éƒ½è¡Œ
+		//½âÎöÎÄ¼ş
+		QFile file(path); //Ïà¶ÔÂ·¾¶¡¢¾ø¶ÔÂ·¾¶¡¢×ÊÔ´Â·¾¶¶¼ĞĞ
 		if (!file.open(QFile::ReadOnly))
 			return;
 
@@ -511,42 +409,44 @@ void EHT::MoveXMLToDesAddr()
 		}
 		file.close();
 	
-		QDomElement root = doc.documentElement(); //è¿”å›æ ¹èŠ‚ç‚¹
+		QDomElement root = doc.documentElement(); //·µ»Ø¸ù½Úµã
 		QDomNode node = root.firstChildElement("currentCoverage");
 		Json.insert("Coverage", node.toElement().text());
 		node = root.firstChildElement("density");
 		Json.insert("Density", node.toElement().text());
 		node = root.firstChildElement("height");
 		Json.insert("CanopyHeight", node.toElement().text());
-		//è®¾å¤‡ID
-		Json.insert("DeviceID", DeviceID);
-		//è®¾å¤‡æ˜¯å¦å«æœ‰åŒºç«™å·
+		//Éè±¸ID
+		Json.insert("DeviceID", "3");
+		//Éè±¸ÊÇ·ñº¬ÓĞÇøÕ¾ºÅ
 		Json.insert("ContainSID", false);
-		Json.insert("StationID", DeviceID);
-		//è§‚æµ‹æ—¶é—´
-		Json.insert("ObserveTime", OBcurrent_date);
-		//ä¸šåŠ¡å·
-		Json.insert("ServiceTypeID", "18");
+		Json.insert("StationID", "3");
+		//¹Û²âÊ±¼ä
+		QDateTime current_date_time = QDateTime::currentDateTime();
+		QString current_date = current_date_time.toString("yyyy-MM-dd hh:mm:ss");
+		Json.insert("ObserveTime", current_date);
+		//ÒµÎñºÅ
+		Json.insert("StationID", "18");
+
 		QJsonDocument document;
 		document.setObject(Json);
 		QByteArray byteArray = document.toJson(QJsonDocument::Compact);
 		LPCSTR dataChar;
 		dataChar = byteArray.data();
 		if (g_SimpleProducer_sh.send(dataChar, strlen(dataChar)) < 0)
-			GetErrorSlot(10304);
-		//å¤åˆ¶æˆåŠŸå åˆ é™¤æºæ–‡ä»¶
+			 GetErrorSlot(10304);
+		//¸´ÖÆ³É¹¦ºó É¾³ıÔ´ÎÄ¼ş
 		if (QFile::copy(path, DesFile_XML))
-			bool b=QFile::remove(path);
-		IsExistXML = true;
+			QFile::remove(path);
 	}
 }
 
-//ç»ˆç«¯å‘½ä»¤æ“ä½œ
-void EHT:: OperationResultSlot(QString Value, int SrvPort, QString StationID)
+//ÖÕ¶ËÃüÁî²Ù×÷
+void FTPEHT::OperationResultSlot(QString Value, int SrvPort, QString StationID)
 {
-	//å‰ç«¯å‘é€æŒ‡ä»¤
+	//Ç°¶Ë·¢ËÍÖ¸Áî
 	QString OperationLog;
-	OperationLog = QString::fromLocal8Bit("ç»ˆç«¯è¿”å›å€¼ï¼š") + Value + QString::fromLocal8Bit(",ä¿¡æ¯æ¥è‡ªä¸šåŠ¡å·ï¼š")+m_ServiceName+ QString::fromLocal8Bit(",å°ç«™å·ï¼š")+StationID;
+	OperationLog = QString::fromLocal8Bit("ÖÕ¶Ë·µ»ØÖµ£º") + Value + QString::fromLocal8Bit(",ĞÅÏ¢À´×ÔÒµÎñºÅ£º") + m_ServiceName + QString::fromLocal8Bit(",Ì¨Õ¾ºÅ£º") + StationID;
 	if (this->WebCommand)
 	{
 		QJsonObject json;
@@ -557,19 +457,19 @@ void EHT:: OperationResultSlot(QString Value, int SrvPort, QString StationID)
 		json.insert("RecvValue1", Value);
 		this->WebCommand = false;
 		this->CurrentCommand = NONE;
-		//å‘é€è‡³WebæœåŠ¡å™¨
+		//·¢ËÍÖÁWeb·şÎñÆ÷
 		emit SendToWebServiceSignal(json);
 	}
-	//UIæ˜¾ç¤º
+	//UIÏÔÊ¾
 	//emit SendToUI(OperationLog);
-	//å†™å…¥æ•°æ®æ—¥å¿—
+	//Ğ´ÈëÊı¾İÈÕÖ¾
 	LogWrite::DataLogMsgOutPut(OperationLog);
 }
-void EHT::OperationResultSlot(QString Value1, QString Value2, int SrvPort, QString StationID)
+void FTPEHT::OperationResultSlot(QString Value1, QString Value2, int SrvPort, QString StationID)
 {
-	//å‰ç«¯å‘é€æŒ‡ä»¤
+	//Ç°¶Ë·¢ËÍÖ¸Áî
 	QString OperationLog;
-	OperationLog = QString::fromLocal8Bit("ç»ˆç«¯è¿”å›å€¼ï¼š") + Value1+ QString::fromLocal8Bit("ï¼Œè¿”å›å€¼ï¼š")+Value2 + QString::fromLocal8Bit(",ä¿¡æ¯æ¥è‡ªä¸šåŠ¡å·ï¼š") + m_ServiceName + QString::fromLocal8Bit(",å°ç«™å·ï¼š") + StationID;
+	OperationLog = QString::fromLocal8Bit("ÖÕ¶Ë·µ»ØÖµ£º") + Value1 + QString::fromLocal8Bit("£¬·µ»ØÖµ£º") + Value2 + QString::fromLocal8Bit(",ĞÅÏ¢À´×ÔÒµÎñºÅ£º") + m_ServiceName + QString::fromLocal8Bit(",Ì¨Õ¾ºÅ£º") + StationID;
 	if (this->WebCommand)
 	{
 		QJsonObject json;
@@ -581,19 +481,19 @@ void EHT::OperationResultSlot(QString Value1, QString Value2, int SrvPort, QStri
 		json.insert("RecvValue2", Value2);
 		this->WebCommand = false;
 		this->CurrentCommand = NONE;
-		//å‘é€è‡³WebæœåŠ¡å™¨
+		//·¢ËÍÖÁWeb·şÎñÆ÷
 		emit SendToWebServiceSignal(json);
 	}
 	//emit SendToUI(OperationLog);
-	//å†™å…¥æ•°æ®æ—¥å¿—
+	//Ğ´ÈëÊı¾İÈÕÖ¾
 	LogWrite::DataLogMsgOutPut(OperationLog);
 }
 
-void EHT::OperationResultSlot(QString Command, QString Value1, QString Value2, QString Value3, QString Value4, int SrvPort, QString StationID)
+void FTPEHT::OperationResultSlot(QString Command, QString Value1, QString Value2, QString Value3, QString Value4, int SrvPort, QString StationID)
 {
-	//å‰ç«¯å‘é€æŒ‡ä»¤
+	//Ç°¶Ë·¢ËÍÖ¸Áî
 	QString OperationLog;
-	OperationLog = QString::fromLocal8Bit("ç»ˆç«¯è¿”å›å€¼ï¼š") + Value1 + QString::fromLocal8Bit("ï¼Œè¿”å›å€¼ï¼š") + Value2 + QString::fromLocal8Bit(",è¿”å›å€¼ï¼š")+Value3+ QString::fromLocal8Bit("ï¼Œè¿”å›å€¼:")+Value4+ QString::fromLocal8Bit(",ä¿¡æ¯æ¥è‡ªä¸šåŠ¡å·ï¼š") + m_ServiceName + QString::fromLocal8Bit(",å°ç«™å·ï¼š") + StationID;
+	OperationLog = QString::fromLocal8Bit("ÖÕ¶Ë·µ»ØÖµ£º") + Value1 + QString::fromLocal8Bit("£¬·µ»ØÖµ£º") + Value2 + QString::fromLocal8Bit(",·µ»ØÖµ£º") + Value3 + QString::fromLocal8Bit("£¬·µ»ØÖµ:") + Value4 + QString::fromLocal8Bit(",ĞÅÏ¢À´×ÔÒµÎñºÅ£º") + m_ServiceName + QString::fromLocal8Bit(",Ì¨Õ¾ºÅ£º") + StationID;
 	if (this->WebCommand)
 	{
 		QJsonObject json;
@@ -607,43 +507,43 @@ void EHT::OperationResultSlot(QString Command, QString Value1, QString Value2, Q
 		json.insert("RecvValue4", Value4);
 		this->WebCommand = false;
 		this->CurrentCommand = NONE;
-		//å‘é€è‡³WebæœåŠ¡å™¨
+		//·¢ËÍÖÁWeb·şÎñÆ÷
 		emit SendToWebServiceSignal(json);
 	}
 	//emit SendToUI(OperationLog);
-	//å†™å…¥æ•°æ®æ—¥å¿—
+	//Ğ´ÈëÊı¾İÈÕÖ¾
 	LogWrite::DataLogMsgOutPut(OperationLog);
 }
-//è·å–é”™è¯¯
-void EHT:: GetErrorSlot(int ErrorMSG)
+//»ñÈ¡´íÎó
+void FTPEHT::GetErrorSlot(int ErrorMSG)
 {
 	QString strMSG;
 	switch (ErrorMSG)
 	{
 	case 1:
-		strMSG = QString::fromLocal8Bit("æ­£å¸¸");
+		strMSG = QString::fromLocal8Bit("Õı³£");
 		break;
 	case 10300: case 10301: case 10302:
-		strMSG = QString::fromLocal8Bit("é€šä¿¡åˆå§‹åŒ–å¤±è´¥ï¼");
+		strMSG = QString::fromLocal8Bit("Í¨ĞÅ³õÊ¼»¯Ê§°Ü£¡");
 		break;
 	case 10304:
-		strMSG = QString::fromLocal8Bit("æ¶ˆæ¯ä¸­é—´ä»¶é€šä¿¡å¼‚å¸¸ï¼");
+		strMSG = QString::fromLocal8Bit("ÏûÏ¢ÖĞ¼ä¼şÍ¨ĞÅÒì³££¡");
 		ReConnectActiveMq();
 		break;
 	case 10305:
-		strMSG = QString::fromLocal8Bit("æ¥æ”¶å†…å­˜æº¢å‡º");
+		strMSG = QString::fromLocal8Bit("½ÓÊÕÄÚ´æÒç³ö");
 		break;
 	case 10036:
-		strMSG = QString::fromLocal8Bit("Webç›‘å¬ç«¯å£å¼‚å¸¸");
+		strMSG = QString::fromLocal8Bit("Web¼àÌı¶Ë¿ÚÒì³£");
 		break;
 	case -4:
-		strMSG = QString::fromLocal8Bit("æœåŠ¡å™¨é—´é€šä¿¡å¼‚å¸¸ï¼");
+		strMSG = QString::fromLocal8Bit("·şÎñÆ÷¼äÍ¨ĞÅÒì³££¡");
 		break;
 	case -5:
-		strMSG = QString::fromLocal8Bit("è®¾å¤‡å·²ç™»å‡ºï¼");
+		strMSG = QString::fromLocal8Bit("Éè±¸ÒÑµÇ³ö£¡");
 		break;
 	case 10311:
-		strMSG = QString::fromLocal8Bit("ç«¯å£å·ç›‘å¬å¤±è´¥ï¼");
+		strMSG = QString::fromLocal8Bit("¶Ë¿ÚºÅ¼àÌıÊ§°Ü£¡");
 		break;
 	default:
 		strMSG = QString::number(ErrorMSG);
@@ -652,16 +552,16 @@ void EHT:: GetErrorSlot(int ErrorMSG)
 	SendWarningInfoToUI(strMSG);
 	LogWrite::WarningLogMsgOutPut(strMSG);
 }
-//è¯»å–SIMå¡å·é…ç½®æ–‡ä»¶ï¼Œè½¬æˆåŒºç«™å·
-void EHT::Convert2StationID()
+//¶ÁÈ¡SIM¿¨ºÅÅäÖÃÎÄ¼ş£¬×ª³ÉÇøÕ¾ºÅ
+void FTPEHT::Convert2StationID()
 {
-	//è¯»å–Command.iniè·¯å¾„
+	//¶ÁÈ¡Command.iniÂ·¾¶
 	QString path = QCoreApplication::applicationDirPath() + "//SIM2STATION.ini";
-	//æ‰“å¼€INIæ–‡ä»¶
+	//´ò¿ªINIÎÄ¼ş
 	QSettings configIniRead(path, QSettings::IniFormat);
-	//ç»ˆç«¯å‘½ä»¤ä¸ªæ•°
+	//ÖÕ¶ËÃüÁî¸öÊı
 	int Count = configIniRead.value("NW/Count").toInt();
-	//éå†ç»ˆç«¯å‘½ä»¤
+	//±éÀúÖÕ¶ËÃüÁî
 	for (int i = 0; i < Count; i++)
 	{
 		QString key = "/NW/STATION" + QString::number(i);
@@ -672,8 +572,8 @@ void EHT::Convert2StationID()
 	}
 }
 
-//çŸ«æ­£æ—¶é’Ÿ
-void EHT::SetTime()
+//½ÃÕıÊ±ÖÓ
+void FTPEHT::SetTime()
 {
 	QDateTime nowtime = QDateTime::currentDateTime();
 	QString datetime = nowtime.toString("yyyy.MM.dd hh:mm:ss");
@@ -690,18 +590,18 @@ void EHT::SetTime()
 	{
 		for (int i = 0; i < Clients.size(); i++)
 		{
-			//åˆ¤æ–­æ˜¯å¦åœ¨çº¿
+			//ÅĞ¶ÏÊÇ·ñÔÚÏß
 			if (Clients[i].Online == false)
-				continue;//ç¦»çº¿è¿”å›
+				continue;//ÀëÏß·µ»Ø
 			int chk = 0;
 			int socketID = Clients[i].SocketID;
 			int SrcAdrr = Clients[i].StationID.toInt();
 			BYTE bytes[1024] = { 0 };
 			bytes[0] = 0xaa;
-			bytes[1] = 0x0a;//å¸§é•¿åº¦
-			bytes[2] = 0x81;//å¸§å‘½ä»¤
+			bytes[1] = 0x0a;//Ö¡³¤¶È
+			bytes[2] = 0x81;//Ö¡ÃüÁî
 			chk += bytes[2];
-			bytes[3] = SrcAdrr & 0xff;//æºåœ°å€
+			bytes[3] = SrcAdrr & 0xff;//Ô´µØÖ·
 			chk += bytes[3];
 			bytes[4] = (SrcAdrr >> 8) & 0xff;
 			chk += bytes[4];
@@ -719,66 +619,66 @@ void EHT::SetTime()
 			chk += bytes[10];
 			bytes[11] = sec.toInt();
 			chk += bytes[11];
-			bytes[12] = chk & 0xff;//æ ¡éªŒä½ ä½å…«ä½
-			bytes[13] = (chk >> 8) & 0xff;//é«˜å…«ä½
-			bytes[14] = 0xdd;
+			bytes[12] = chk & 0xff;//Ğ£ÑéÎ» µÍ°ËÎ»
+			bytes[13] = (chk >> 8) & 0xff;//¸ß°ËÎ»
+			bytes[14] = 0xff;
 			int result = ::send(socketID, (char *)bytes, 15, 0);
-			LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit("åœŸå£¤æ°´åˆ†") + Clients[i].StationID + QString::fromLocal8Bit("è‡ªåŠ¨çŸ«æ­£æ—¶é’Ÿ."));
+			LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit("ÍÁÈÀË®·Ö") + Clients[i].StationID + QString::fromLocal8Bit("×Ô¶¯½ÃÕıÊ±ÖÓ."));
 		}
 		break;
 	}
-		
+
 	default:
 	{
 		for (int i = 0; i < Clients.size(); i++)
 		{
-			//åˆ¤æ–­æ˜¯å¦åœ¨çº¿
+			//ÅĞ¶ÏÊÇ·ñÔÚÏß
 			if (Clients[i].Online == false)
-				continue;//ç¦»çº¿è¿”å›
+				continue;//ÀëÏß·µ»Ø
 			int socketID = Clients[i].SocketID;
 			QString Comm = "DATETIME " + datetime + "\r\n";
 			QByteArray ba = Comm.toLatin1();
 			LPCSTR ch = ba.data();
 			int len = Comm.length();
 			int result = ::send(socketID, ch, len, 0);
-			LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit( "å°ç«™å·ï¼š") + Clients[i].StationID +QString::fromLocal8Bit( "è‡ªåŠ¨çŸ«æ­£æ—¶é’Ÿ."));
+			LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit("Ì¨Õ¾ºÅ£º") + Clients[i].StationID + QString::fromLocal8Bit("×Ô¶¯½ÃÕıÊ±ÖÓ."));
 		}
 		break;
 	}
-	
+
 	}
 }
 
-//è‡ªåŠ¨æ£€æµ‹ç¦»çº¿
-void EHT::Disconnect()
+//×Ô¶¯¼ì²âÀëÏß
+void FTPEHT::Disconnect()
 {
 	QDateTime currentTime = QDateTime::currentDateTime();
 	QString current_date = currentTime.toString("yyyy.MM.dd hh:mm:ss");
 	for (int i = 0; i < Clients.size(); i++)
 	{
-		
-			int time_t = currentTime.toTime_t() - Clients[i].LatestTimeOfHeartBeat.toTime_t();
-			//å¤§äº5åˆ†é’Ÿ
-			if (time_t >300 && (Clients[i].Online == true))
-			{
-				Clients[i].Online = false;
-				emit OffLineSignal(m_ServiceName,Clients[i].StationID,Clients[i].LatestTimeOfHeartBeat,Clients[i].LoginTime);
-				LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit("æœªæ£€æµ‹åˆ°å¿ƒè·³åŒ…,åŒºç«™å· ") + Clients[i].StationID +QString::fromLocal8Bit( "å·²ç¦»çº¿"));
-			}
+
+		int time_t = currentTime.toTime_t() - Clients[i].LatestTimeOfHeartBeat.toTime_t();
+		//´óÓÚ5·ÖÖÓ
+		if (time_t >300 && (Clients[i].Online == true))
+		{
+			Clients[i].Online = false;
+			emit OffLineSignal(m_ServiceName, Clients[i].StationID, Clients[i].LatestTimeOfHeartBeat, Clients[i].LoginTime);
+			LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit("Î´¼ì²âµ½ĞÄÌø°ü,ÇøÕ¾ºÅ ") + Clients[i].StationID + QString::fromLocal8Bit("ÒÑÀëÏß"));
+		}
 	}
 }
 
-//ç»ˆç«¯å‘½ä»¤æ“ä½œ
-void EHT::SendCommand(OPCommand cmm, QString StationID, QString Params1, QString Params2, bool WebCommand)
+//ÖÕ¶ËÃüÁî²Ù×÷
+void FTPEHT::SendCommand(OPCommand cmm, QString StationID, QString Params1, QString Params2, bool WebCommand)
 {
 	this->WebCommand = WebCommand;
 	pIOCP->SetWebCommand(1);
-	//è·å–å½“å‰ç»ˆç«¯æŒ‡ä»¤
+	//»ñÈ¡µ±Ç°ÖÕ¶ËÖ¸Áî
 	this->CurrentCommand = cmm;
-	//æ‰¾åˆ°å¯¹åº”å°ç«™å·çš„Socketå€¼
+	//ÕÒµ½¶ÔÓ¦Ì¨Õ¾ºÅµÄSocketÖµ
 	unsigned int SocketID = 0;
 	SocketID = GetSocket(StationID);
-	//åœŸå£¤æ°´åˆ†
+	//ÍÁÈÀË®·Ö
 	switch (m_ServiceID)
 	{
 	case TRSF_NM: case TRSF:case TRSF_XJ:case SH_TRSF_SQ:
@@ -789,7 +689,7 @@ void EHT::SendCommand(OPCommand cmm, QString StationID, QString Params1, QString
 			break;
 		case BASEINFO:
 			break;
-			//è®¾ç½®æˆ–è¯»å–é‡‡é›†å™¨æ—¥æœŸæ—¶é—´æ“ä½œ
+			//ÉèÖÃ»ò¶ÁÈ¡²É¼¯Æ÷ÈÕÆÚÊ±¼ä²Ù×÷
 		case DATETIME:
 		{
 			if (Params1 != "NULL")
@@ -808,10 +708,10 @@ void EHT::SendCommand(OPCommand cmm, QString StationID, QString Params1, QString
 				int SrcAdrr = StationID.toInt();
 				BYTE bytes[1024] = { 0 };
 				bytes[0] = 0xaa;
-				bytes[1] = 0x0a;//å¸§é•¿åº¦
-				bytes[2] = 0x81;//å¸§å‘½ä»¤
+				bytes[1] = 0x0a;//Ö¡³¤¶È
+				bytes[2] = 0x81;//Ö¡ÃüÁî
 				chk += bytes[2];
-				bytes[3] = SrcAdrr & 0xff;//æºåœ°å€
+				bytes[3] = SrcAdrr & 0xff;//Ô´µØÖ·
 				chk += bytes[3];
 				bytes[4] = (SrcAdrr >> 8) & 0xff;
 				chk += bytes[4];
@@ -829,9 +729,9 @@ void EHT::SendCommand(OPCommand cmm, QString StationID, QString Params1, QString
 				chk += bytes[10];
 				bytes[11] = sec.toInt();
 				chk += bytes[11];
-				bytes[12] = chk & 0xff;//æ ¡éªŒä½ ä½å…«ä½
-				bytes[13] = (chk >> 8) & 0xff;//é«˜å…«ä½
-				bytes[14] = 0xdd;
+				bytes[12] = chk & 0xff;//Ğ£ÑéÎ» µÍ°ËÎ»
+				bytes[13] = (chk >> 8) & 0xff;//¸ß°ËÎ»
+				bytes[14] = 0xff;
 				::send(SocketID, (char *)bytes, 15, 0);
 			}
 			else
@@ -840,21 +740,21 @@ void EHT::SendCommand(OPCommand cmm, QString StationID, QString Params1, QString
 				int SrcAdrr = StationID.toInt();
 				BYTE bytes[1024] = { 0 };
 				bytes[0] = 0xaa;
-				bytes[1] = 0x03;//å¸§é•¿åº¦
-				bytes[2] = 0x82;//å¸§å‘½ä»¤
+				bytes[1] = 0x03;//Ö¡³¤¶È
+				bytes[2] = 0x82;//Ö¡ÃüÁî
 				chk += bytes[2];
-				bytes[3] = SrcAdrr & 0xff;//æºåœ°å€
+				bytes[3] = SrcAdrr & 0xff;//Ô´µØÖ·
 				chk += bytes[3];
 				bytes[4] = (SrcAdrr >> 8) & 0xff;
 				chk += bytes[4];
-				bytes[5] = chk & 0xff;//æ ¡éªŒä½ ä½å…«ä½
-				bytes[6] = (chk >> 8) & 0xff;//é«˜å…«ä½
-				bytes[7] = 0xdd;
+				bytes[5] = chk & 0xff;//Ğ£ÑéÎ» µÍ°ËÎ»
+				bytes[6] = (chk >> 8) & 0xff;//¸ß°ËÎ»
+				bytes[7] = 0xff;
 				::send(SocketID, (char *)bytes, 8, 0);
 			}
 		}
 		break;
-		//è®¾ç½®æˆ–è¯»å–é‡‡é›†å™¨IPå’Œç«¯å£
+		//ÉèÖÃ»ò¶ÁÈ¡²É¼¯Æ÷IPºÍ¶Ë¿Ú
 		case ID:
 		{
 			if (Params1 != "NULL"&&Params2 != "NULL")
@@ -880,7 +780,7 @@ void EHT::SendCommand(OPCommand cmm, QString StationID, QString Params1, QString
 			break;
 		case UPDATE:
 			break;
-			//è¡¥æŠ„æ•°æ®å‘½ä»¤
+			//²¹³­Êı¾İÃüÁî
 		case DMTD:
 		{
 			if (Params1 != "NULL"&&Params2 != "NULL")
@@ -903,10 +803,10 @@ void EHT::SendCommand(OPCommand cmm, QString StationID, QString Params1, QString
 				int SrcAdrr = StationID.toInt();
 				BYTE bytes[1024] = { 0 };
 				bytes[0] = 0xaa;
-				bytes[1] = 0x0d;//å¸§é•¿åº¦
-				bytes[2] = 0x94;//å¸§å‘½ä»¤
+				bytes[1] = 0x0d;//Ö¡³¤¶È
+				bytes[2] = 0x94;//Ö¡ÃüÁî
 				chk += bytes[2];
-				bytes[3] = SrcAdrr & 0xff;//æºåœ°å€
+				bytes[3] = SrcAdrr & 0xff;//Ô´µØÖ·
 				chk += bytes[3];
 				bytes[4] = (SrcAdrr >> 8) & 0xff;
 				chk += bytes[4];
@@ -930,9 +830,9 @@ void EHT::SendCommand(OPCommand cmm, QString StationID, QString Params1, QString
 				chk += bytes[13];
 				bytes[14] = minE.toInt();
 				chk += bytes[14];
-				bytes[15] = chk & 0xff;//æ ¡éªŒä½ ä½å…«ä½
-				bytes[16] = (chk >> 8) & 0xff;//é«˜å…«ä½
-				bytes[17] = 0xdd;
+				bytes[15] = chk & 0xff;//Ğ£ÑéÎ» µÍ°ËÎ»
+				bytes[16] = (chk >> 8) & 0xff;//¸ß°ËÎ»
+				bytes[17] = 0xff;
 				::send(SocketID, (char *)bytes, 18, 0);
 			}
 		}
@@ -943,10 +843,10 @@ void EHT::SendCommand(OPCommand cmm, QString StationID, QString Params1, QString
 	}
 	default:
 	{
-		//å‘é€ç»ˆç«¯å‘½ä»¤
+		//·¢ËÍÖÕ¶ËÃüÁî
 		switch (cmm)
 		{
-			//è¯»å–é‡‡é›†å™¨çš„åŸºæœ¬ä¿¡æ¯
+			//¶ÁÈ¡²É¼¯Æ÷µÄ»ù±¾ĞÅÏ¢
 		case BASEINFO:
 		{
 			QString Comm = "BASEINFO\r\n";
@@ -960,7 +860,7 @@ void EHT::SendCommand(OPCommand cmm, QString StationID, QString Params1, QString
 			::send(SocketID, ch, len, 0);
 			break;
 		}
-		//è®¾ç½®æˆ–è¯»å–è‡ªåŠ¨è§‚æµ‹ç«™çš„åŒºç«™å·
+		//ÉèÖÃ»ò¶ÁÈ¡×Ô¶¯¹Û²âÕ¾µÄÇøÕ¾ºÅ
 		case ID:
 		{
 
@@ -975,7 +875,7 @@ void EHT::SendCommand(OPCommand cmm, QString StationID, QString Params1, QString
 			::send(SocketID, ch, len, 0);
 			break;
 		}
-		//è®¾ç½®æˆ–è¯»å–è§‚æµ‹åœºæ‹”æµ·é«˜åº¦
+		//ÉèÖÃ»ò¶ÁÈ¡¹Û²â³¡°Îº£¸ß¶È
 		case ALT:
 		{
 			QString Comm = "ALT\r\n";
@@ -989,7 +889,7 @@ void EHT::SendCommand(OPCommand cmm, QString StationID, QString Params1, QString
 			::send(SocketID, ch, len, 0);
 			break;
 		}
-		//CFå¡æ¨¡å—é…ç½®
+		//CF¿¨Ä£¿éÅäÖÃ
 		case CFSET:
 		{
 			QString Comm = "CFSET\r\n";
@@ -999,7 +899,7 @@ void EHT::SendCommand(OPCommand cmm, QString StationID, QString Params1, QString
 			::send(SocketID, ch, len, 0);
 			break;
 		}
-		//è®¾ç½®æˆ–è¯»å–æ•°æ®é‡‡é›†æ—¶é—´èŒƒå›´
+		//ÉèÖÃ»ò¶ÁÈ¡Êı¾İ²É¼¯Ê±¼ä·¶Î§
 		case CAPTIME:
 		{
 			QString Comm = "CAPTIME\r\n";
@@ -1013,7 +913,7 @@ void EHT::SendCommand(OPCommand cmm, QString StationID, QString Params1, QString
 			::send(SocketID, ch, len, 0);
 			break;
 		}
-		//è®¾ç½®æˆ–è¯»å–è‡ªåŠ¨è§‚æµ‹ç«™çš„ç»åº¦
+		//ÉèÖÃ»ò¶ÁÈ¡×Ô¶¯¹Û²âÕ¾µÄ¾­¶È
 		case LONGITUDE:
 		{
 			QString Comm = "LONG\r\n";
@@ -1027,7 +927,7 @@ void EHT::SendCommand(OPCommand cmm, QString StationID, QString Params1, QString
 			::send(SocketID, ch, len, 0);
 			break;
 		}
-		//è®¾ç½®æˆ–è¯»å–æ•°æ®é‡‡é›†æ—¶é—´é—´éš”
+		//ÉèÖÃ»ò¶ÁÈ¡Êı¾İ²É¼¯Ê±¼ä¼ä¸ô
 		case CAPINTERVAL:
 		{
 			QString Comm = "CAPINTERVAL\r\n";
@@ -1041,7 +941,7 @@ void EHT::SendCommand(OPCommand cmm, QString StationID, QString Params1, QString
 			::send(SocketID, ch, len, 0);
 			break;
 		}
-		//é‡æ–°å¯åŠ¨é‡‡é›†å™¨
+		//ÖØĞÂÆô¶¯²É¼¯Æ÷
 		case RESET:
 		{
 			QString Comm = "RESET\r\n";
@@ -1051,7 +951,7 @@ void EHT::SendCommand(OPCommand cmm, QString StationID, QString Params1, QString
 			::send(SocketID, ch, len, 0);
 			break;
 		}
-		//è¿œç¨‹å‡çº§å¼€å…³
+		//Ô¶³ÌÉı¼¶¿ª¹Ø
 		case UPDATE:
 		{
 			QString Comm = "UPDATE\r\n";
@@ -1061,7 +961,7 @@ void EHT::SendCommand(OPCommand cmm, QString StationID, QString Params1, QString
 			::send(SocketID, ch, len, 0);
 			break;
 		}
-		//æ‰‹åŠ¨é‡‡é›†å½“å‰æ—¶åˆ»çš„è¦ç´ æ•°æ®
+		//ÊÖ¶¯²É¼¯µ±Ç°Ê±¿ÌµÄÒªËØÊı¾İ
 		case SNAPSHOT:
 		{
 			QString Comm = "SNAPSHOT\r\n";
@@ -1071,7 +971,7 @@ void EHT::SendCommand(OPCommand cmm, QString StationID, QString Params1, QString
 			::send(SocketID, ch, len, 0);
 			break;
 		}
-		//è®¾ç½®æˆ–è¯»å–é‡‡é›†å™¨æ—¥æœŸæ—¶é—´æ“ä½œ
+		//ÉèÖÃ»ò¶ÁÈ¡²É¼¯Æ÷ÈÕÆÚÊ±¼ä²Ù×÷
 		case DATETIME:
 		{
 			QString Comm = "DATETIME\r\n";
@@ -1085,7 +985,7 @@ void EHT::SendCommand(OPCommand cmm, QString StationID, QString Params1, QString
 			::send(SocketID, ch, len, 0);
 			break;
 		}
-		//è®¾ç½®æˆ–è¯»å–è‡ªåŠ¨è§‚æµ‹ç«™çš„çº¬åº¦
+		//ÉèÖÃ»ò¶ÁÈ¡×Ô¶¯¹Û²âÕ¾µÄÎ³¶È
 		case LAT:
 		{
 			QString Comm = "LAT\r\n";
@@ -1099,7 +999,7 @@ void EHT::SendCommand(OPCommand cmm, QString StationID, QString Params1, QString
 			::send(SocketID, ch, len, 0);
 			break;
 		}
-		//è¡¥æŠ„æ•°æ®å‘½ä»¤
+		//²¹³­Êı¾İÃüÁî
 		case DMTD:
 		{
 			if (Params1 != "NULL"&&Params2 != "NULL")
@@ -1119,11 +1019,11 @@ void EHT::SendCommand(OPCommand cmm, QString StationID, QString Params1, QString
 	break;
 	}
 }
-//ç»Ÿè®¡åœ¨çº¿ä¸ªæ•°
-int EHT::GetOnlineCount()
+//Í³¼ÆÔÚÏß¸öÊı
+int FTPEHT::GetOnlineCount()
 {
 	int count = 0;
-	for (int  i = 0; i < Clients.count(); i++)
+	for (int i = 0; i < Clients.count(); i++)
 	{
 		if (Clients[i].Online)
 			count++;
@@ -1131,31 +1031,31 @@ int EHT::GetOnlineCount()
 	return count;
 }
 
-//å®æ—¶æ¥æ”¶æ•°æ®
-void EHT::RealTimeDataSlot(QString data)
+//ÊµÊ±½ÓÊÕÊı¾İ
+void FTPEHT::RealTimeDataSlot(QString data)
 {
 
 }
 
-void EHT::ReConnectActiveMq()
+void FTPEHT::ReConnectActiveMq()
 {
-	//å·²ç»è¿æ¥
+	//ÒÑ¾­Á¬½Ó
 	LPCSTR dataChar = "test";
 	if (g_SimpleProducer.send(dataChar, strlen(dataChar)) == 1)
 		return;
-	//é‡è¿æ˜¯å¦å¼€å¯
+	//ÖØÁ¬ÊÇ·ñ¿ªÆô
 	if (ReconnectTimer->isActive())
 		return;
-	LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit("æ¶ˆæ¯ä¸­é—´ä»¶å¼€å§‹é‡è¿..."));
+	LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit("ÏûÏ¢ÖĞ¼ä¼ş¿ªÊ¼ÖØÁ¬..."));
 	ReconnectTimer->start(1000 * 10);
 }
 
-void EHT::Reconnect()
+void FTPEHT::Reconnect()
 {
 	LPCSTR dataChar = "test";
-	if (g_SimpleProducer.send(dataChar, strlen(dataChar))==1)
+	if (g_SimpleProducer.send(dataChar, strlen(dataChar)) == 1)
 	{
-		LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit("æ¶ˆæ¯ä¸­é—´ä»¶å·²ç»é‡è¿"));
+		LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit("ÏûÏ¢ÖĞ¼ä¼şÒÑ¾­ÖØÁ¬1"));
 		ReconnectTimer->stop();
 		return;
 	}

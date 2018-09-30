@@ -6,7 +6,7 @@ SYSLogDlg::SYSLogDlg(QWidget *parent)
 	: QDialog(parent)
 {
 	ui.setupUi(this);
-	setWindowFlags(Qt::WindowCloseButtonHint|Qt::FramelessWindowHint);
+	setWindowFlags(Qt::WindowCloseButtonHint|Qt::FramelessWindowHint|Qt::Tool);
 	setFixedSize(623, 470);
 
 	m_pLoadingLabel = new QLabel(this);

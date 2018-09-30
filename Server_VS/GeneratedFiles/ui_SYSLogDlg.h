@@ -54,6 +54,9 @@ public:
         SYSLogDlg->setWindowModality(Qt::NonModal);
         SYSLogDlg->setEnabled(true);
         SYSLogDlg->resize(623, 482);
+		QIcon icon;
+		icon.addFile(QStringLiteral("../Image/png/logicon.png"), QSize(), QIcon::Normal, QIcon::Off);
+		SYSLogDlg->setWindowIcon(icon);  //…Ë÷√¥∞ø⁄Õº±Í
         QFont font;
         font.setFamily(QString::fromUtf8("\345\276\256\350\275\257\351\233\205\351\273\221"));
         font.setPointSize(10);

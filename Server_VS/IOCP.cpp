@@ -272,11 +272,25 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 					QString ServiceID= data_json.find("ServiceTypeID").value().toString();
 					if (ServiceID.toInt() ==8||ServiceID.toInt() ==11||ServiceID.toInt() ==12||ServiceID.toInt()==13||
 						ServiceID.toInt() == 14 || ServiceID.toInt() == 15 || ServiceID.toInt() == 16 ||
-						ServiceID.toInt() ==17 || ServiceID.toInt() == 18 )
+						ServiceID.toInt() ==17 )
 					{    //湿地数据
 						//发送至消息中间件
 						if (g_SimpleProducer_sh.send(dataChar, strlen(dataChar)) < 0)
 							emit ErrorMSGSignal(10304);
+					}
+					if (ServiceID.toInt()==18)//植被
+					{
+						//获取区站号
+						PerHandleData->StationID = data_json.find("StationID").value().toString();
+						int file = data_json.find("FileType").value().toInt();
+						//通知EHT,新的数据
+						emit NewDataSignal(
+							PerHandleData->StationID,
+							PerHandleData->ClientIP,
+							PerHandleData->Port,
+							file,
+							PerHandleData->Socket);
+						break;
 					}
 					else
 					{

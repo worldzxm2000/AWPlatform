@@ -108,7 +108,7 @@ void ControlDlg::SendComm()
 			chk += bytes[4];
 			bytes[5] = chk & 0xff;//校验位 低八位
 			bytes[6] = (chk >> 8) & 0xff;//高八位
-			bytes[7] = 0xff;
+			bytes[7] = 0xdd;
 			::send(SocketID, (char *)bytes, 8, 0);
 			break;
 		}
@@ -142,7 +142,7 @@ void ControlDlg::SendComm()
 			chk += bytes[4];
 			bytes[5] = chk & 0xff;//校验位 低八位
 			bytes[6] = (chk >> 8) & 0xff;//高八位
-			bytes[7] = 0xff;
+			bytes[7] = 0xdd;
 			::send(SocketID, (char *)bytes, 8, 0);
 			break;
 		}
@@ -270,7 +270,7 @@ void ControlDlg::SendComm()
 			chk += bytes[4];
 			bytes[5] = chk & 0xff;//校验位 低八位
 			bytes[6] = (chk >> 8) & 0xff;//高八位
-			bytes[7] = 0xff;
+			bytes[7] = 0xdd;
 			::send(SocketID, (char *)bytes, 8, 0);
 		}
 			break;
@@ -336,7 +336,7 @@ void ControlDlg::SendComm()
 			chk += bytes[14];
 			bytes[15] = chk & 0xff;//校验位 低八位
 			bytes[16] = (chk >> 8) & 0xff;//高八位
-			bytes[17] = 0xff;
+			bytes[17] = 0xdd;
 			::send(SocketID, (char *)bytes, 18, 0);
 		}
 			break;
