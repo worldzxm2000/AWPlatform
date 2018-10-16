@@ -256,7 +256,7 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 			for (int i = 0; i < Count; i++)
 			{
 				//解析数据数组
-				QJsonObject data_json=JsonObj.find(QString::number(i+1)).value().toObject();
+				QJsonObject data_json = JsonObj.find(QString::number(i + 1)).value().toObject();
 				//获取数据类型（1为观测数据，2位操作数据，3为心跳数据）
 				int DataType = data_json.find("DataType").value().toInt();
 				switch (DataType)
@@ -269,19 +269,12 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 					QByteArray byteArray = document.toJson(QJsonDocument::Compact);
 					LPCSTR dataChar;
 					dataChar = byteArray.data();
-					QString ServiceID= data_json.find("ServiceTypeID").value().toString();
-					if (ServiceID.toInt() ==8||ServiceID.toInt() ==11||ServiceID.toInt() ==12||ServiceID.toInt()==13||
-						ServiceID.toInt() == 14 || ServiceID.toInt() == 15 || ServiceID.toInt() == 16 ||
-						ServiceID.toInt() ==17 )
-					{    //湿地数据
-						//发送至消息中间件
-						if (g_SimpleProducer_sh.send(dataChar, strlen(dataChar)) < 0)
-							emit ErrorMSGSignal(10304);
-					}
-					if (ServiceID.toInt()==18)//植被
+					QString ServiceID = data_json.find("ServiceTypeID").value().toString();
+					if (ServiceID.toInt() == 18)//植被
 					{
 						//获取区站号
 						PerHandleData->StationID = data_json.find("StationID").value().toString();
+						PerHandleData->DeviceID = data_json.find("DeviceID").value().toString();
 						int file = data_json.find("FileType").value().toInt();
 						//通知EHT,新的数据
 						emit NewDataSignal(
@@ -289,28 +282,32 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 							PerHandleData->ClientIP,
 							PerHandleData->Port,
 							file,
-							PerHandleData->Socket);
+							PerHandleData->Socket,
+							PerHandleData->DeviceID);
 						break;
 					}
-					else
-					{
-						//发送至消息中间件
-						if (g_SimpleProducer.send(dataChar, strlen(dataChar)) < 0)
-							emit ErrorMSGSignal(10304);
-						if (g_SimpleProducer_ZDH.send(dataChar, strlen(dataChar)) < 0)
-							emit ErrorMSGSignal(10304);
-					}
-				
+
+					//发送至消息中间件
+					if (g_SimpleProducer.send(dataChar, strlen(dataChar)) < 0)
+						emit ErrorMSGSignal(10304);
+					if (g_SimpleProducer_ZDH.send(dataChar, strlen(dataChar)) < 0)
+						emit ErrorMSGSignal(10304);
+
+
 					//获取区站号
 					PerHandleData->StationID = data_json.find("StationID").value().toString();
+					//获取设备号
+					PerHandleData->DeviceID = data_json.find("DeviceID").value().toString();
 					//通知EHT,新的数据
 					emit NewDataSignal(
 						PerHandleData->StationID,
 						PerHandleData->ClientIP,
 						PerHandleData->Port,
-						PerHandleData->Socket);
-					 break;
+						PerHandleData->Socket,
+						PerHandleData->DeviceID);
+					break;
 				}
+				break;
 				case 2://操作数据
 				{
 					int ValueCount = data_json.find("ValueCount").value().toInt();
@@ -319,44 +316,68 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 					case 1:
 					{
 						QString Value = data_json.find("RecvValue1").value().toString();
-						emit OperationResultSignal(Value,m_Port,PerHandleData->StationID);
+						emit OperationResultSignal(Value,m_Port,PerHandleData->StationID,PerHandleData->DeviceID);
 						break;
 					}
 					case 2:
 					{
 						QString Value1 = data_json.find("RecvValue1").value().toString();
 						QString Value2 = data_json.find("RecvValue2").value().toString();
-						emit OperationResultSignal(Value1,Value2, m_Port, PerHandleData->StationID);
+						emit OperationResultSignal(Value1,Value2, m_Port, PerHandleData->StationID,PerHandleData->DeviceID);
 						break;
 					}
-					//航空操作数据
+					//航空操作数据或水体液位
 					case 7:
 					{
 						QString ServiceTypeID = data_json.find("ServiceTypeID").value().toString();
 						QString StationID = data_json.find("StationID").value().toString();
 						QString Command = data_json.find("Command").value().toString();
+						QString DeviceID = data_json.find("DeviceID").value().toString() == NULL ? "NULL" : data_json.find("DeviceID").value().toString();
 						QString Value1 = data_json.find("RecvValue1").value().toString();
 						QString Value2 = data_json.find("RecvValue2").value().toString();
 						QString Value3 = data_json.find("RecvValue3").value().toString();
 						QString Value4 = data_json.find("RecvValue4").value().toString();
-						emit OperationResultSignal(Command,Value1,Value2,Value3,Value4, m_Port,StationID);
+						emit OperationResultSignal(Command,Value1,Value2,Value3,Value4, m_Port,PerHandleData->StationID,PerHandleData->DeviceID);
 					}
 					default:
 						break;
 					}
 				
 				}
+				break;
 				case 3://心跳数据
 				{
 					//获取区站号
 					PerHandleData->StationID = data_json.find("StationID").value().toString();
+					//获取设备号
+					PerHandleData->DeviceID = data_json.find("DeviceID").value().toString();
+					//if (m_Port == 8005)
+				//	{
+					/*	QJsonObject HBJson;
+						HBJson.insert("DeviceID", PerHandleData->StationID);
+						HBJson.insert("ServiceTypeID","18");
+						QDateTime current_date_time = QDateTime::currentDateTime();
+						QString current_date = current_date_time.toString("yyyy-MM-dd hh24:mm:ss");
+						HBJson.insert("HBTime", current_date);
+						HBJson.insert("OnLineStatus",true);*/
+						QJsonDocument document;
+						document.setObject(data_json);
+						QByteArray byteArray = document.toJson(QJsonDocument::Compact);
+						LPCSTR dataChar;
+						dataChar = byteArray.data();
+						//发送至消息中间件
+						if (g_SimpleProducer_sh.send(dataChar, strlen(dataChar)) < 0)
+							emit ErrorMSGSignal(10304);
+				//	}
 					emit NewDataSignal(
 						PerHandleData->StationID,
 						PerHandleData->ClientIP,
 						PerHandleData->Port,
-						PerHandleData->Socket);
+						PerHandleData->Socket,
+						PerHandleData->DeviceID);
 					break;
 				}
+				break;
 				}
 			}
 			break;

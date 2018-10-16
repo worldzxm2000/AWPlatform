@@ -29,14 +29,18 @@ bool SimpleProducer::start(const std::string& UserName, const std::string& Passw
 	this->UserName = UserName;
 	this->Password = Password;
 	this->numMessages = numMessages;
-	this->useTopic = useTopic;
+	
 	this->brokerURI = brokerURI;
 	this->destURI = destURI;
-	this->clientAck = clientAck;
+
 
 	return initialize();
 }
 
+bool SimpleProducer::start()
+{
+	return initialize();
+}
 bool SimpleProducer::initialize()
 {
 	try {
@@ -57,20 +61,13 @@ bool SimpleProducer::initialize()
 		}
 
 		// Create a Session
-		if (clientAck) {
-			session = connection->createSession(Session::CLIENT_ACKNOWLEDGE);
-		}
-		else {
-			session = connection->createSession(Session::AUTO_ACKNOWLEDGE);
-		}
+		session = connection->createSession(Session::AUTO_ACKNOWLEDGE);
+	
 
 		// Create the destination (Topic or Queue)
-		if (useTopic) {
-			destination = session->createTopic(destURI);
-		}
-		else {
-			destination = session->createQueue(destURI);
-		}
+
+		destination = session->createQueue(destURI);
+	
 
 		// Create a MessageProducer from the Session to the Topic or Queue
 		producer = session->createProducer(destination);

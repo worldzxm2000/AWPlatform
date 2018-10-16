@@ -11,7 +11,6 @@ EHT::EHT(QWidget *parent)
 	InitIOCP();
 	b_IsReconnect = false;//MQ重连状态
 	IsExistImage = false;
-	IsExistXML = false;
 	IsExistTXT = false;
 	//读取SIM卡号配置文件，转成区站号
 	Convert2StationID();
@@ -24,7 +23,7 @@ EHT::EHT(QWidget *parent)
 
 	OffLineTimer = new QTimer(parent);
 	connect(OffLineTimer, SIGNAL(timeout()), this, SLOT(Disconnect()));
-	OffLineTimer->start(1000 * 60 * 10);
+	OffLineTimer->start(1000 * 60 * 7);
 	//消息中间件重连时间
 	ReconnectTimer = new QTimer(parent);
 	ReconnectTimer->
@@ -32,9 +31,10 @@ EHT::EHT(QWidget *parent)
 	//Image图片重新处理时间
 	ReHandleZB_IMAGE = new QTimer(parent);
 	ReHandleZB_IMAGE->connect(ReHandleZB_IMAGE, SIGNAL(timeout()), this, SLOT(MoveImageToDesAddr()));
-	//XML文件重新处理时间
+	//XML文件处理时间
 	ReHandleZB_XML = new QTimer(parent);
 	ReHandleZB_XML->connect(ReHandleZB_XML, SIGNAL(timeout()), this, SLOT(MoveXMLToDesAddr()));
+	ReHandleZB_XML->start(1000 * 60 * 10);
 	//TXT文件重新处理时间
 	ReHandleZB_TXT = new QTimer(parent);
 	ReHandleZB_TXT->connect(ReHandleZB_TXT, SIGNAL(timeout()), this, SLOT(MoveTXTToDesAddr()));
@@ -59,7 +59,12 @@ LRESULT EHT::LoadLib(QString Lib_Path)
 		GetPort_Lib func_GetPort = (GetPort_Lib)m_Lib.resolve("GetPort");//获取端口号
 		GetVersionNo_Lib func_GetVersionNo = (GetVersionNo_Lib)m_Lib.resolve("GetVersionNo");//获取版本号
 		Char2Json func_Char2Json = (Char2Json)(m_Lib.resolve("Char2Json"));//获取解析数据
-		if (!(func_GetServiceTypeID && func_GetServiceTypeName && func_GetVersionNo && func_GetPort&&func_Char2Json))
+		func_SetTime_Lib = (SetTime_Lib)(m_Lib.resolve("SetTime"));
+		func_GetControlWidget = (GetControlWidget_Lib)(m_Lib.resolve("GetControlWidget"));
+		func_SetValueToControlWidget = (SetValueToControlWidget_Lib)(m_Lib.resolve("SetValueToControlWidget"));
+		func_SetCommand = (SetCommand_Lib)(m_Lib.resolve("SetCommand"));
+		if (!(func_GetServiceTypeID && func_GetServiceTypeName && func_GetVersionNo && 
+			func_GetPort&&func_Char2Json&&func_SetTime_Lib&&func_GetControlWidget&&func_SetCommand&&func_SetValueToControlWidget))
 		{
 			UnloadLib();
 			return -1;
@@ -75,7 +80,7 @@ LRESULT EHT::LoadLib(QString Lib_Path)
 		//获取版本号
 		m_Vesion = func_GetVersionNo();
 		//开启IP和端口设置窗体
-		ConfigWnd CfgWnd(this->parentWidget());
+		ConfigWnd CfgWnd;
 		CfgWnd.DialogMode = true;//设置 false为读取
 		CfgWnd.SetServicePort(m_Port);
 		int r = CfgWnd.exec();
@@ -193,12 +198,12 @@ void EHT::InitIOCP()
 	//设备数据错误通知
 	connect(pIOCP, SIGNAL(ErrorMSGSignal(int)), this, SLOT(GetErrorSlot(int)), Qt::QueuedConnection);
 	//设备新数据通知
-	connect(pIOCP, SIGNAL(NewDataSignal(QString, QString,int, unsigned int)), this, SLOT(NewDataSlot(QString ,QString ,int, unsigned int)), Qt::QueuedConnection);
-	connect(pIOCP, SIGNAL(NewDataSignal(QString, QString, int, int,unsigned int)), this, SLOT(NewDataSlot(QString, QString, int, int, unsigned int)), Qt::QueuedConnection);
+	connect(pIOCP, SIGNAL(NewDataSignal(QString, QString,int, unsigned int,QString)), this, SLOT(NewDataSlot(QString ,QString ,int, unsigned int,QString)), Qt::QueuedConnection);
+	connect(pIOCP, SIGNAL(NewDataSignal(QString, QString, int, int,unsigned int,QString)), this, SLOT(NewDataSlot(QString, QString, int, int, unsigned int,QString)), Qt::QueuedConnection);
 	//设备操作状态通知
-	connect(pIOCP, SIGNAL(OperationResultSignal(QString, int, QString)), this, SLOT(OperationResultSlot(QString, int, QString)), Qt::QueuedConnection);
-	connect(pIOCP, SIGNAL(OperationResultSignal(QString, QString, int, QString)), this, SLOT(OperationResultSlot(QString,QString, int, QString)), Qt::QueuedConnection);
-	connect(pIOCP, SIGNAL(OperationResultSignal(QString, QString, QString, QString, QString, int, QString)), this, SLOT(OperationResultSlot(QString, QString, QString, QString, QString, int, QString)),Qt::QueuedConnection);
+	connect(pIOCP, SIGNAL(OperationResultSignal(QString, int, QString, QString)), this, SLOT(OperationResultSlot(QString, int, QString, QString)), Qt::QueuedConnection);
+	connect(pIOCP, SIGNAL(OperationResultSignal(QString, QString, int, QString, QString)), this, SLOT(OperationResultSlot(QString,QString, int, QString, QString)), Qt::QueuedConnection);
+	connect(pIOCP, SIGNAL(OperationResultSignal(QString, QString, QString, QString, QString, int, QString, QString)), this, SLOT(OperationResultSlot(QString, QString, QString, QString, QString, int, QString, QString)),Qt::QueuedConnection);
 	//设备终端命令返回值
 	connect(pIOCP, SIGNAL(RecvRealTimeDataSignal(QString)), this, SLOT(RealTimeDataSlot(QString)), Qt::AutoConnection);
 }
@@ -246,13 +251,32 @@ void EHT::OffLineSlot(unsigned int CltSocket)
 			LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit("区站号 ") + Clients[i].StationID + QString::fromLocal8Bit("已经断开连接"));
 			Clients[i].SocketID = 0;//Socket置零
 			Clients[i].Online = false;//设置离线状态
-			emit OffLineSignal(m_ServiceName, Clients[i].StationID, current_date_time, Clients[i].LoginTime);
+			if (m_Port == 8005)
+			{
+				QJsonObject HBJson;
+				HBJson.insert("DeviceID", Clients[i].StationID);
+				HBJson.insert("ServiceTypeID", "18");
+				QDateTime current_date_time = QDateTime::currentDateTime();
+				QString current_date = current_date_time.toString("yyyy-MM-dd hh24:mm:ss");
+				HBJson.insert("HBTime", current_date);
+				HBJson.insert("OnLineStatus", false);
+				QJsonDocument document;
+				document.setObject(HBJson);
+				QByteArray byteArray = document.toJson(QJsonDocument::Compact);
+				LPCSTR dataChar;
+				dataChar = byteArray.data();
+				//发送至消息中间件
+				if (g_SimpleProducer_sh.send(dataChar, strlen(dataChar)) < 0)
+					GetErrorSlot(10304);
+			}
+			emit OffLineSignal(m_ServiceName, Clients[i].StationID, current_date_time, Clients[i].LoginTime,Clients[i].DeviceID);
 			break;
 		}
 	}
 }
+
 //有数据传输
-void EHT::NewDataSlot(QString StationID, QString IP, int Port, unsigned int CltSocket)
+void EHT::NewDataSlot(QString StationID, QString IP, int Port, unsigned int CltSocket,QString DeviceID)
 {
 	//台站号为空
 	if (StationID == NULL)
@@ -271,28 +295,28 @@ void EHT::NewDataSlot(QString StationID, QString IP, int Port, unsigned int CltS
 	for (int i = 0; i < Clients.count(); i++)
 	{
 		//存在
-		if (Clients[i].StationID.toUpper().compare(StationID.toUpper()) == 0)
+		if (Clients[i].DeviceID.toUpper().compare(DeviceID.toUpper()) == 0)
 		{
 			Clients[i].LatestTimeOfHeartBeat = current_date_time;//更新时间
 			Clients[i].SocketID = CltSocket;//更新Socket号
 			Clients[i].IP = IP;//更新IP
 			Clients[i].Port = Port;//更新端口
 			Clients[i].Online = true;//设置在线
-			emit OnLineSignal(m_ServiceName,StationID,Clients[i].LatestTimeOfHeartBeat,Clients[i].LoginTime);//刷新UI
-		//	LogWrite::DataLogMsgOutPut("新数据已到达！台站号为：" + Clients[i].StationID);
+			emit OnLineSignal(m_ServiceName, Clients[i].StationID,Clients[i].LatestTimeOfHeartBeat,Clients[i].LoginTime,Clients[i].DeviceID);//刷新UI
 			return;
 		}
 	}
 	//不存在插入
-	CLIENTINFO clientinfo{ IP, Port,CltSocket,StationID,current_date_time,true,current_date_time };
+	CLIENTINFO clientinfo{ IP, Port,CltSocket,StationID,DeviceID,current_date_time,true,current_date_time };
 	Clients.push_back(clientinfo);
-	LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit("新设备已连接，台站号为：") + clientinfo.StationID);
-	emit  OnLineSignal(m_ServiceName, StationID,clientinfo.LatestTimeOfHeartBeat,clientinfo.LoginTime);;//刷新UI
+	LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit("新设备已连接，台站号为：") + clientinfo.StationID+QString::fromLocal8Bit("，设备号为：")+ clientinfo.DeviceID);
+	emit  OnLineSignal(m_ServiceName, StationID,clientinfo.LatestTimeOfHeartBeat,clientinfo.LoginTime, clientinfo.DeviceID);;//刷新UI
 }
 
 //有数据传输植被
-void EHT::NewDataSlot(QString StationID, QString IP, int Port, int File, unsigned int CltSocket)
+void EHT::NewDataSlot(QString StationID, QString IP, int Port, int File, unsigned int CltSocket,QString DeviceID)
 {
+
 	//台站号为空
 	if (StationID == NULL)
 		return;
@@ -314,15 +338,9 @@ void EHT::NewDataSlot(QString StationID, QString IP, int Port, int File, unsigne
 		ReHandleZB_IMAGE->start(1000 * 10);
 	}
 	break;
-	case XML:
-	{
-		IsExistXML = false;
-		ReHandleZB_XML->start(1000*10);
-	}
-	break;
 	case TXT:
 	{
-		IsExistXML = false;
+		IsExistTXT= false;
 		ReHandleZB_TXT->start(1000* 10);
 	}
 		break;
@@ -333,22 +351,22 @@ void EHT::NewDataSlot(QString StationID, QString IP, int Port, int File, unsigne
 	for (int i = 0; i < Clients.count(); i++)
 	{
 		//存在
-		if (Clients[i].StationID.toUpper().compare(StationID.toUpper()) == 0)
+		if (Clients[i].DeviceID.toUpper().compare(DeviceID.toUpper()) == 0)
 		{
 			Clients[i].LatestTimeOfHeartBeat = current_date_time;//更新时间
 			Clients[i].SocketID = CltSocket;//更新Socket号
 			Clients[i].IP = IP;//更新IP
 			Clients[i].Port = Port;//更新端口
 			Clients[i].Online = true;//设置在线
-			emit OnLineSignal(m_ServiceName, StationID, Clients[i].LatestTimeOfHeartBeat, Clients[i].LoginTime);//刷新UI
+			emit OnLineSignal(m_ServiceName, StationID, Clients[i].LatestTimeOfHeartBeat, Clients[i].LoginTime, Clients[i].DeviceID);//刷新UI
 			return;
 		}
 	}
 	//不存在插入
-	CLIENTINFO clientinfo{ IP, Port,CltSocket,StationID,current_date_time,true,current_date_time };
+	CLIENTINFO clientinfo{ IP, Port,CltSocket,StationID,DeviceID,current_date_time,true,current_date_time };
 	Clients.push_back(clientinfo);
 	LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit("新设备已连接，台站号为：") + clientinfo.StationID);
-	emit  OnLineSignal(m_ServiceName, StationID, clientinfo.LatestTimeOfHeartBeat, clientinfo.LoginTime);;//刷新UI
+	emit  OnLineSignal(m_ServiceName, StationID, clientinfo.LatestTimeOfHeartBeat, clientinfo.LoginTime,clientinfo.DeviceID);;//刷新UI
 }
 
 //图片处理
@@ -356,10 +374,7 @@ void EHT::MoveImageToDesAddr()
 {
 	if (IsExistImage)
 		ReHandleZB_IMAGE->stop();
-	QDateTime current_date_time = QDateTime::currentDateTime();
-	QString yy = current_date_time.toString("yyyy");
-	QString mm = current_date_time.toString("MM");
-	QString dd = current_date_time.toString("dd");
+	
 	QString fileName = "E:\\EcologyImage";
 	QDir dir(fileName);
 	QStringList filter;
@@ -373,11 +388,24 @@ void EHT::MoveImageToDesAddr()
 		//找到是图片
 		QString path = fileInfo->at(i).filePath();
 		QString name = fileInfo->at(i).fileName();
+		int sizeOfImg = fileInfo->at(i).size();
 		//获取图片名称
 		QStringList namestrlit = name.split(".");
 		if (namestrlit.count() < 1)
 			continue;
-		
+		QStringList strName = name.split("_");
+		if (strName.count() != 4)
+			continue;
+		QStringList strDll = strName.at(3).split(".");
+		QString DeviceID = strDll.at(0);
+		QString OBcurrent_date = strName.at(2);
+		QString StationID = strName.at(0);
+
+		QDateTime current_date_time = QDateTime::fromString("yyyyMMddhhmmss");
+		QString yy = current_date_time.toString("yyyy");
+		QString mm = current_date_time.toString("MM");
+		QString dd = current_date_time.toString("dd");
+
 		//生成原始图和缩略图
 		QString DesFile_Image = "D://Tomcat 8.0//webapps//byd//upload//yszb//" + yy+"//"+mm+"//"+dd;//原始图
 		QString DesFile_MinImage = "D://Tomcat 8.0//webapps//byd//upload//slzb//" +yy + "//" + mm + "//" + dd;//缩略图
@@ -395,17 +423,11 @@ void EHT::MoveImageToDesAddr()
 		minImage.save(DesFile_MinImage, "JPG");
 		//XML文件处理
 		QJsonObject Json;
-		QStringList strName = name.split("_");
-		if (strName.count()!=4)
-			continue;
-		QStringList strDll = strName.at(3).split(".");
-		QString DeviceID = strDll.at(0);
-		QString OBcurrent_date = strName.at(2);
-		QString StationID = strName.at(0);
+	
 		//原图名称
 		Json.insert("ImageName",name);
 		//原图路径
-		Json.insert("ImagePath","//byd//upload//yszb//"+yy + "//" + mm + "//" + dd +"//"+name);
+		Json.insert("ImagePath","//byd//upload//yszb//" + yy + "//" + mm + "//" + dd +"//" + name);
 		//缩略图路径
 		Json.insert("MinImgPath", "//byd//upload//slzb//" + yy + "//" + mm + "//" + dd + "//" + name);
 		//设备ID
@@ -426,8 +448,8 @@ void EHT::MoveImageToDesAddr()
 		if (g_SimpleProducer_sh.send(dataChar, strlen(dataChar)) < 0)
 			GetErrorSlot(10304);
 		//复制成功后 删除源文件
-		if (QFile::copy(path, DesFile_Image))
-			QFile::remove(path);
+		QFile::copy(path, DesFile_Image);
+		QFile::remove(path);
 		IsExistImage = true;
 	}
 }
@@ -459,8 +481,8 @@ void EHT::MoveTXTToDesAddr()
 		DesFile_TXT += "\\" + name;
 		
 		//复制成功后 删除源文件
-		if (QFile::copy(path, DesFile_TXT))
-			QFile::remove(path);
+		QFile::copy(path, DesFile_TXT);
+		QFile::remove(path);
 		IsExistTXT = true;
 	}
 }
@@ -468,8 +490,6 @@ void EHT::MoveTXTToDesAddr()
 //XML处理
 void EHT::MoveXMLToDesAddr()
 {
-	if (IsExistXML)
-		ReHandleZB_XML->stop();
 	QJsonObject Json;
 	QDateTime current_date_time = QDateTime::currentDateTime();
 	QString current_date = current_date_time.toString("yyyy.MM.dd");
@@ -493,13 +513,17 @@ void EHT::MoveXMLToDesAddr()
 		QString DeviceID = strDll.at(0);
 		QString OBcurrent_date = strName.at(2);
 		QString StationID = strName.at(0);
+
 		QString DesFile_XML = "D://SH_ZB_XML//" + current_date;//目的路径
 		QDir dir(DesFile_XML);
 		if (!dir.exists())
 			dir.mkpath(DesFile_XML);//创建多级目录
 		DesFile_XML += "\\" + name;
+		//复制成功后 删除源文件
+		QFile::copy(path, DesFile_XML);
+	    QFile::remove(path);
 		//解析文件
-		QFile file(path); //相对路径、绝对路径、资源路径都行
+		QFile file(DesFile_XML); //相对路径、绝对路径、资源路径都行
 		if (!file.open(QFile::ReadOnly))
 			return;
 
@@ -527,6 +551,7 @@ void EHT::MoveXMLToDesAddr()
 		Json.insert("ObserveTime", OBcurrent_date);
 		//业务号
 		Json.insert("ServiceTypeID", "18");
+
 		QJsonDocument document;
 		document.setObject(Json);
 		QByteArray byteArray = document.toJson(QJsonDocument::Compact);
@@ -534,19 +559,23 @@ void EHT::MoveXMLToDesAddr()
 		dataChar = byteArray.data();
 		if (g_SimpleProducer_sh.send(dataChar, strlen(dataChar)) < 0)
 			GetErrorSlot(10304);
-		//复制成功后 删除源文件
-		if (QFile::copy(path, DesFile_XML))
-			bool b=QFile::remove(path);
-		IsExistXML = true;
 	}
 }
 
 //终端命令操作
-void EHT:: OperationResultSlot(QString Value, int SrvPort, QString StationID)
+void EHT:: OperationResultSlot(QString Value, int SrvPort, QString StationID, QString DeviceID)
 {
+	QStringList ValueList;
+	ValueList.append(Value);
+	for (int i = 0; i < Clients.count(); i++)
+	{
+		if(Clients[i].DeviceID.toUpper().compare(DeviceID.toUpper())==0&& Clients[i].StationID.toUpper().compare(StationID.toUpper())==0)
+		func_SetValueToControlWidget(ValueList);
+	}
+
 	//前端发送指令
 	QString OperationLog;
-	OperationLog = QString::fromLocal8Bit("终端返回值：") + Value + QString::fromLocal8Bit(",信息来自业务号：")+m_ServiceName+ QString::fromLocal8Bit(",台站号：")+StationID;
+	OperationLog = QString::fromLocal8Bit("终端返回值：") + Value + QString::fromLocal8Bit(",信息来自业务号：")+m_ServiceName+ QString::fromLocal8Bit(",台站号：")+StationID+QString::fromLocal8Bit(",设备号：")+DeviceID;
 	if (this->WebCommand)
 	{
 		QJsonObject json;
@@ -565,11 +594,19 @@ void EHT:: OperationResultSlot(QString Value, int SrvPort, QString StationID)
 	//写入数据日志
 	LogWrite::DataLogMsgOutPut(OperationLog);
 }
-void EHT::OperationResultSlot(QString Value1, QString Value2, int SrvPort, QString StationID)
+void EHT:: OperationResultSlot(QString Value1, QString Value2, int SrvPort, QString StationID, QString DeviceID)
 {
+	QStringList ValueList;
+	ValueList.append(Value1);
+	ValueList.append(Value2);
+	for (int i = 0; i < Clients.count(); i++)
+	{
+		if (Clients[i].DeviceID.toUpper().compare(DeviceID.toUpper()) == 0 && Clients[i].StationID.toUpper().compare(StationID.toUpper())==0)
+			func_SetValueToControlWidget(ValueList);
+	}
 	//前端发送指令
 	QString OperationLog;
-	OperationLog = QString::fromLocal8Bit("终端返回值：") + Value1+ QString::fromLocal8Bit("，返回值：")+Value2 + QString::fromLocal8Bit(",信息来自业务号：") + m_ServiceName + QString::fromLocal8Bit(",台站号：") + StationID;
+	OperationLog = QString::fromLocal8Bit("终端返回值：") + Value1+ QString::fromLocal8Bit("，返回值：")+Value2 + QString::fromLocal8Bit(",信息来自业务号：") + m_ServiceName + QString::fromLocal8Bit(",台站号：") + StationID + QString::fromLocal8Bit(",设备号：") + DeviceID;
 	if (this->WebCommand)
 	{
 		QJsonObject json;
@@ -584,16 +621,31 @@ void EHT::OperationResultSlot(QString Value1, QString Value2, int SrvPort, QStri
 		//发送至Web服务器
 		emit SendToWebServiceSignal(json);
 	}
+
 	//emit SendToUI(OperationLog);
 	//写入数据日志
 	LogWrite::DataLogMsgOutPut(OperationLog);
 }
-
-void EHT::OperationResultSlot(QString Command, QString Value1, QString Value2, QString Value3, QString Value4, int SrvPort, QString StationID)
+void EHT:: OperationResultSlot(QString Command, QString Value1, QString Value2, QString Value3, QString Value4, int SrvPort, QString StationID, QString DeviceID)
 {
+	QStringList ValueList;
+	if (!(Value1 == "NULL" || Value1.toUpper() == "N"))
+		ValueList.append(Value1);
+	if (!(Value2 == "NULL" || Value2.toUpper() == "N"))
+		ValueList.append(Value2);
+	if (!(Value3 == "NULL" || Value3.toUpper() == "N"))
+		ValueList.append(Value3);
+	if (!(Value4 == "NULL" || Value4.toUpper() == "N"))
+		ValueList.append(Value4);
+
+	for (int i = 0; i < Clients.count(); i++)
+	{
+		if (Clients[i].DeviceID.toUpper().compare(DeviceID.toUpper()) == 0 && Clients[i].StationID.toUpper().compare(StationID.toUpper())==0)
+			func_SetValueToControlWidget(ValueList);
+	}
 	//前端发送指令
 	QString OperationLog;
-	OperationLog = QString::fromLocal8Bit("终端返回值：") + Value1 + QString::fromLocal8Bit("，返回值：") + Value2 + QString::fromLocal8Bit(",返回值：")+Value3+ QString::fromLocal8Bit("，返回值:")+Value4+ QString::fromLocal8Bit(",信息来自业务号：") + m_ServiceName + QString::fromLocal8Bit(",台站号：") + StationID;
+	OperationLog = QString::fromLocal8Bit("终端返回值：") + Value1 + QString::fromLocal8Bit("，返回值：") + Value2 + QString::fromLocal8Bit(",返回值：")+Value3+ QString::fromLocal8Bit("，返回值:")+Value4+ QString::fromLocal8Bit(",信息来自业务号：") + m_ServiceName + QString::fromLocal8Bit(",台站号：") + StationID + QString::fromLocal8Bit(",设备号：") + DeviceID;
 	if (this->WebCommand)
 	{
 		QJsonObject json;
@@ -652,6 +704,7 @@ void EHT:: GetErrorSlot(int ErrorMSG)
 	SendWarningInfoToUI(strMSG);
 	LogWrite::WarningLogMsgOutPut(strMSG);
 }
+
 //读取SIM卡号配置文件，转成区站号
 void EHT::Convert2StationID()
 {
@@ -675,77 +728,13 @@ void EHT::Convert2StationID()
 //矫正时钟
 void EHT::SetTime()
 {
-	QDateTime nowtime = QDateTime::currentDateTime();
-	QString datetime = nowtime.toString("yyyy.MM.dd hh:mm:ss");
-	QString year, month, day, hour, min, sec;
-	year = nowtime.toString("yy");
-	month = nowtime.toString("MM");
-	day = nowtime.toString("dd");
-	hour = nowtime.toString("hh");
-	min = nowtime.toString("mm");
-	sec = nowtime.toString("ss");
-	switch (m_ServiceID)
+	for (int i = 0; i < Clients.size(); i++)
 	{
-	case TRSF_NM: case TRSF:case TRSF_XJ:case SH_TRSF_SQ:
-	{
-		for (int i = 0; i < Clients.size(); i++)
-		{
-			//判断是否在线
+		//判断是否在线
 			if (Clients[i].Online == false)
 				continue;//离线返回
-			int chk = 0;
-			int socketID = Clients[i].SocketID;
-			int SrcAdrr = Clients[i].StationID.toInt();
-			BYTE bytes[1024] = { 0 };
-			bytes[0] = 0xaa;
-			bytes[1] = 0x0a;//帧长度
-			bytes[2] = 0x81;//帧命令
-			chk += bytes[2];
-			bytes[3] = SrcAdrr & 0xff;//源地址
-			chk += bytes[3];
-			bytes[4] = (SrcAdrr >> 8) & 0xff;
-			chk += bytes[4];
-			bytes[5] = 0x14;//20
-			chk += bytes[5];
-			bytes[6] = year.toInt();
-			chk += bytes[6];
-			bytes[7] = month.toInt();
-			chk += bytes[7];
-			bytes[8] = day.toInt();
-			chk += bytes[8];
-			bytes[9] = hour.toInt();
-			chk += bytes[9];
-			bytes[10] = min.toInt();
-			chk += bytes[10];
-			bytes[11] = sec.toInt();
-			chk += bytes[11];
-			bytes[12] = chk & 0xff;//校验位 低八位
-			bytes[13] = (chk >> 8) & 0xff;//高八位
-			bytes[14] = 0xdd;
-			int result = ::send(socketID, (char *)bytes, 15, 0);
-			LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit("土壤水分") + Clients[i].StationID + QString::fromLocal8Bit("自动矫正时钟."));
-		}
-		break;
-	}
-		
-	default:
-	{
-		for (int i = 0; i < Clients.size(); i++)
-		{
-			//判断是否在线
-			if (Clients[i].Online == false)
-				continue;//离线返回
-			int socketID = Clients[i].SocketID;
-			QString Comm = "DATETIME " + datetime + "\r\n";
-			QByteArray ba = Comm.toLatin1();
-			LPCSTR ch = ba.data();
-			int len = Comm.length();
-			int result = ::send(socketID, ch, len, 0);
+			func_SetTime_Lib(Clients[i].StationID,Clients[i].SocketID);
 			LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit( "台站号：") + Clients[i].StationID +QString::fromLocal8Bit( "自动矫正时钟."));
-		}
-		break;
-	}
-	
 	}
 }
 
@@ -753,7 +742,6 @@ void EHT::SetTime()
 void EHT::Disconnect()
 {
 	QDateTime currentTime = QDateTime::currentDateTime();
-	QString current_date = currentTime.toString("yyyy.MM.dd hh:mm:ss");
 	for (int i = 0; i < Clients.size(); i++)
 	{
 		
@@ -762,7 +750,25 @@ void EHT::Disconnect()
 			if (time_t >300 && (Clients[i].Online == true))
 			{
 				Clients[i].Online = false;
-				emit OffLineSignal(m_ServiceName,Clients[i].StationID,Clients[i].LatestTimeOfHeartBeat,Clients[i].LoginTime);
+				emit OffLineSignal(m_ServiceName,Clients[i].StationID,Clients[i].LatestTimeOfHeartBeat,Clients[i].LoginTime,Clients[i].DeviceID);
+				if (m_Port==8005)
+				{
+					QJsonObject HBJson;
+					HBJson.insert("DeviceID", Clients[i].StationID);
+					HBJson.insert("ServiceTypeID", "18");
+					QDateTime current_date_time = QDateTime::currentDateTime();
+					QString current_date = current_date_time.toString("yyyy-MM-dd hh24:mm:ss");
+					HBJson.insert("HBTime", current_date);
+					HBJson.insert("OnLineStatus", false);
+					QJsonDocument document;
+					document.setObject(HBJson);
+					QByteArray byteArray = document.toJson(QJsonDocument::Compact);
+					LPCSTR dataChar;
+					dataChar = byteArray.data();
+					//发送至消息中间件
+					if (g_SimpleProducer_sh.send(dataChar, strlen(dataChar)) < 0)
+						 GetErrorSlot(10304);
+				}
 				LogWrite::SYSLogMsgOutPut(QString::fromLocal8Bit("未检测到心跳包,区站号 ") + Clients[i].StationID +QString::fromLocal8Bit( "已离线"));
 			}
 	}
@@ -778,346 +784,8 @@ void EHT::SendCommand(OPCommand cmm, QString StationID, QString Params1, QString
 	//找到对应台站号的Socket值
 	unsigned int SocketID = 0;
 	SocketID = GetSocket(StationID);
-	//土壤水分
-	switch (m_ServiceID)
-	{
-	case TRSF_NM: case TRSF:case TRSF_XJ:case SH_TRSF_SQ:
-	{
-		switch (cmm)
-		{
-		case NONE:
-			break;
-		case BASEINFO:
-			break;
-			//设置或读取采集器日期时间操作
-		case DATETIME:
-		{
-			if (Params1 != "NULL")
-			{
-				QDateTime nowtime = QDateTime::currentDateTime();
-				QString datetime = nowtime.toString("yyyy.MM.dd hh:mm:ss");
-				QString year, month, day, hour, min, sec;
-				year = nowtime.toString("yy");
-				month = nowtime.toString("MM");
-				day = nowtime.toString("dd");
-				hour = nowtime.toString("hh");
-				min = nowtime.toString("mm");
-				sec = nowtime.toString("ss");
-
-				int chk = 0;
-				int SrcAdrr = StationID.toInt();
-				BYTE bytes[1024] = { 0 };
-				bytes[0] = 0xaa;
-				bytes[1] = 0x0a;//帧长度
-				bytes[2] = 0x81;//帧命令
-				chk += bytes[2];
-				bytes[3] = SrcAdrr & 0xff;//源地址
-				chk += bytes[3];
-				bytes[4] = (SrcAdrr >> 8) & 0xff;
-				chk += bytes[4];
-				bytes[5] = 0x14;//20
-				chk += bytes[5];
-				bytes[6] = year.toInt();
-				chk += bytes[6];
-				bytes[7] = month.toInt();
-				chk += bytes[7];
-				bytes[8] = day.toInt();
-				chk += bytes[8];
-				bytes[9] = hour.toInt();
-				chk += bytes[9];
-				bytes[10] = min.toInt();
-				chk += bytes[10];
-				bytes[11] = sec.toInt();
-				chk += bytes[11];
-				bytes[12] = chk & 0xff;//校验位 低八位
-				bytes[13] = (chk >> 8) & 0xff;//高八位
-				bytes[14] = 0xdd;
-				::send(SocketID, (char *)bytes, 15, 0);
-			}
-			else
-			{
-				int chk = 0;
-				int SrcAdrr = StationID.toInt();
-				BYTE bytes[1024] = { 0 };
-				bytes[0] = 0xaa;
-				bytes[1] = 0x03;//帧长度
-				bytes[2] = 0x82;//帧命令
-				chk += bytes[2];
-				bytes[3] = SrcAdrr & 0xff;//源地址
-				chk += bytes[3];
-				bytes[4] = (SrcAdrr >> 8) & 0xff;
-				chk += bytes[4];
-				bytes[5] = chk & 0xff;//校验位 低八位
-				bytes[6] = (chk >> 8) & 0xff;//高八位
-				bytes[7] = 0xdd;
-				::send(SocketID, (char *)bytes, 8, 0);
-			}
-		}
-		break;
-		//设置或读取采集器IP和端口
-		case ID:
-		{
-			if (Params1 != "NULL"&&Params2 != "NULL")
-			{
-			}
-		}
-		break;
-		case LAT:
-			break;
-		case LONGITUDE:
-			break;
-		case ALT:
-			break;
-		case CFSET:
-			break;
-		case CAPTIME:
-			break;
-		case CAPINTERVAL:
-			break;
-		case SNAPSHOT:
-			break;
-		case RESET:
-			break;
-		case UPDATE:
-			break;
-			//补抄数据命令
-		case DMTD:
-		{
-			if (Params1 != "NULL"&&Params2 != "NULL")
-			{
-				QDateTime Btime = QDateTime::fromString(Params1, "yyyy-MM-dd hh:mm:ss");
-				QDateTime Etime = QDateTime::fromString(Params2, "yyyy-MM-dd hh:mm:ss");
-				QString yearB, monthB, dayB, hourB, minB, yearE, monthE, dayE, hourE, minE;
-				yearB = Btime.toString("yy");
-				monthB = Btime.toString("MM");
-				dayB = Btime.toString("DD");
-				hourB = Btime.toString("hh");
-				minB = Btime.toString("mm");
-
-				yearE = Etime.toString("yy");
-				monthE = Etime.toString("MM");
-				dayE = Etime.toString("DD");
-				hourE = Etime.toString("hh");
-				minE = Etime.toString("mm");
-				int chk = 0;
-				int SrcAdrr = StationID.toInt();
-				BYTE bytes[1024] = { 0 };
-				bytes[0] = 0xaa;
-				bytes[1] = 0x0d;//帧长度
-				bytes[2] = 0x94;//帧命令
-				chk += bytes[2];
-				bytes[3] = SrcAdrr & 0xff;//源地址
-				chk += bytes[3];
-				bytes[4] = (SrcAdrr >> 8) & 0xff;
-				chk += bytes[4];
-				bytes[5] = yearB.toInt() - 2000;
-				chk += bytes[5];
-				bytes[6] = monthB.toInt();
-				chk += bytes[6];
-				bytes[7] = dayB.toInt();
-				chk += bytes[7];
-				bytes[8] = hourB.toInt();
-				chk += bytes[8];
-				bytes[9] = minB.toInt();
-				chk += bytes[9];
-				bytes[10] = yearE.toInt() - 2000;
-				chk += bytes[10];
-				bytes[11] = monthE.toInt();
-				chk += bytes[11];
-				bytes[12] = dayE.toInt();
-				chk += bytes[12];
-				bytes[13] = hourE.toInt();
-				chk += bytes[13];
-				bytes[14] = minE.toInt();
-				chk += bytes[14];
-				bytes[15] = chk & 0xff;//校验位 低八位
-				bytes[16] = (chk >> 8) & 0xff;//高八位
-				bytes[17] = 0xdd;
-				::send(SocketID, (char *)bytes, 18, 0);
-			}
-		}
-		default:
-			break;
-		}
-		break;
-	}
-	default:
-	{
-		//发送终端命令
-		switch (cmm)
-		{
-			//读取采集器的基本信息
-		case BASEINFO:
-		{
-			QString Comm = "BASEINFO\r\n";
-			if (Params1 != "NULL")
-			{
-				Comm = "BASEINFO " + Params1 + "\r\n";
-			}
-			QByteArray ba = Comm.toLatin1();
-			LPCSTR ch = ba.data();
-			int len = Comm.length();
-			::send(SocketID, ch, len, 0);
-			break;
-		}
-		//设置或读取自动观测站的区站号
-		case ID:
-		{
-
-			QString Comm = "ID\r\n";
-			if (Params1 != "NULL")
-			{
-				Comm = "ID " + Params1 + "\r\n";
-			}
-			QByteArray ba = Comm.toLatin1();
-			LPCSTR ch = ba.data();
-			int len = Comm.length();
-			::send(SocketID, ch, len, 0);
-			break;
-		}
-		//设置或读取观测场拔海高度
-		case ALT:
-		{
-			QString Comm = "ALT\r\n";
-			if (Params1 != "NULL")
-			{
-				Comm = "ALT " + Params1 + "\r\n";
-			}
-			QByteArray ba = Comm.toLatin1();
-			LPCSTR ch = ba.data();
-			int len = Comm.length();
-			::send(SocketID, ch, len, 0);
-			break;
-		}
-		//CF卡模块配置
-		case CFSET:
-		{
-			QString Comm = "CFSET\r\n";
-			QByteArray ba = Comm.toLatin1();
-			LPCSTR ch = ba.data();
-			int len = Comm.length();
-			::send(SocketID, ch, len, 0);
-			break;
-		}
-		//设置或读取数据采集时间范围
-		case CAPTIME:
-		{
-			QString Comm = "CAPTIME\r\n";
-			if (Params1 != "NULL")
-			{
-				Comm = "CAPTIME " + Params1 + " " + Params2 + "\r\n";
-			}
-			QByteArray ba = Comm.toLatin1();
-			LPCSTR ch = ba.data();
-			int len = Comm.length();
-			::send(SocketID, ch, len, 0);
-			break;
-		}
-		//设置或读取自动观测站的经度
-		case LONGITUDE:
-		{
-			QString Comm = "LONG\r\n";
-			if (Params1 != "NULL")
-			{
-				Comm = "LONG " + Params1 + "\r\n";
-			}
-			QByteArray ba = Comm.toLatin1();
-			LPCSTR ch = ba.data();
-			int len = Comm.length();
-			::send(SocketID, ch, len, 0);
-			break;
-		}
-		//设置或读取数据采集时间间隔
-		case CAPINTERVAL:
-		{
-			QString Comm = "CAPINTERVAL\r\n";
-			if (Params1 != "NULL")
-			{
-				Comm = "CAPINTERVAL " + Params1 + "\r\n";
-			}
-			QByteArray ba = Comm.toLatin1();
-			LPCSTR ch = ba.data();
-			int len = Comm.length();
-			::send(SocketID, ch, len, 0);
-			break;
-		}
-		//重新启动采集器
-		case RESET:
-		{
-			QString Comm = "RESET\r\n";
-			QByteArray ba = Comm.toLatin1();
-			LPCSTR ch = ba.data();
-			int len = Comm.length();
-			::send(SocketID, ch, len, 0);
-			break;
-		}
-		//远程升级开关
-		case UPDATE:
-		{
-			QString Comm = "UPDATE\r\n";
-			QByteArray ba = Comm.toLatin1();
-			LPCSTR ch = ba.data();
-			int len = Comm.length();
-			::send(SocketID, ch, len, 0);
-			break;
-		}
-		//手动采集当前时刻的要素数据
-		case SNAPSHOT:
-		{
-			QString Comm = "SNAPSHOT\r\n";
-			QByteArray ba = Comm.toLatin1();
-			LPCSTR ch = ba.data();
-			int len = Comm.length();
-			::send(SocketID, ch, len, 0);
-			break;
-		}
-		//设置或读取采集器日期时间操作
-		case DATETIME:
-		{
-			QString Comm = "DATETIME\r\n";
-			if (Params1 != "NULL")
-			{
-				Comm = "DATETIME " + Params1 + "\r\n";
-			}
-			QByteArray ba = Comm.toLatin1();
-			LPCSTR ch = ba.data();
-			int len = Comm.length();
-			::send(SocketID, ch, len, 0);
-			break;
-		}
-		//设置或读取自动观测站的纬度
-		case LAT:
-		{
-			QString Comm = "LAT\r\n";
-			if (Params1 != "NULL")
-			{
-				Comm = "LAT " + Params1 + "\r\n";
-			}
-			QByteArray ba = Comm.toLatin1();
-			LPCSTR ch = ba.data();
-			int len = Comm.length();
-			::send(SocketID, ch, len, 0);
-			break;
-		}
-		//补抄数据命令
-		case DMTD:
-		{
-			if (Params1 != "NULL"&&Params2 != "NULL")
-			{
-				QString Comm = "DMTD " + Params1 + " " + Params2 + "\r\n";
-				QByteArray ba = Comm.toLatin1();
-				LPCSTR ch = ba.data();
-				int len = Comm.length();
-				::send(SocketID, ch, len, 0);
-			}
-			break;
-		}
-		default:
-			break;
-		}
-	}
-	break;
-	}
+	int indexComm = cmm;
+	func_SetCommand(SocketID, indexComm, Params1, Params2,StationID);
 }
 //统计在线个数
 int EHT::GetOnlineCount()
@@ -1137,6 +805,7 @@ void EHT::RealTimeDataSlot(QString data)
 
 }
 
+//重连MQ
 void EHT::ReConnectActiveMq()
 {
 	//已经连接
@@ -1162,29 +831,31 @@ void EHT::Reconnect()
 	g_SimpleProducer.close();
 	g_SimpleProducer_ZDH.close();
 	g_SimpleProducer_sh.close();
-	string brokerURI;
-	string destURI;
-	string destURI_1;
-	string destURI_sh;
-	string UserName;
-	string Password;
-	bool useTopics;
-	bool clientAck;
+	
 
 	activemq::library::ActiveMQCPP::initializeLibrary();
-	UserName = "admin";
-	Password = "admin";
-	brokerURI = "tcp://117.158.216.250:61616";
+	g_SimpleProducer.start();
+	g_SimpleProducer_ZDH.start();
+	g_SimpleProducer_sh.start();
+}
 
-	unsigned int numMessages = 2000;
-	destURI = "DataFromFacility";
-	destURI_1 = "ZDH";
-	destURI_sh = "SH_BYD";
-	clientAck = false;
-	useTopics = false;
-	g_SimpleProducer.start(UserName, Password, brokerURI, numMessages, destURI, useTopics, clientAck);
-	g_SimpleProducer_ZDH.start(UserName, Password, brokerURI, numMessages, destURI_1, useTopics, clientAck);
-	g_SimpleProducer_sh.start(UserName, Password, brokerURI, numMessages, destURI_sh, useTopics, clientAck);
-
-
+//打开调试窗体
+void EHT::OpenCtrlWnd(QString StationID,QString DeviceID)
+{
+	for (int  i = 0; i < Clients.count(); i++)
+	{
+		if (Clients[i].StationID.compare(StationID) == 0 &&
+			Clients[i].DeviceID.compare(DeviceID)==0)
+		{
+			if (StationID.toUpper().compare("NULL")==0)
+			{
+				func_GetControlWidget(DeviceID, Clients[i].SocketID, nullptr);
+				return;
+			}
+			func_GetControlWidget(StationID, Clients[i].SocketID,nullptr);
+			return;
+		}
+		
+	}
+	
 }

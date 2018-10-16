@@ -59,9 +59,15 @@ public:
     QScrollArea *ScrollArea_LogBtn;
     QWidget *ScrollAreaWidgetContents_LogBtn;
     MyButton *LogBtn;
-    QScrollArea *ScrollArea_TerminalBtn;
-    QWidget *ScrollAreaWidgetContents_TerminalBtn;
-    MyButton *TerminalBtn;
+
+    QScrollArea *ScrollArea_MQBtn;
+    QWidget *ScrollAreaWidgetContents_MQBtn;
+    MyButton *MQBtn;
+
+	QScrollArea *ScrollArea_TerminalBtn;
+	QWidget *ScrollAreaWidgetContents_TerminalBtn;
+	MyButton *TerminalBtn;
+
     QGroupBox *groupBox_5;
     QScrollArea *ScrollArea_CloseBtn;
     QWidget *ScrollAreaWidgetContents_CloseBtn;
@@ -196,6 +202,7 @@ public:
         LogBtn->setObjectName(QStringLiteral("LogBtn"));
         LogBtn->setGeometry(QRect(2, 2, 32, 32));
         ScrollArea_LogBtn->setWidget(ScrollAreaWidgetContents_LogBtn);
+
         ScrollArea_TerminalBtn = new QScrollArea(groupBox_4);
         ScrollArea_TerminalBtn->setObjectName(QStringLiteral("ScrollArea_TerminalBtn"));
         ScrollArea_TerminalBtn->setGeometry(QRect(50, 20, 40, 40));
@@ -208,6 +215,20 @@ public:
         TerminalBtn->setObjectName(QStringLiteral("TerminalBtn"));
         TerminalBtn->setGeometry(QRect(2, 2, 32, 32));
         ScrollArea_TerminalBtn->setWidget(ScrollAreaWidgetContents_TerminalBtn);
+
+		ScrollArea_MQBtn = new QScrollArea(groupBox_4);
+		ScrollArea_MQBtn->setObjectName(QStringLiteral("ScrollArea_MQBtn"));
+		ScrollArea_MQBtn->setGeometry(QRect(140, 20, 40, 40));
+		ScrollArea_MQBtn->setWidgetResizable(true);
+		ScrollAreaWidgetContents_MQBtn = new QWidget();
+		ScrollAreaWidgetContents_MQBtn->setObjectName(QStringLiteral("ScrollAreaWidgetContents_MQBtn"));
+		ScrollAreaWidgetContents_MQBtn->setGeometry(QRect(0, 0, 38, 38));
+		ScrollAreaWidgetContents_MQBtn->setMaximumSize(QSize(40, 40));
+		MQBtn = new MyButton("../Image/png/MQ.png", 1, ScrollAreaWidgetContents_MQBtn);
+		MQBtn->setObjectName(QStringLiteral("TerminalBtn"));
+		MQBtn->setGeometry(QRect(2, 2, 32, 32));
+		ScrollArea_MQBtn->setWidget(ScrollAreaWidgetContents_MQBtn);
+
         groupBox_5 = new QGroupBox(centralWidget);
         groupBox_5->setObjectName(QStringLiteral("groupBox_5"));
         groupBox_5->setGeometry(QRect(1200, 5, 75, 26));

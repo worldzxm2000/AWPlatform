@@ -52,6 +52,8 @@ public:
 	bool WebCommand;
 	//获取在线设备个数
 	int GetOnlineCount();
+	//打开设备控制窗体
+	void OpenCtrlWnd(QString StationID, QString DeviceID);
 private:
 	//植被重新处理定时器
 	QTimer *ReHandleZB_IMAGE;
@@ -59,8 +61,6 @@ private:
 	QTimer *ReHandleZB_TXT;
 	//是否存在JPG文件
 	bool IsExistImage;
-	//是否存在XML文件
-	bool IsExistXML;
 	//是否存在TXT
 	bool IsExistTXT;
 	//初始化IOCP
@@ -105,6 +105,14 @@ private:
 	QTimer *SetTimeTimer;
 	//离线判断
 	QTimer *OffLineTimer;
+	//对时命令
+	SetTime_Lib func_SetTime_Lib;
+	//设备控制窗体
+	GetControlWidget_Lib func_GetControlWidget;
+	//显示返回值
+	SetValueToControlWidget_Lib func_SetValueToControlWidget;
+	//终端命令
+	SetCommand_Lib func_SetCommand;
 private slots:
     //自动检测离线
     void Disconnect();
@@ -115,14 +123,14 @@ private slots:
     //离线通知
 	void OffLineSlot(unsigned int CltSocket);
 	//新的数据(观测数据或者心跳数据)
-	void NewDataSlot(QString StationID, QString IP, int Port, unsigned int CltSocket);
-	void NewDataSlot(QString StationID, QString IP, int Port, int File, unsigned int CltSocket);
+	void NewDataSlot(QString StationID, QString IP, int Port, unsigned int CltSocket,QString DeviceID);
+	void NewDataSlot(QString StationID, QString IP, int Port, int File, unsigned int CltSocket,QString DeviceID);
 	//错误信息
 	void GetErrorSlot(int ErrorMSG);
 	//终端操作指令
-	void OperationResultSlot(QString Value, int SrvPort, QString StationID);
-	void OperationResultSlot(QString Value1, QString Value2, int SrvPort, QString StationID);
-	void OperationResultSlot(QString Command, QString Value1, QString Value2, QString Value3, QString Value4, int SrvPort, QString StationID);
+	void OperationResultSlot(QString Value, int SrvPort, QString StationID, QString DeviceID);
+	void OperationResultSlot(QString Value1, QString Value2, int SrvPort, QString StationID, QString DeviceID);
+	void OperationResultSlot(QString Command, QString Value1, QString Value2, QString Value3, QString Value4, int SrvPort, QString StationID, QString DeviceID);
 	//设备实时数据
 	void RealTimeDataSlot(QString data);
 	//图片处理
@@ -135,9 +143,9 @@ signals:
 	 //UI登录时间
 	 void LoginTimeSignal(int SrvPort, QString Station);
 	 //UI设备在线信息
-	 void OnLineSignal(QString SrvName,QString StationID, QDateTime LastTime, QDateTime LoginTime);
+	 void OnLineSignal(QString SrvName,QString StationID, QDateTime LastTime, QDateTime LoginTime,QString DeviceID);
 	 //UI设备离线信息
-	 void OffLineSignal(QString SrvName, QString StationID, QDateTime LastTime, QDateTime LoginTime);
+	 void OffLineSignal(QString SrvName, QString StationID, QDateTime LastTime, QDateTime LoginTime,QString DeviceID);
 	 //UI显示终端返回值
 	 void SendWarningInfoToUI(QString Result);
 	 //发送至Web

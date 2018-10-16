@@ -4,15 +4,16 @@
 #include<WinSock2.h>
 #include<Windows.h>
 #include"SimpleProducer.h"
-#include<QDateTime>
-typedef int(*Fun)(int, int, string*); //定义函数指针,int add(int a,int b);   
+#include<QDateTime> 
 typedef LRESULT(*Char2Json)(QString &buff,QJsonObject &json);//解析数据函数
 typedef int(*GetServiceTypeID_Lib)();//获取业务类型
 typedef QString(*GetServiceTypeName_Lib)();//获取业务名称
 typedef int(*GetPort_Lib)();//获取端口
 typedef QString(*GetVersionNo_Lib)();//获取版本号
 typedef void(*GetControlWidget_Lib)(QString StationID, uint Socket, QWidget* parent);//获取调试窗体
-
+typedef void(*SetTime_Lib)(QString StationID, uint Socket);//对时命令
+typedef void(*SetCommand_Lib)(uint Socket, int CommandType,QString Params1,QString Params2,QString StationID);//终端命令
+typedef void(*SetValueToControlWidget_Lib)(QStringList ValueList);//返回值
 extern 	SimpleProducer g_SimpleProducer;
 extern SimpleProducer g_SimpleProducer_ZDH;
 extern SimpleProducer g_SimpleProducer_sh;
@@ -37,6 +38,7 @@ typedef struct
 	int Count;//总数据接收量
 	QString Frame;//一帧数据
 	QString StationID;//台站号
+	QString DeviceID;//设备号
 }PER_HANDLE_DATA, *LPPER_HANDLE_DATA;
 
 //IOCP中结构体
@@ -86,6 +88,8 @@ typedef struct
 	SOCKET SocketID;
 	//区站号
 	QString StationID;
+	//设备号
+	QString DeviceID;
 	//最新心跳时间
 	QDateTime LatestTimeOfHeartBeat;
 	//状态

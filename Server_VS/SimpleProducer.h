@@ -32,7 +32,14 @@ class SimpleProducer
 public:
 	SimpleProducer();
 	virtual ~SimpleProducer();
+	//消息中间件配置参数
+	string brokerURI;
+	string destURI;
+	string UserName;
+	string Password;
 
+	unsigned int numMessages = 2000;
+	bool start();
 	bool start(const std::string& UserName, const std::string& Password, const std::string& brokerURI, unsigned int numMessages, const std::string& destURI, bool useTopic, bool clientAck);
 	LRESULT send(const char* bytesMessage, int nSize);
 	void close();
@@ -47,11 +54,10 @@ private:
 	Session* session;
 	Destination* destination;
 	MessageProducer* producer;
-	bool useTopic;
-	bool clientAck;
-	unsigned int numMessages;
-	string UserName;
-	string Password;
-	string brokerURI;
-	string destURI;
+	//bool useTopic;
+	//bool clientAck;
+	
+
+	//string brokerURI;
+	//string destURI;
 };

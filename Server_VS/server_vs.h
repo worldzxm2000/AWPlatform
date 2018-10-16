@@ -77,7 +77,7 @@ private:;
 	//添加解析DLL
 	LRESULT AddDll();
 	//通过设备号和端口查询到设备索引号
-	int FindRowIndex(QString SrvName, QString StationID);
+	int FindRowIndex(QString SrvName, QString StationID=NULL,QString DeviceID=NULL);
 	////通过服务器端口号查找业务编号
 	//QString FindserviceTypeIDByPort(int servicePort);
 	//通过服务器类型查找业务编号
@@ -86,8 +86,6 @@ private:;
 	//bool AddClient(QString IP, int Port, int SrvPort, SOCKET SocketID, QString StationID);
 	//业务列表右键菜单
 	void CreateServerListActions();
-	//区站号列表右键菜单
-	void CreateClientListActions();
 	//初始化终端命令Socket
 	LRESULT InitializeCommandSocket();
 	////通过业务和区站号找到对应的Socket号
@@ -127,8 +125,6 @@ private:
 	QAction action_run;
 	//停止
 	QAction action_stop;
-	//补抄数据
-	QAction action_dmtd;
 	//属性
 	QAction action_Attributes;
 	//客户列表右键菜单
@@ -169,16 +165,14 @@ private:
 	QStringListModel* slModel;
 	//报警信息显示
 	QListView* strView;
-	//控制窗体
-	ControlDlg *controlDlg;
-
+	
 private slots:
     //最小化窗体
     void slot_minWindow();
 	//设备离线ListCtrl控件信息
-	void OffLineListCtrl(QString SrvName, QString StationID, QDateTime LastTime, QDateTime LoginTime);
+	void OffLineListCtrl(QString SrvName, QString StationID, QDateTime LastTime, QDateTime LoginTime, QString DeviceID);
 	//刷新设备ListCtrl控件信息
-	void RefreshListCtrl(QString SrvName, QString StationID, QDateTime LastTime, QDateTime LoginTime);
+	void RefreshListCtrl(QString SrvName, QString StationID, QDateTime LastTime, QDateTime LoginTime,QString DeviceID);
 	//终端读取设备命令
 	void RequestForReadCOMM(int ServiceTypeID, QString StationID, QString FacilityID, int Command, QString Param1, QString Param2);
 	//错误提示
@@ -217,6 +211,8 @@ private slots:
 	void ShowWarningDockWidget();
 	//终端控制dlg
 	void OpenControlDlg();
+	//消息中间件设置
+	void MQConfig();
 //Docking配置
 	public:
 		void addDockWidget(Qt::DockWidgetArea area, MyDockWidget* dockWidget);

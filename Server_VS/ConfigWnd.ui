@@ -10,12 +10,20 @@
     <height>300</height>
    </rect>
   </property>
+  <property name="font">
+   <font>
+    <family>微软雅黑</family>
+   </font>
+  </property>
   <property name="windowTitle">
    <string>IP端口号配置</string>
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>../Image/setup.ico</normaloff>../Image/setup.ico</iconset>
+    <normaloff>../Image/png/Weather.ico</normaloff>../Image/png/Weather.ico</iconset>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">background:rgb(77,77,77);color:white</string>
   </property>
   <widget class="QLineEdit" name="IPEdit">
    <property name="geometry">
@@ -38,7 +46,7 @@
    </property>
    <property name="font">
     <font>
-     <family>楷体</family>
+     <family>微软雅黑</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -80,7 +88,7 @@
    </property>
    <property name="font">
     <font>
-     <family>楷体</family>
+     <family>微软雅黑</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -99,9 +107,12 @@
    </property>
    <property name="font">
     <font>
-     <family>楷体</family>
+     <family>微软雅黑</family>
      <pointsize>12</pointsize>
     </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true"/>
    </property>
    <property name="text">
     <string>IP：</string>

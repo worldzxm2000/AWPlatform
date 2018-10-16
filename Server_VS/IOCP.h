@@ -58,16 +58,16 @@ signals:
 	//发送错误信息
 	void ErrorMSGSignal(int errorMSG);
 	//数据通知(观测数据或者心跳数据)
-	void NewDataSignal(QString StationID,QString IP,int Port, unsigned int Socket);
-	void NewDataSignal(QString StationID,QString IP,int Port,int File,unsigned int Socket);
+	void NewDataSignal(QString StationID,QString IP,int Port, unsigned int Socket,QString DeviceID);
+	void NewDataSignal(QString StationID,QString IP,int Port,int File,unsigned int Socket,QString DeviceID);
 	//新设备连接信号
 	void NewConnectionSignal(QString IP, int Port, int m_Port, unsigned int Socket);
 	//终端操作命令信号
 	void NoticfyServerOperateStatus(int Result);
 	//终端操作命令返回值dd
-	void OperationResultSignal(QString Value,int SrvPort,QString StationID);
-	void OperationResultSignal(QString Value1, QString Value2, int SrvPort, QString StationID);
-	void OperationResultSignal(QString Command, QString Value1, QString Value2, QString Value3, QString Value4, int SrvPort, QString StationID);
+	void OperationResultSignal(QString Value,int SrvPort,QString StationID,QString DeviceID);
+	void OperationResultSignal(QString Value1, QString Value2, int SrvPort, QString StationID,QString DeviceID);
+	void OperationResultSignal(QString Command, QString Value1, QString Value2, QString Value3, QString Value4, int SrvPort, QString StationID,QString DeviceID);
 	//离线通知
 	void OffLineSignal(unsigned int CltSocket);
 	//发送到Web终端
