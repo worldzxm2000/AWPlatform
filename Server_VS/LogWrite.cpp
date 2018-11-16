@@ -1,6 +1,6 @@
 #include "LogWrite.h"
 #include"qdir.h"
-QMutex mutex;//日志代码互斥锁  
+QMutex mutex;//日志代码互斥锁 
 LogWrite::LogWrite(QObject *parent)
 	: QObject(parent)
 {

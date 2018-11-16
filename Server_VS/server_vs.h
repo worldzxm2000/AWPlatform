@@ -22,7 +22,6 @@
 #include"MyDockWidgetTabBar.h"
 #include"MyDockWidgetTabButton.h"
 #include"ControlDlg.h"
-#include"ContainerWidget.h"
 //业务类型连接信息
 typedef struct
 {
@@ -115,8 +114,6 @@ private:
 	EHTPool EHTPool;
 	//UPD线程
 	SocketServerForWeb *socket4web;
-	//线程池
-	QThreadPool pool;
 	//操作类型
 	QString strOperateType;
 	//业务列表右键菜单
@@ -191,8 +188,6 @@ private slots:
 	void Lib_Attri();
 	//区站号列表右键事件
 	void on_ClientList_customContextMenuRequested(const QPoint &pos);
-	//发送终端命令
-	void SendCOMM();
 	////心跳处理
 	//void HeartBeat(QString IP, int Port, int SrvPort, int CltSocket, QString StationID, QString  ServiceTypeID);
 	//获取终端命令名称
@@ -213,6 +208,10 @@ private slots:
 	void OpenControlDlg();
 	//消息中间件设置
 	void MQConfig();
+	//业务列表LIST改变
+	void ServerList_currentItemChanged(QTableWidgetItem * current, QTableWidgetItem * previous);
+	//设备列表LIST改变
+	void ClientList_cuurentItemChanged(QTableWidgetItem * current, QTableWidgetItem * previous);
 //Docking配置
 	public:
 		void addDockWidget(Qt::DockWidgetArea area, MyDockWidget* dockWidget);

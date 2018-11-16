@@ -5,23 +5,16 @@
 TEMPLATE = app
 TARGET = Server_VS
 DESTDIR = ../Win32/Debug
-QT += core sql network gui widgets websockets
+QT += core xml sql network gui axserver axcontainer widgets websockets
 CONFIG += debug
-DEFINES += _UNICODE WIN64 QT_DLL QT_WEBSOCKETS_LIB QT_WIDGETS_LIB
+DEFINES += _UNICODE WIN64
 INCLUDEPATH += ./../include \
     ./GeneratedFiles \
-    . \
-    ./GeneratedFiles/$(ConfigurationName)
+    ./GeneratedFiles/$(ConfigurationName) \
+    .
 LIBS += -L"./../lib" \
     -lws2_32 \
     -lactivemq-cpp \
-    -llibapr-1 \
-    -llibapriconv-1 \
-    -llibaprutil-1 \
-    -llibeay32 \
-    -llibssh2 \
-    -lssleay32 \
-    -lzlib \
     -lIphlpapi
 DEPENDPATH += .
 MOC_DIR += ./GeneratedFiles/$(ConfigurationName)
@@ -29,4 +22,3 @@ OBJECTS_DIR += debug
 UI_DIR += ./GeneratedFiles
 RCC_DIR += ./GeneratedFiles
 include(Server_VS.pri)
-RC_FILE = myapp.rc

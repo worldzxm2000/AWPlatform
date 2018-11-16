@@ -33,7 +33,7 @@ void  ImpDataThread::ImpData()
 			ServiceID.toInt() == 17 || ServiceID.toInt() == 18)
 		{    //湿地数据
 			 //发送至消息中间件
-			if (g_SimpleProducer_sh.send(dataChar, strlen(dataChar)) < 0)
+			if (g_SimpleProducer.send(dataChar, strlen(dataChar)) < 0)
 				emit ErrorMSGSignal(10304);
 		}
 		else
@@ -41,8 +41,8 @@ void  ImpDataThread::ImpData()
 			//发送至消息中间件
 			if (g_SimpleProducer.send(dataChar, strlen(dataChar)) < 0)
 				emit ErrorMSGSignal(10304);
-			if (g_SimpleProducer_ZDH.send(dataChar, strlen(dataChar)) < 0)
-				emit ErrorMSGSignal(10304);
+			//if (g_SimpleProducer_ZDH.send(dataChar, strlen(dataChar)) < 0)
+				//emit ErrorMSGSignal(10304);
 		}
 		ProcessingSignal(i + 1);
 	}

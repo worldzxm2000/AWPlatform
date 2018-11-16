@@ -45,11 +45,7 @@ public:
 	//获取连接客户端数组
 	QList<CLIENTINFO> Clients;
 	//发送COMMAND指令
-	void SendCommand(OPCommand cmm,QString StationID, QString Params1, QString Params2, bool WebCommand);
-	//当前COMMAND指令
-	OPCommand CurrentCommand;
-	//锁住操作变量，判断是否是Web发送的请求
-	bool WebCommand;
+	void SendCommand(int cmm,QString StationID, QString Params1, QString Params2);
 	//获取在线设备个数
 	int GetOnlineCount();
 	//打开设备控制窗体
@@ -131,8 +127,6 @@ private slots:
 	void OperationResultSlot(QString Value, int SrvPort, QString StationID, QString DeviceID);
 	void OperationResultSlot(QString Value1, QString Value2, int SrvPort, QString StationID, QString DeviceID);
 	void OperationResultSlot(QString Command, QString Value1, QString Value2, QString Value3, QString Value4, int SrvPort, QString StationID, QString DeviceID);
-	//设备实时数据
-	void RealTimeDataSlot(QString data);
 	//图片处理
 	void MoveImageToDesAddr();
 	//文本处理

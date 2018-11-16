@@ -84,20 +84,31 @@ LRESULT SimpleProducer::send(const char* Message, int nSize)
 {
 	try
 	{
-		// 消息内容
-		// 创建一个文本类型的消息
-		if (session == nullptr)
-			return -1;
-		BytesMessage* bytesMessage=session->createBytesMessage((unsigned char*)Message, nSize);
-		// 发送消息
-		producer->send(bytesMessage);
-		delete bytesMessage;
+		std::string str(Message);
+		std::auto_ptr<TextMessage> message(session->createTextMessage(str));
+		producer->send(message.get());
 		return 1;
 	}
 	catch (CMSException& e)
 	{
 		return -1;
 	}
+	//try
+	//{
+	//	// 消息内容
+	//	// 创建一个文本类型的消息
+	//	if (session == nullptr)
+	//		return -1;
+	//	BytesMessage* bytesMessage=session->createBytesMessage((unsigned char*)Message, nSize);
+	//	// 发送消息
+	//	producer->send(bytesMessage);
+	//	delete bytesMessage;
+	//	return 1;
+	//}
+	//catch (CMSException& e)
+	//{
+	//	return -1;
+	//}
 	
 }
 

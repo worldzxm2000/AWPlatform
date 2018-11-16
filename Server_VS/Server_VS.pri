@@ -27,6 +27,9 @@ HEADERS += ./resource.h \
     ./MyDockWidget.h \
     ./MyDockWidgetTabButton.h \
     ./MyDockWidgetTabBar.h \
+    ./MQConfigDlg.h \
+    ./LoadTxtThread.h \
+    ./ImpDataThread.h \
     ./LogWrite.h
 SOURCES += ./CommandDlg.cpp \
     ./ConfigWnd.cpp \
@@ -34,9 +37,12 @@ SOURCES += ./CommandDlg.cpp \
     ./DMTDDlg.cpp \
     ./EHT.cpp \
     ./EHTPool.cpp \
+    ./ImpDataThread.cpp \
     ./IOCP.cpp \
+    ./LoadTxtThread.cpp \
     ./LogWrite.cpp \
     ./main.cpp \
+    ./MQConfigDlg.cpp \
     ./MyButton.cpp \
     ./MyDockWidget.cpp \
     ./MyDockWidgetTabBar.cpp \
@@ -53,5 +59,6 @@ FORMS += ./server_vs.ui \
     ./CommandDlg.ui \
     ./DMTDDlg.ui \
     ./SYSLogDlg.ui \
-    ./ControlDlg.ui
+    ./ControlDlg.ui \
+    ./MQConfig.ui
 RESOURCES += server_vs.qrc

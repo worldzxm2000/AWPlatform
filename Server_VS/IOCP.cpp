@@ -231,8 +231,6 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 		QString RecvStr = QString(QLatin1String(perIOData->buffer,len));
 		//去除多余符号
 		RecvStr = RecvStr.trimmed();
-		if (m_bIsWebCommand)
-			emit RecvRealTimeDataSignal(RecvStr);
 		PerHandleData->Frame += RecvStr;
 		LRESULT pResult = -1;
 		//数据内存判断，如果数据内存大于40M说明有错误数据 需要清空内存，否则会造成内存溢
@@ -243,7 +241,7 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 			return;
 		}
 		///**************************解析动态链接库***********************************
-		pResult = func_Char2Json(PerHandleData->Frame,JsonObj);
+	pResult = func_Char2Json(PerHandleData->Frame,JsonObj);
 		//判断接收情况
 		switch (pResult)
 		{
@@ -290,8 +288,8 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 					//发送至消息中间件
 					if (g_SimpleProducer.send(dataChar, strlen(dataChar)) < 0)
 						emit ErrorMSGSignal(10304);
-					if (g_SimpleProducer_ZDH.send(dataChar, strlen(dataChar)) < 0)
-						emit ErrorMSGSignal(10304);
+					//if (g_SimpleProducer_ZDH.send(dataChar, strlen(dataChar)) < 0)
+					//	emit ErrorMSGSignal(10304);
 
 
 					//获取区站号
@@ -329,16 +327,13 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 					//航空操作数据或水体液位
 					case 7:
 					{
-						QString ServiceTypeID = data_json.find("ServiceTypeID").value().toString();
 						QString StationID = data_json.find("StationID").value().toString();
 						QString Command = data_json.find("Command").value().toString();
 						QString DeviceID = data_json.find("DeviceID").value().toString() == NULL ? "NULL" : data_json.find("DeviceID").value().toString();
 						QString Value1 = data_json.find("RecvValue1").value().toString();
 						QString Value2 = data_json.find("RecvValue2").value().toString();
-						QString Value3 = data_json.find("RecvValue3").value().toString();
-						QString Value4 = data_json.find("RecvValue4").value().toString();
-						emit OperationResultSignal(Command,Value1,Value2,Value3,Value4, m_Port,PerHandleData->StationID,PerHandleData->DeviceID);
-					}
+						emit OperationResultSignal(Command,Value1,Value2,NULL,NULL, m_Port, PerHandleData->StationID, PerHandleData->DeviceID);
+						}
 					default:
 						break;
 					}
@@ -366,8 +361,8 @@ void IOCP::UnboxData(LPPER_IO_DATA perIOData, u_short len, LPPER_HANDLE_DATA Per
 						LPCSTR dataChar;
 						dataChar = byteArray.data();
 						//发送至消息中间件
-						if (g_SimpleProducer_sh.send(dataChar, strlen(dataChar)) < 0)
-							emit ErrorMSGSignal(10304);
+					//	if (g_SimpleProducer_sh.send(dataChar, strlen(dataChar)) < 0)
+						//	emit ErrorMSGSignal(10304);
 				//	}
 					emit NewDataSignal(
 						PerHandleData->StationID,

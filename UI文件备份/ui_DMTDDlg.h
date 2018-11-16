@@ -38,15 +38,17 @@ public:
         if (DMTDDlg->objectName().isEmpty())
             DMTDDlg->setObjectName(QStringLiteral("DMTDDlg"));
         DMTDDlg->resize(525, 160);
+        QFont font;
+        font.setFamily(QString::fromUtf8("\345\276\256\350\275\257\351\233\205\351\273\221"));
+        font.setPointSize(10);
+        DMTDDlg->setFont(font);
         QIcon icon;
-        icon.addFile(QStringLiteral("../Image/png/Weather.ico"), QSize(), QIcon::Normal, QIcon::Off);
+        icon.addFile(QStringLiteral("../Image/upload.ico"), QSize(), QIcon::Normal, QIcon::Off);
         DMTDDlg->setWindowIcon(icon);
+        DMTDDlg->setStyleSheet(QStringLiteral(""));
         BrowsingBtn = new QPushButton(DMTDDlg);
         BrowsingBtn->setObjectName(QStringLiteral("BrowsingBtn"));
         BrowsingBtn->setGeometry(QRect(430, 40, 75, 21));
-        QFont font;
-        font.setFamily(QString::fromUtf8("\345\256\213\344\275\223"));
-        font.setPointSize(10);
         BrowsingBtn->setFont(font);
         label = new QLabel(DMTDDlg);
         label->setObjectName(QStringLiteral("label"));
@@ -62,11 +64,7 @@ public:
         ImpBtn = new QPushButton(DMTDDlg);
         ImpBtn->setObjectName(QStringLiteral("ImpBtn"));
         ImpBtn->setGeometry(QRect(430, 80, 75, 23));
-	
-        QFont font1;
-        font1.setFamily(QStringLiteral("04b_21"));
-        font1.setPointSize(10);
-        ImpBtn->setFont(font1);
+        ImpBtn->setFont(font);
         label_2 = new QLabel(DMTDDlg);
         label_2->setObjectName(QStringLiteral("label_2"));
         label_2->setGeometry(QRect(10, 80, 81, 20));

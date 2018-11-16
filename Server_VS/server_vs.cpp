@@ -30,7 +30,8 @@ Server_VS::Server_VS(QWidget *parent)
 	setFixedSize(1280, 660);
 	strOperateType = "未知操作";
 	ui.OnLineCountLabel->setText("当前在线设备个数：0");
-	pool.setMaxThreadCount(1024);
+	ui.NameLabel->setText("气象观测平台中心站 版本1.0");
+	//pool.setMaxThreadCount(1024);
 	addDockWidget(Qt::RightDockWidgetArea,ui.WarningDockWidget);
 	slModel = new QStringListModel();
 	slModel->setStringList(WarningInfoList);
@@ -51,6 +52,7 @@ Server_VS::Server_VS(QWidget *parent)
 	//业务类型列表
 	connect(ui.ServerList, SIGNAL(NoticfyServerRun(int)), this, SLOT(Lib_Run(int)));
 	connect(ui.ServerList, SIGNAL(NoticfyServerStop(int)), this, SLOT(Lib_Stop(int)));
+	connect(ui.ServerList, SIGNAL(currentItemChanged(QTableWidgetItem *, QTableWidgetItem *)), this, SLOT(ServerList_currentItemChanged(QTableWidgetItem *, QTableWidgetItem *)));
 	ui.ServerList->setContextMenuPolicy(Qt::CustomContextMenu);//右键创建Menu
 	CreateServerListActions();
 
@@ -73,7 +75,7 @@ Server_VS::Server_VS(QWidget *parent)
 	ui.ClientList->setContextMenuPolicy(Qt::CustomContextMenu);//右键创建Menu
 	ui.AddBtn->setToolTipName("添加新业务");
 	ui.RemoveBtn->setToolTipName("移除业务");
-	ui.UpLoadBtn->setToolTipName("补抄数据");
+	//ui.UpLoadBtn->setToolTipName("补抄数据");
 	ui.ControlBtn->setToolTipName("控制设备");
 	ui.TerminalBtn->setToolTipName("查看终端返回值");
 	ui.MQBtn->setToolTipName("消息中间件设置");
@@ -86,7 +88,7 @@ Server_VS::Server_VS(QWidget *parent)
 	connect(ui.MinBtn, SIGNAL(clicked()), this, SLOT(slot_minWindow()));
 	connect(ui.CloseBtn, SIGNAL(clicked()), this, SLOT(close()));
 	connect(ui.TerminalBtn, SIGNAL(clicked()), this, SLOT(OpenDataLog()));
-	connect(ui.UpLoadBtn,SIGNAL(clicked()),this,SLOT(Func_DMTD()));
+	//connect(ui.UpLoadBtn,SIGNAL(clicked()),this,SLOT(Func_DMTD()));
 	connect(ui.WarningBtn, SIGNAL(clicked()), this, SLOT(ShowWarningDockWidget()));
 	connect(ui.ControlBtn, SIGNAL(clicked()), this, SLOT(OpenControlDlg()));
 	connect(ui.MQBtn, SIGNAL(clicked()), this, SLOT(MQConfig()));
@@ -116,8 +118,8 @@ Server_VS::Server_VS(QWidget *parent)
 //析构函数
 Server_VS::~Server_VS()
 {	
-	delete socket4web;
-	socket4web = nullptr;
+	//socket4web->Stop();
+	//socket4web = nullptr;
 }
 
 //消息中间件配置窗体
@@ -198,13 +200,12 @@ LRESULT Server_VS::InitializeCommandSocket()
 	try
 	{
 		//开启WebSocket线程
-		socket4web = new SocketServerForWeb();
-		connect(socket4web, SIGNAL(ErrorMSGSignal(int)), this, SLOT(GetErrorMSG(int)), Qt::AutoConnection);
+		//socket4web = new SocketServerForWeb();
+		//connect(socket4web, SIGNAL(ErrorMSGSignal(int)), this, SLOT(GetErrorMSG(int)), Qt::AutoConnection);
 		//处理web端发送过来命令类型
-		connect(socket4web, SIGNAL(NoticfyServerFacilityID(int, QString, QString, int, QString, QString)), this, SLOT(RequestForReadCOMM(int, QString, QString, int, QString, QString)), Qt::AutoConnection);
-		socket4web->m_portServer = 1022;
-		socket4web->setAutoDelete(false);
-		pool.start(socket4web);
+		//connect(socket4web, SIGNAL(NoticfyServerFacilityID(int, QString, QString, int, QString, QString)), this, SLOT(RequestForReadCOMM(int, QString, QString, int, QString, QString)), Qt::AutoConnection);
+		//socket4web->m_portServer = 1030;
+		//socket4web->start();
 		return 1;
 	}
 	catch (const std::exception&)
@@ -220,7 +221,7 @@ void Server_VS::RequestForReadCOMM(int ServiceTypeID, QString StationID, QString
 	if (EHTPool.GetEHT(ServiceTypeID) == NULL)
 		return;
 	//发送指令
-	EHTPool.GetEHT(ServiceTypeID)->SendCommand(OPCommand(Command), StationID, Params1, Params2, true);
+	EHTPool.GetEHT(ServiceTypeID)->SendCommand(Command, StationID, Params1, Params2);
 	
 }
 
@@ -246,7 +247,7 @@ void Server_VS::on_AddBtn_clicked()
 //移除Lib
 void Server_VS::on_DeleteBtn_clicked()
 {
-	if (iSelectedRowOfServiceListCtrl < 0)
+	if (iSelectedRowOfServiceListCtrl < 0 || iSelectedRowOfServiceListCtrl > ui.ServerList->rowCount() - 1)
 		return;
 	QString ServiceName = ui.ServerList->item(iSelectedRowOfServiceListCtrl, 0)->text();
 	//移除EHT
@@ -283,7 +284,7 @@ LRESULT Server_VS::AddDll()
 		//离线通知
 		connect(pEHT, SIGNAL(OffLineSignal(QString, QString, QDateTime, QDateTime,QString)), this, SLOT(OffLineListCtrl(QString, QString, QDateTime, QDateTime,QString)));
 		//Web端发送指令通知
-		connect(pEHT, SIGNAL(SendToWebServiceSignal(QJsonObject)), socket4web, SLOT(SendToWebServiceSlot(QJsonObject)));
+		//connect(pEHT, SIGNAL(SendToWebServiceSignal(QJsonObject)), socket4web, SLOT(SendToWebServiceSlot(QJsonObject)));
 		//终端返回命令通知
 		connect(pEHT, SIGNAL(SendWarningInfoToUI(QString)), this, SLOT(GetWarningInfon(QString)));
 		LRESULT pResult = pEHT->LoadLib(strName);
@@ -458,7 +459,6 @@ void Server_VS::Convert2StationID()
 //补抄数据
 void Server_VS::Func_DMTD()
 {
-	
 	//未选中业务服务
 	if (iSelectedRowOfServiceListCtrl < 0)
 		return;
@@ -484,27 +484,31 @@ void Server_VS::OpenDataLog()
 	SYSLogDlg datalogdlg("DataLog");
 	datalogdlg.exec();
 }
-
+int nCount = 0;
 //命令控制窗体
 void Server_VS::OpenControlDlg()
-{
-	if (iSelectedRowOfClientListCtrl > -1)
-	{
+{	//nCount++;
+//	QJsonObject json;
+//	json.insert("Count", nCount);
+//	socket4web->SendToWebServiceSlot(json);
+//
+	if (iSelectedRowOfClientListCtrl<0 || iSelectedRowOfClientListCtrl>ui.ClientList->rowCount() - 1)
+		return;
 
 		QString ServiceName = ui.ClientList->item(iSelectedRowOfClientListCtrl, 0)->text();
 		QString StationID = ui.ClientList->item(iSelectedRowOfClientListCtrl, 1)->text();
 		QString DeviceID = ui.ClientList->item(iSelectedRowOfClientListCtrl,2)->text();
 		int SeverID = EHTPool.GetEHT(ServiceName)->GetServiceID();
 		EHTPool.GetEHT(ServiceName)->OpenCtrlWnd(StationID,DeviceID);
-	}
 }
+
 //打开报警停靠窗口
 void Server_VS:: ShowWarningDockWidget()
 {	
 	//读取WaningLog文件中报警信息
 	LoadWarningInfo();
 	ui.WarningDockWidget->show();
-	ui.groupBox_5->setGeometry(QRect(940, 2, 75, 26));
+	ui.groupBox_SrvGB->setGeometry(QRect(940, 2, 75, 26));
 }
 
 //加载报警信息
@@ -543,16 +547,6 @@ void Server_VS::Lib_Attri()
 	CfgWnd.exec();
 }
 
-//发送终端命令
-void Server_VS::SendCOMM()
-{
-	QString ServiceName = ui.ClientList->item(iSelectedRowOfClientListCtrl, 0)->text();
-	QString StationID = ui.ClientList->item(iSelectedRowOfClientListCtrl, 1)->text();
-	QString DeviceID= ui.ClientList->item(iSelectedRowOfClientListCtrl, 2)->text();
-	int SeverID = EHTPool.GetEHT(ServiceName)->GetServiceID();
-	EHTPool.GetEHT(ServiceName)->OpenCtrlWnd(StationID, DeviceID);
-}
-
 //获取终端命令名称
 void Server_VS::GetCommName(QString CommName)
 {
@@ -563,7 +557,7 @@ void Server_VS::GetCommName(QString CommName)
 void Server_VS::on_ServerList_itemClicked(QTableWidgetItem *item)
 {
 	iSelectedRowOfServiceListCtrl = item->row();
-	if (iSelectedRowOfServiceListCtrl < 0)
+	if (iSelectedRowOfServiceListCtrl < 0 || iSelectedRowOfServiceListCtrl > ui.ServerList->rowCount() - 1)
 		return;
 	QString ServiceName = ui.ServerList->item(iSelectedRowOfServiceListCtrl, 0)->text();
 	int Count=EHTPool.GetEHT(ServiceName)->GetOnlineCount();
@@ -576,6 +570,26 @@ void Server_VS::on_ClientList_itemClicked(QTableWidgetItem *item)
 	iSelectedRowOfClientListCtrl = item->row();
 }
 
+//业务列表改变
+void Server_VS::ServerList_currentItemChanged(QTableWidgetItem * current, QTableWidgetItem * previous)
+{
+	if (current == NULL)
+		return;
+	iSelectedRowOfServiceListCtrl = current->row();
+	if (iSelectedRowOfServiceListCtrl < 0 || iSelectedRowOfServiceListCtrl > ui.ServerList->rowCount() - 1)
+		return;
+	QString ServiceName = ui.ServerList->item(iSelectedRowOfServiceListCtrl, 0)->text();
+	int Count = EHTPool.GetEHT(ServiceName)->GetOnlineCount();
+	ui.OnLineCountLabel->setText("当前在线设备个数: " + QString::number(Count));
+}
+
+//设备列表改变
+void Server_VS::ClientList_cuurentItemChanged(QTableWidgetItem * current, QTableWidgetItem * previous)
+{
+	if (current == NULL)
+		return;
+	iSelectedRowOfClientListCtrl = current->row();
+}
 void Server_VS::MQConfig()
 {
 	MQConfigDlg *mq = new MQConfigDlg();
@@ -648,7 +662,7 @@ void Server_VS::dockWidgetUnpinned(MyDockWidget* dockWidget)
 	{
 		getDockWidgetBar(Qt::TopDockWidgetArea)->insertSpacing();
 		getDockWidgetBar(Qt::BottomDockWidgetArea)->insertSpacing();
-		ui.groupBox_5->setGeometry(QRect(1175, 2, 75, 26));
+		ui.groupBox_SrvGB->setGeometry(QRect(1175, 2, 75, 26));
 	}
 }
 
@@ -700,7 +714,7 @@ void Server_VS::dockWidgetPinned(MyDockWidget* dockWidget)
 	if((dockWidget->getArea() == Qt::RightDockWidgetArea) &&
 		dockWidgetBar->isHidden())
 	{
-		ui.groupBox_5->setGeometry(QRect(935, 2, 75, 26));
+		ui.groupBox_SrvGB->setGeometry(QRect(935, 2, 75, 26));
 	}
 	
 }
@@ -732,12 +746,12 @@ void Server_VS::showDockWidget(MyDockWidget* dockWidget)
 		dockWidget->setFocus();
 
 		m_dockWidget = dockWidget;
-		ui.groupBox_5->setGeometry(QRect(915, 2, 75, 26));
+		ui.groupBox_SrvGB->setGeometry(QRect(915, 2, 75, 26));
 	}
 	else
 	{
 		hideDockWidget(dockWidget);
-		ui.groupBox_5->setGeometry(QRect(1170, 2, 75, 26));
+		ui.groupBox_SrvGB->setGeometry(QRect(1170, 2, 75, 26));
 	}
 }
 
@@ -772,7 +786,7 @@ void Server_VS::adjustDockWidget(MyDockWidget* dockWidget)
 								break;
 
 	case Qt::RightDockWidgetArea: {
-		ui.groupBox_5->setGeometry(QRect(915, 2, 75, 26));
+		ui.groupBox_SrvGB->setGeometry(QRect(915, 2, 75, 26));
 		dockWidget->setGeometry(rect.left() + rect.width() - dockWidget->width(), rect.top(), dockWidget->width(), rect.height());
 	}
 								  break;
@@ -853,7 +867,7 @@ void Server_VS::dockWidgetDocked(MyDockWidget* dockWidget)
 
 void Server_VS::dockWidgetClose(MyDockWidget* dockWidget)
 {
-    ui.groupBox_5->setGeometry(QRect(1200, 2, 75, 26));
+    ui.groupBox_SrvGB->setGeometry(QRect(1200, 2, 75, 26));
 }
 
 void Server_VS::dockWidgetUndocked(MyDockWidget* dockWidget)

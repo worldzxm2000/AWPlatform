@@ -15,8 +15,8 @@ typedef void(*SetTime_Lib)(QString StationID, uint Socket);//∂‘ ±√¸¡Ó
 typedef void(*SetCommand_Lib)(uint Socket, int CommandType,QString Params1,QString Params2,QString StationID);//÷’∂À√¸¡Ó
 typedef void(*SetValueToControlWidget_Lib)(QStringList ValueList);//∑µªÿ÷µ
 extern 	SimpleProducer g_SimpleProducer;
-extern SimpleProducer g_SimpleProducer_ZDH;
-extern SimpleProducer g_SimpleProducer_sh;
+//extern SimpleProducer g_SimpleProducer_ZDH;
+//extern SimpleProducer g_SimpleProducer_sh;
 const int DataBuffSize = 4 * 1024;
 typedef void* HLIB;		//∂ØÃ¨ø‚æ‰±˙
 typedef struct
@@ -104,7 +104,7 @@ enum OPCommand
 	NONE = -1,
 	BASEINFO = 231,
 	DATETIME = 232,
-	ID = 233,
+	ID = 201,
 	LAT = 234,
 	LONGITUDE = 235,
 	ALT = 236,
@@ -124,5 +124,4 @@ enum FileType
 	TXT=2,
 	XML=3
 };
-
 #endif // PARAM_H

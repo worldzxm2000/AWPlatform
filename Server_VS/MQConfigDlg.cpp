@@ -49,32 +49,32 @@ void MQConfigDlg::mouseReleaseEvent(QMouseEvent *event)
 void MQConfigDlg::SetAdmin()
 {
 	g_SimpleProducer.UserName = ui.lineEdit_admin->text().trimmed().toLocal8Bit().constData();
-	g_SimpleProducer_ZDH.UserName = ui.lineEdit_admin->text().trimmed().toLocal8Bit().constData();
-	g_SimpleProducer_sh.UserName = ui.lineEdit_admin->text().trimmed().toLocal8Bit().constData();
+	//g_SimpleProducer_ZDH.UserName = ui.lineEdit_admin->text().trimmed().toLocal8Bit().constData();
+	//g_SimpleProducer_sh.UserName = ui.lineEdit_admin->text().trimmed().toLocal8Bit().constData();
 
 	g_SimpleProducer.start();
-	g_SimpleProducer_ZDH.start();
-	g_SimpleProducer_sh.start();
+	//g_SimpleProducer_ZDH.start();
+	//g_SimpleProducer_sh.start();
 }
 
 void MQConfigDlg::SetPassword()
 {
 	g_SimpleProducer.Password = ui.lineEdit_password->text().trimmed().toLocal8Bit().constData();
-	g_SimpleProducer_ZDH.Password = ui.lineEdit_password->text().trimmed().toLocal8Bit().constData();
-	g_SimpleProducer_sh.Password = ui.lineEdit_password->text().trimmed().toLocal8Bit().constData();
+	//g_SimpleProducer_ZDH.Password = ui.lineEdit_password->text().trimmed().toLocal8Bit().constData();
+	//g_SimpleProducer_sh.Password = ui.lineEdit_password->text().trimmed().toLocal8Bit().constData();
 	
 	g_SimpleProducer.start();
-	g_SimpleProducer_ZDH.start();
-	g_SimpleProducer_sh.start();
+	//g_SimpleProducer_ZDH.start();
+	//g_SimpleProducer_sh.start();
 }
 
 void MQConfigDlg::SetURL()
 {
 	g_SimpleProducer.brokerURI = ui.lineEdit_URL->text().trimmed().toLocal8Bit().constData();
-	g_SimpleProducer_ZDH.brokerURI = ui.lineEdit_URL->text().trimmed().toLocal8Bit().constData();
-	g_SimpleProducer_sh.brokerURI = ui.lineEdit_URL->text().trimmed().toLocal8Bit().constData();
+//	g_SimpleProducer_ZDH.brokerURI = ui.lineEdit_URL->text().trimmed().toLocal8Bit().constData();
+	//g_SimpleProducer_sh.brokerURI = ui.lineEdit_URL->text().trimmed().toLocal8Bit().constData();
 
 	g_SimpleProducer.start();
-	g_SimpleProducer_ZDH.start();
-	g_SimpleProducer_sh.start();
+	//g_SimpleProducer_ZDH.start();
+	//g_SimpleProducer_sh.start();
 }
