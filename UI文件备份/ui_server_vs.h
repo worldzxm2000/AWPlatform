@@ -49,8 +49,8 @@ public:
 	QScrollArea *ScrollArea_RemoveBtn;
 	QWidget *ScrollAreaWidgetContents_RemoveBtn;
 	MyButton *RemoveBtn;
-	//QScrollArea *ScrollArea_UpLoadBtn;
-	//QWidget *ScrollAreaWidgetContents_UpLoadBtn;
+	QScrollArea *ScrollArea_UpLoadBtn;
+	QWidget *ScrollAreaWidgetContents_UpLoadBtn;
 	//MyButton *UpLoadBtn;
 	QGroupBox *groupBox_SYSStatus;
 	QScrollArea *ScrollArea_ControlBtn;
@@ -164,7 +164,7 @@ public:
 		ScrollArea_RemoveBtn->setWidget(ScrollAreaWidgetContents_RemoveBtn);
 		/*ScrollArea_UpLoadBtn = new QScrollArea(groupBox_SL);
 		ScrollArea_UpLoadBtn->setObjectName(QStringLiteral("ScrollArea_UpLoadBtn"));
-		ScrollArea_UpLoadBtn->setGeometry(QRect(95, 20, 40, 40));
+		ScrollArea_UpLoadBtn->setGeometry(QRect(250, 20, 40, 40));
 		ScrollArea_UpLoadBtn->setWidgetResizable(true);
 		ScrollAreaWidgetContents_UpLoadBtn = new QWidget();
 		ScrollAreaWidgetContents_UpLoadBtn->setObjectName(QStringLiteral("ScrollAreaWidgetContents_UpLoadBtn"));
