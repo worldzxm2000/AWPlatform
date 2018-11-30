@@ -21,11 +21,11 @@ public:
 	void StopAll();
 	//暂停监听服务
 	void Pause(int ServiceID);
-	void Pause(QString KeyName);
+	bool Pause(QString KeyName);
 	void PauseAll();
 	//开启监听服务
 	void Run(int ServiceID);
-	void Run(QString ServiceName);
+	bool Run(QString ServiceName);
 	void RunAll();
 	//获取EHT
 	EHT* GetEHT(QString ServiceName);

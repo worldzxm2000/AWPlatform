@@ -61,12 +61,12 @@ void SrvTableWidget::On_Run_Btn()
 	QString strText = senderObj->text();
 	if (strText==QString::fromLocal8Bit("运行"))
 	{
-		NoticfyServerRun(row);
-		senderObj->setText(QString::fromLocal8Bit("停止"));
+		if(NoticfyServerRun(row))
+			senderObj->setText(QString::fromLocal8Bit("停止"));
 	}
 	else
 	{
-		NoticfyServerStop(row);
-		senderObj->setText(QString::fromLocal8Bit("运行"));
+		if(NoticfyServerStop(row))
+			senderObj->setText(QString::fromLocal8Bit("运行"));
 	}
 }

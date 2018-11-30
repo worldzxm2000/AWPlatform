@@ -74,15 +74,14 @@ void EHTPool::Pause(int Index)
 	}
 }
 
-void EHTPool::Pause(QString KeyName)
+bool EHTPool::Pause(QString KeyName)
 {
 	QList<EHT*>::iterator iter = AllEHTList.begin();
 	while (iter != AllEHTList.end())
 	{
 		if ((*iter)->GetServiceName() == KeyName)
 		{
-			(*iter)->Stop();
-			break;
+			return (*iter)->Stop();
 		}
 		iter++;
 	}
@@ -113,15 +112,14 @@ void EHTPool::Run(int Index)
 	}
 }
 
-void EHTPool::Run(QString KeyName)
+bool EHTPool::Run(QString KeyName)
 {
 	QList<EHT*>::iterator iter = AllEHTList.begin();
 	while (iter != AllEHTList.end())
 	{
 		if ((*iter)->GetServiceName() == KeyName)
 		{
-			(*iter)->Run(ThreadPool);
-			break;
+			return (*iter)->Run(ThreadPool);
 		}
 		iter++;
 	}

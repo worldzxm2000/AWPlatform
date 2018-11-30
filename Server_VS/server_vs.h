@@ -181,9 +181,9 @@ private slots:
 	//业务列表右键事件
 	void on_ServerList_customContextMenuRequested(const QPoint &pos);
 	//启动业务事件
-	void Lib_Run(int ServerIndex);
+	bool Lib_Run(int ServerIndex);
 	//action_stop事件
-	void Lib_Stop(int ServerIndex);
+	bool Lib_Stop(int ServerIndex);
 	//action_attri事件
 	void Lib_Attri();
 	//区站号列表右键事件

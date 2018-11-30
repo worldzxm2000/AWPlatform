@@ -50,8 +50,8 @@ Server_VS::Server_VS(QWidget *parent)
 	//读取配置文件
 	Convert2StationID();
 	//业务类型列表
-	connect(ui.ServerList, SIGNAL(NoticfyServerRun(int)), this, SLOT(Lib_Run(int)));
-	connect(ui.ServerList, SIGNAL(NoticfyServerStop(int)), this, SLOT(Lib_Stop(int)));
+	connect(ui.ServerList, SIGNAL(NoticfyServerRun(int)), this, SLOT(Lib_Run(int)),Qt::DirectConnection);
+	connect(ui.ServerList, SIGNAL(NoticfyServerStop(int)), this, SLOT(Lib_Stop(int)),Qt::DirectConnection);
 	connect(ui.ServerList, SIGNAL(currentItemChanged(QTableWidgetItem *, QTableWidgetItem *)), this, SLOT(ServerList_currentItemChanged(QTableWidgetItem *, QTableWidgetItem *)));
 	ui.ServerList->setContextMenuPolicy(Qt::CustomContextMenu);//右键创建Menu
 	CreateServerListActions();
@@ -197,15 +197,16 @@ void Server_VS::mouseReleaseEvent(QMouseEvent *event)
 //初始化Web监听线程
 LRESULT Server_VS::InitializeCommandSocket()
 {
+
 	try
 	{
 		//开启WebSocket线程
-		//socket4web = new SocketServerForWeb();
-		//connect(socket4web, SIGNAL(ErrorMSGSignal(int)), this, SLOT(GetErrorMSG(int)), Qt::AutoConnection);
-		//处理web端发送过来命令类型
-		//connect(socket4web, SIGNAL(NoticfyServerFacilityID(int, QString, QString, int, QString, QString)), this, SLOT(RequestForReadCOMM(int, QString, QString, int, QString, QString)), Qt::AutoConnection);
-		//socket4web->m_portServer = 1030;
-		//socket4web->start();
+		socket4web = new SocketServerForWeb();
+		connect(socket4web, SIGNAL(ErrorMSGSignal(int)), this, SLOT(GetErrorMSG(int)), Qt::AutoConnection);
+	//	处理web端发送过来命令类型
+		connect(socket4web, SIGNAL(NoticfyServerFacilityID(int, QString, QString, int, QString, QString)), this, SLOT(RequestForReadCOMM(int, QString, QString, int, QString, QString)), Qt::AutoConnection);
+		socket4web->m_portServer = 1030;
+		socket4web->start();
 		return 1;
 	}
 	catch (const std::exception&)
@@ -417,23 +418,26 @@ void Server_VS::on_ClientList_customContextMenuRequested(const QPoint &pos)
 }
 
 //启动Lib服务
-void Server_VS::Lib_Run(int ServerIndex)
+bool Server_VS::Lib_Run(int ServerIndex)
 {
 	QTableWidgetItem* SelectedItem = ui.ServerList->item(ServerIndex, 0); //获取选择行														
 	if (SelectedItem == 0)
-		return;
+		return false;
 	int Row = SelectedItem->row();
-	EHTPool.Run(ui.ServerList->item(Row, 0)->text());
+	bool b= EHTPool.Run(ui.ServerList->item(Row, 0)->text());
+	if (!b)
+		QMessageBox::warning(this, "警告", "端口号被其他程序占用！");
+	return b;
 }
 
 //停止Lib服务
-void Server_VS::Lib_Stop(int ServerIndex)
+bool Server_VS::Lib_Stop(int ServerIndex)
 {
 	QTableWidgetItem* SelectedItem = ui.ServerList->item(ServerIndex, 0); //获取选择行														
 	if (SelectedItem == 0)
-		return;
+		return false;
 	int Row = SelectedItem->row();
-	EHTPool.Pause(ui.ServerList->item(Row, 0)->text());
+	return EHTPool.Pause(ui.ServerList->item(Row, 0)->text());
 }
 
 //读取SIM卡号配置文件，转成区站号

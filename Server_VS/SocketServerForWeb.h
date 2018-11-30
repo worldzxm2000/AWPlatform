@@ -2,11 +2,10 @@
 
 
 #include <QObject>
-
+#include<QList>
 #include<QThread>
 #include<QTimer>
 #include<qjsonobject.h>
-#include"UDPClientList.h"
 #include"param.h"
 #include<QUdpSocket>
 #define LENGTH 4*1024
@@ -20,9 +19,16 @@ public:
 	//服务器端Socket监听端口
 	int m_portServer;
 private:
-//	UDPClientList ClientsQ;
 	//服务器端Socket
 	SOCKET m_SrvSocket;
+	//UDP连接池
+	QList<UDPClient> ClientsQ;
+	//超时检测
+	virtual void timerEvent(QTimerEvent *event);
+	//计数线程
+	int m_TimeOutTimerID;
+	//获取udp端信息
+	SOCKADDR_IN GetClient(QString ServiceID, QString StationID, QString DeviceID);
 protected:
 	void run();
 	void ResolveData(LPCSTR buff,int len, SOCKADDR_IN from);

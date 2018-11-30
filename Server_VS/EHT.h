@@ -37,9 +37,9 @@ public:
 	//获得数据解析
 	Char2Json GetDataFunc();
 	//开始运行监听
-	void Run(QThreadPool &ThreadPool);
+	bool Run(QThreadPool &ThreadPool);
 	//结束运行监听
-	void Stop();
+	bool Stop();
 	//获取运行状态
 	bool IsRun();
 	//获取连接客户端数组

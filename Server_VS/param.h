@@ -98,6 +98,16 @@ typedef struct
 	QDateTime LoginTime;
 } CLIENTINFO, *LPCLIENTINFO;
 
+//UDP信息
+typedef struct
+{
+	SOCKADDR_IN from;//udp socket号
+	int ServiceID;//业务号
+	QString StationID;//台站号
+	QString DeviceID;//设备号
+	int Count;//计数器
+
+} UDPClient,*LPUDPClient;
 //终端命令
 enum OPCommand
 {

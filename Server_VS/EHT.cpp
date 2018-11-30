@@ -162,30 +162,40 @@ Char2Json EHT::GetDataFunc()
 	return m_DataFunc;
 }
 //启动监听数据服务
-void EHT::Run(QThreadPool &ThreadPool)
+bool EHT::Run(QThreadPool &ThreadPool)
 {
 	if (pIOCP == NULL)
+	{
+		if (!IsLegallyPort(m_Port))
+		{
+			UnloadLib();
+			return false;
+		}
 		InitIOCP();
+	}
+	
 	pIOCP->func_Char2Json = (Char2Json)m_Lib.resolve("Char2Json");
 	m_DataFunc= (Char2Json)m_Lib.resolve("Char2Json");
 	pIOCP->SetListenedPort(m_Port, m_IP,m_ServiceID);
 	ThreadPool.start(pIOCP);
 	m_IsRun = true;
+	return true;
 }
 
 //结束监听数据服务
-void EHT::Stop()
+bool EHT::Stop()
 {
 	if (pIOCP == nullptr)
 	{
 		UnloadLib();
-		return;
+		return true;
 	}
 	//关闭IOCP
 	pIOCP->Stop();
 	UnloadLib();
 	m_IsRun = false;
 	pIOCP = nullptr;
+	return true;
 }
 //初始化IOCP
 void EHT::InitIOCP()
